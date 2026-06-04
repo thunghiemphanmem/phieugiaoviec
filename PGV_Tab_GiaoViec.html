@@ -4,17 +4,17 @@
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; overflow-x: auto;}
   
-  /* ĐIỀU CHỈNH GIAO DIỆN BẢNG - BỎ VIỀN THEO YÊU CẦU */
-  #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; border: none; }
-  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; vertical-align: middle; font-size: 13px; }
+  /* THIẾT LẬP THANH TRƯỢT VÀ BỎ VIỀN THEO YÊU CẦU */
+  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
+  #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: separate; border-spacing: 0; table-layout: fixed; border: none; }
+  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh td { border: none; border-bottom: 1px dashed #dee2e6; padding: 2px !important; vertical-align: middle; }
   
   #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
   #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
-  #khuGvChinh .nutThem { margin-top: 5px; font-size: 13px; font-weight: bold; }
+  #khuGvChinh .nutThem { margin: 5px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
@@ -39,7 +39,7 @@
 
     <div class="hopBang">
       <table id="gvBangNv" class="table-hover">
-        <thead><tr><th style="width: 40px; border-radius: 4px 0 0 0;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 25%;">Nội dung công việc</th><th style="width: 80px;">Điểm T.Đa</th><th style="width: 110px;">TG Giao</th><th style="width: 12%;">Tiến độ</th><th style="width: 110px;">TG Hoàn thành</th><th style="width: 15%;">Người thực hiện</th><th style="width: 18%; border-radius: 0 4px 0 0;">Ghi chú</th></tr></thead>
+        <thead><tr><th style="width: 40px;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 25%;">Nội dung công việc</th><th style="width: 80px;">Điểm T.Đa</th><th style="width: 110px;">TG Giao</th><th style="width: 12%;">Tiến độ</th><th style="width: 110px;">TG Hoàn thành</th><th style="width: 15%;">Người thực hiện</th><th style="width: 18%;">Ghi chú</th></tr></thead>
         <tbody id="gvThanBang"></tbody>
       </table>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
@@ -84,18 +84,20 @@
         else { if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; }
     }
 
-    /* NHẬN DIỆN DÒNG TIÊU ĐỀ: Ẩn các thuộc tính nhập liệu phía sau */
+    /* TRẢI RỘNG TIÊU ĐỀ HẾT BẢNG */
     function gvKiemTraTieuDe(ptu) {
         let isHeader = ptu.value.trim().startsWith('*');
         let tr = ptu.closest('tr');
+        let tdNoiDung = ptu.closest('td');
         if (isHeader) {
             ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
+            tdNoiDung.colSpan = 7;
+            tr.querySelectorAll('td:nth-child(n+4)').forEach(td => td.style.display = 'none');
         } else {
             ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
+            tdNoiDung.colSpan = 1;
+            tr.querySelectorAll('td:nth-child(n+4)').forEach(td => td.style.display = '');
         }
-        tr.querySelectorAll('.oDmaxGv, .oTGGiao, .oTdoGv, .oTGHoanThanh, .oNnghanGv, .oGchuGv').forEach(el => {
-            el.style.visibility = isHeader ? 'hidden' : 'visible';
-        });
     }
 
     function gvVeDong(dong = null) {

@@ -5,7 +5,6 @@
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  /* THIẾT LẬP KẺ DỌC PHÂN CÁCH CÁC CỘT */
   #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
   #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; border: none; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
@@ -15,6 +14,10 @@
   
   #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
   #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
+  
+  /* ĐẢM BẢO CHỮ MỜ TRÔNG RÕ RÀNG HƠN CHO MỤC ĐÍCH PLACEHOLDER */
+  #gvBangNv input::placeholder { color: #adb5bd; font-style: italic; }
+
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
   #khuGvChinh .nutThem { margin: 5px; font-size: 13px; font-weight: bold; }
   
@@ -86,7 +89,6 @@
         else { if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; }
     }
 
-    /* TRẢI RỘNG TIÊU ĐỀ HẾT BẢNG */
     function gvKiemTraTieuDe(ptu) {
         let isHeader = ptu.value.trim().startsWith('*');
         let tr = ptu.closest('tr');
@@ -120,13 +122,19 @@
         let bstt = dong ? dong[0] : ddemDong; ddemDong = dong ? parseInt(bstt) + 1 : ddemDong + 1;
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
+        // BỘ LỌC CHUYỂN dd/mm/yyyy THÀNH CHỮ MỜ PLACEHOLDER
+        let vTgGiao = dong ? dong[3] || "" : "";
+        let vTgHt = dong ? dong[5] || "" : "";
+        if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
+        if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
+        
         tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
         <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${bstt}" readonly></td>
         <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
         <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
-        <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${dong?dong[3]||"":""}"></td>
+        <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
         <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-        <td><input type="text" class="form-control text-center oTGHoanThanh" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${dong?dong[5]||"":""}"></td>
+        <td><input type="text" class="form-control text-center oTGHoanThanh" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgHt}"></td>
         <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
         <td><textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea><input type="hidden" class="oDiemDgGv" value="${dong?dong[7]||"":""}"></td>`;
         

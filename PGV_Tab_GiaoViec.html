@@ -5,8 +5,9 @@
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
+  /* THIẾT LẬP KẺ DỌC PHÂN CÁCH CÁC CỘT */
   #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
-  #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; border: none; }
+  #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh th:last-child { border-right: none; }
   #khuGvChinh td { border: none; border-bottom: 1px dashed #dee2e6; border-right: 1px solid #dee2e6; padding: 2px !important; vertical-align: middle; }
@@ -15,7 +16,6 @@
   #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
   #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
   
-  /* ĐẢM BẢO CHỮ MỜ TRÔNG RÕ RÀNG HƠN CHO MỤC ĐÍCH PLACEHOLDER */
   #gvBangNv input::placeholder { color: #adb5bd; font-style: italic; }
 
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
@@ -44,7 +44,18 @@
 
     <div class="hopBang">
       <table id="gvBangNv" class="table-hover">
-        <thead><tr><th style="width: 40px;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 25%;">Nội dung công việc</th><th style="width: 80px;">Điểm T.Đa</th><th style="width: 110px;">TG Giao</th><th style="width: 12%;">Tiến độ</th><th style="width: 110px;">TG Hoàn thành</th><th style="width: 15%;">Người thực hiện</th><th style="width: 18%;">Ghi chú</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="width: 40px;">Xóa</th>
+            <th style="width: 40px;">TT</th>
+            <th style="width: 30%;">Nội dung công việc</th>
+            <th style="width: 80px;">Điểm T.Đa</th>
+            <th style="width: 110px;">TG Giao</th>
+            <th style="width: 15%;">Tiến độ</th>
+            <th style="width: 15%;">Người thực hiện</th>
+            <th style="width: 20%;">Ghi chú</th>
+          </tr>
+        </thead>
         <tbody id="gvThanBang"></tbody>
       </table>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
@@ -95,7 +106,7 @@
         let tdNoiDung = ptu.closest('td');
         if (isHeader) {
             ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
-            tdNoiDung.colSpan = 7;
+            tdNoiDung.colSpan = 6; // Đã giảm từ 7 xuống 6 do bỏ 1 cột
             tr.querySelectorAll('td:nth-child(n+4)').forEach(td => td.style.display = 'none');
         } else {
             ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
@@ -122,7 +133,6 @@
         let bstt = dong ? dong[0] : ddemDong; ddemDong = dong ? parseInt(bstt) + 1 : ddemDong + 1;
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
-        // BỘ LỌC CHUYỂN dd/mm/yyyy THÀNH CHỮ MỜ PLACEHOLDER
         let vTgGiao = dong ? dong[3] || "" : "";
         let vTgHt = dong ? dong[5] || "" : "";
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
@@ -134,9 +144,12 @@
         <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
         <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
         <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-        <td><input type="text" class="form-control text-center oTGHoanThanh" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgHt}"></td>
         <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
-        <td><textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea><input type="hidden" class="oDiemDgGv" value="${dong?dong[7]||"":""}"></td>`;
+        <td>
+            <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
+            <input type="hidden" class="oDiemDgGv" value="${dong?dong[7]||"":""}">
+            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+        </td>`;
         
         tb.appendChild(tr);
         gvKiemTraTieuDe(tr.querySelector('.oNdGv'));

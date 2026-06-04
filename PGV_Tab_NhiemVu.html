@@ -7,14 +7,12 @@
   .nhapTuyChinh { border: 1px solid #ced4da; border-radius: 4px; padding: 2px; outline: none; height: 30px; font-size: 14px; }
   .epMotDong { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
-  /* ÉP VÙNG ĐỆM VÀ XÓA BỎ KHUNG BẢNG - BỔ SUNG KẺ DỌC */
   #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; border-collapse: collapse; border: none; }
   #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; font-size: 13px; border: none; border-right: 1px solid #7ea8f8;}
   #bangNviec th:last-child { border-right: none; }
   #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
   #bangNviec td:last-child { border-right: none !important; }
 
-  /* LỘT SẠCH VIỀN, NỀN VÀ MÀU CHỮ CỦA CÁC Ô NHẬP LIỆU BÊN TRONG */
   #bangNviec textarea.form-control, #bangNviec input.form-control, #bangNviec select.form-select { 
       border: none !important; 
       background-color: transparent !important; 
@@ -28,6 +26,9 @@
   }
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
+  
+  /* ĐẢM BẢO CHỮ MỜ TRÔNG RÕ RÀNG HƠN CHO MỤC ĐÍCH PLACEHOLDER */
+  #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
   .diemTru, .diemTru:disabled { background-color: #dc3545 !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -88,14 +89,12 @@
 <script>
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
-/* BỔ SUNG: HÀM KIỂM TRA CHUNG QUYỀN BAN GIÁM HIỆU */
 function kiemTraLaBGH() {
     if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
     if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xxx' || canbHientai.quyen === 'xx')) return true;
     return false;
 }
 
-/* ĐÃ SỬA LỖI KHÓA Ô ĐIỂM VÀ NÚT LƯU KHI ĐĂNG NHẬP LÀ xx */
 function kiemTraQuyenTruyCap() {
     var selectGv = document.getElementById("hopChonGv"); 
     var nutLuu = document.querySelector('button[onclick="xulyLuuTam()"]'); 
@@ -107,10 +106,9 @@ function kiemTraQuyenTruyCap() {
         var daChon = selectGv.value && selectGv.value !== "";
         if (daChon) { 
             if (isBGH) {
-                // BGH (xx, xxx) được phép thao tác lưu & sửa điểm đánh giá
                 if (nutLuu) nutLuu.disabled = false; 
                 if (diemThuong) diemThuong.disabled = false;
-                if (nutNop) nutNop.disabled = true; // BGH không nộp báo cáo thay giáo viên
+                if (nutNop) nutNop.disabled = true; 
             } else {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
@@ -141,7 +139,7 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
     cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
     khoiTaoDropdownGiaoVien(dsGiaoVien); 
-    kiemTraQuyenTruyCap(); // Đồng bộ trạng thái mở/khóa theo quyền BGH
+    kiemTraQuyenTruyCap(); 
 }
 
 function cdang(ptu) { 
@@ -233,7 +231,6 @@ function nopBcaoChinh() {
 function mokBcao() { mbcMo = true; const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') { nt.disabled = false; } }
 function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') nt.disabled = true; } }
 
-/* TRẢI RỘNG TIÊU ĐỀ HẾT BẢNG & ẨN CÁC Ô KHÔNG CẦN THIẾT */
 function ktraAnHienTieuDe(ptu) {
     let isTitle = ptu.value.trim().startsWith('*');
     let tr = ptu.closest('tr');
@@ -253,7 +250,7 @@ function ktraAnHienTieuDe(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan="8" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
+    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
@@ -265,15 +262,18 @@ function veBangNviec(db) {
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
         else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
         
-        // Nhận diện dòng có sao (*)
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
         let colSp = isTitle ? 'colspan="7"' : '';
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red;" onchange="tinhtTdong()">`;
+        // BỘ LỌC CHUYỂN dd/mm/yyyy THÀNH CHỮ MỜ PLACEHOLDER
+        let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
+        let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
+
+        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red;" onchange="tinhtTdong()">`;
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="">-- Trống --</option>`;
             let opts = valConfig.split(",");
             opts.forEach(opt => {
@@ -293,14 +293,13 @@ function veBangNviec(db) {
               <input type="hidden" class="anGhiChu" value="${gc}">
           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" value="${tGiao}" readonly></td>
+          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" value="${tHt}"></td>
+          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
         </tr>`; bg.append(dg);
     });
-    // Kích hoạt giãn dòng
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
 
@@ -314,7 +313,6 @@ function addNv() {
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
-/* HÀM TÍNH ĐIỂM: Tổng hợp tự động các giá trị điểm từ Menu Select */
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;

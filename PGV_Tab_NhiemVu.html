@@ -18,13 +18,13 @@
       background-color: transparent !important; 
       box-shadow: none !important; 
       border-radius: 0 !important;
-      padding: 2px 4px !important; 
+      padding: 4px 6px !important; 
       margin: 0 !important;
       font-size: 14px;
       resize: none; 
       overflow: hidden;
   }
-  #bangNviec textarea.form-control { min-height: 30px; line-height: 1.3; white-space: pre-wrap; cursor: default; }
+  #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -102,6 +102,13 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
 }
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; khoiTaoDropdownGiaoVien(dsGiaoVien); var nutLuu = document.querySelector('button[onclick="xulyLuuTam()"]'); var nutNop = document.getElementById("nutNopBcao"); if (nutLuu) nutLuu.disabled = true; if (nutNop) nutNop.disabled = true; }
+
+/* HÀM XỬ LÝ CO GIÃN ĐỘ CAO CHỮ (BỔ SUNG) */
+function cdang(ptu) { 
+    if(!ptu) return;
+    ptu.style.height = 'auto'; 
+    ptu.style.height = (ptu.scrollHeight) + 'px'; 
+}
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
@@ -230,6 +237,7 @@ function veBangNviec(db) {
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
         </tr>`; bg.append(dg);
     });
+    // Gọi hàm cdang để kích hoạt giãn độ cao
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
 

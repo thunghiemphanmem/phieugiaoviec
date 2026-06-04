@@ -5,18 +5,20 @@
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; overflow-x: auto;}
-  #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; }
-  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: 1px solid #dee2e6; vertical-align: middle; font-size: 13px; }
-  #khuGvChinh td { border: 1px solid #999; padding: 0 !important; vertical-align: middle; }
+  
+  /* ĐIỀU CHỈNH GIAO DIỆN BẢNG - BỎ VIỀN THEO YÊU CẦU */
+  #khuGvChinh table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; border: none; }
+  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; vertical-align: middle; font-size: 13px; }
+  #khuGvChinh td { border: none; border-bottom: 1px dashed #dee2e6; padding: 2px !important; vertical-align: middle; }
   
   #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
   #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
-  #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: #f8f9fa; }
+  #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
   #khuGvChinh .nutThem { margin-top: 5px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
-  #khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: #ffffff !important; cursor: not-allowed;color: #333;font-weight: normal;}
+  #khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: transparent !important; cursor: not-allowed; color: #333; font-weight: normal;}
 </style>
 
 <div id="khuGvChinh">
@@ -36,8 +38,8 @@
     </div>
 
     <div class="hopBang">
-      <table id="gvBangNv">
-        <thead><tr><th style="width: 40px;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 25%;">Nội dung công việc</th><th style="width: 80px;">Điểm T.Đa</th><th style="width: 110px;">TG Giao</th><th style="width: 12%;">Tiến độ</th><th style="width: 110px;">TG Hoàn thành</th><th style="width: 15%;">Người thực hiện</th><th style="width: 18%;">Ghi chú</th></tr></thead>
+      <table id="gvBangNv" class="table-hover">
+        <thead><tr><th style="width: 40px; border-radius: 4px 0 0 0;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 25%;">Nội dung công việc</th><th style="width: 80px;">Điểm T.Đa</th><th style="width: 110px;">TG Giao</th><th style="width: 12%;">Tiến độ</th><th style="width: 110px;">TG Hoàn thành</th><th style="width: 15%;">Người thực hiện</th><th style="width: 18%; border-radius: 0 4px 0 0;">Ghi chú</th></tr></thead>
         <tbody id="gvThanBang"></tbody>
       </table>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
@@ -52,7 +54,7 @@
     function gvTbaoNhanh(loai, tb) { if (typeof hienThongb === 'function') hienThongb(loai, tb); else alert(tb); }
 
     function gvTaiCanb() { 
-        gvDatTai(true, "Đang tải danh sách nhân sự (để giao việc)..."); 
+        gvDatTai(true, "Đang tải danh sách nhân sự..."); 
         khachApi.gvLaydsCanb(function(dl) { dsCanbgv = dl; gvLaydlGoc(); }, function(l) { gvTbaoNhanh('loi', "Lỗi tải nhân sự: " + l.message); gvDatTai(false); }); 
     }
 
@@ -82,9 +84,22 @@
         else { if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; }
     }
 
+    /* NHẬN DIỆN DÒNG TIÊU ĐỀ: Ẩn các thuộc tính nhập liệu phía sau */
+    function gvKiemTraTieuDe(ptu) {
+        let isHeader = ptu.value.trim().startsWith('*');
+        let tr = ptu.closest('tr');
+        if (isHeader) {
+            ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
+        } else {
+            ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
+        }
+        tr.querySelectorAll('.oDmaxGv, .oTGGiao, .oTdoGv, .oTGHoanThanh, .oNnghanGv, .oGchuGv').forEach(el => {
+            el.style.visibility = isHeader ? 'hidden' : 'visible';
+        });
+    }
+
     function gvVeDong(dong = null) {
         const tb = document.getElementById('gvThanBang'); const tr = document.createElement('tr');
-        // dong [0:TT, 1:Nội dung, 2:Điểm Max, 3:TG Giao, 4:Tiến độ, 5:TG HT, 6:Người TH, 7:Điểm ĐG(Ẩn), 8:Ghi chú]
         let ngnth = (dong && dong[6]) ? dong[6] : ""; let ngnthH = ngnth.toUpperCase(); let dcb = (dong && ngnth !== "") ? "disabled" : "";
         let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
         
@@ -103,7 +118,7 @@
         
         tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
         <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${bstt}" readonly></td>
-        <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
+        <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
         <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
         <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${dong?dong[3]||"":""}"></td>
         <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
@@ -112,6 +127,7 @@
         <td><textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea><input type="hidden" class="oDiemDgGv" value="${dong?dong[7]||"":""}"></td>`;
         
         tb.appendChild(tr);
+        gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
     }
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }

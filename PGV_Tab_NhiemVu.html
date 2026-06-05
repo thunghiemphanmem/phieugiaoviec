@@ -274,7 +274,8 @@ function veBangNviec(db) {
         let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
         let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        // BẮT SỰ KIỆN oninput (Gõ phím) VÀ onchange (Chọn select) ĐỂ ĐỐI CHIẾU NGAY
+        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" oninput="tinhtTdong()" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="">-- Trống --</option>`;
@@ -288,6 +289,7 @@ function veBangNviec(db) {
         }
 
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
+        
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
           <td ${colSp}>
@@ -303,7 +305,10 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
-          <td class="align-middle" style="${dsp}">${htmlDiem}</td>
+          <td class="align-middle" style="${dsp}">
+             ${htmlDiem}
+             <div class="mt-1 oXepLoaiDong text-center" style="font-size: 11px;"></div>
+          </td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
         </tr>`; bg.append(dg);
     });
@@ -314,13 +319,13 @@ function addNv() {
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) { var selectGv = document.getElementById("hopChonGv"); if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác."); return; } } }
     const bg = $('#bangNviec tbody'); if (bg.find('tr td').length === 1) { bg.empty(); } let sn = bg.find('tr.dongNv').length + 1;
-    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""><input type="hidden" class="dkXuatSac" value=""><input type="hidden" class="dkTot" value=""><input type="hidden" class="dkHoanThanh" value=""><input type="hidden" class="dkKhongHT" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
+    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""><input type="hidden" class="dkXuatSac" value=""><input type="hidden" class="dkTot" value=""><input type="hidden" class="dkHoanThanh" value=""><input type="hidden" class="dkKhongHT" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config="" oninput="tinhtTdong()" onchange="tinhtTdong()"><div class="mt-1 oXepLoaiDong text-center" style="font-size: 11px;"></div></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
 }
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
-/* HÀM THUẬT TOÁN ĐỐI CHIẾU XẾP LOẠI (minRank) */
+/* HÀM ĐỐI CHIẾU TIÊU CHÍ VÀ TÍNH ĐIỂM THỜI GIAN THỰC */
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -332,60 +337,73 @@ function tinhtTdong() {
     }
     
     let tongDiem = 0;
-    let minRank = 4; // Mặc định ở mức Xuất sắc, sẽ bị rớt xuống nếu có tiêu chí không đạt
+    let minRank = 4; 
     let hasEvaluation = false;
     
     const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv');
     
     cdt.forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
+        const xlDong = dg.querySelector('.oXepLoaiDong');
+        if (xlDong) xlDong.innerHTML = ''; 
+
         if (cg && cg.style.display !== 'none' && cg.value !== "") {
-            // Cộng điểm cơ học
             let diem = parseFloat(cg.value);
             if (!isNaN(diem)) tongDiem += diem;
             
-            // Trích xuất văn bản đã chọn từ Dropdown
             let selectedText = "";
             if (cg.tagName === "SELECT") {
                 selectedText = cg.options[cg.selectedIndex].text.trim();
             } else {
                 selectedText = cg.value.trim();
             }
+            let valScore = cg.value.trim();
             
-            // Lấy tiêu chí J, K, L, M
             let valJ = (dg.querySelector('.dkXuatSac')?.value || "").trim();
             let valK = (dg.querySelector('.dkTot')?.value || "").trim();
             let valL = (dg.querySelector('.dkHoanThanh')?.value || "").trim();
             let valM = (dg.querySelector('.dkKhongHT')?.value || "").trim();
             
-            // Nếu có cấu hình đối chiếu
             if (valJ !== "" || valK !== "" || valL !== "" || valM !== "") {
                 hasEvaluation = true;
-                let rowRank = 1; // Rớt xuống CHT nếu không khớp gì cả
+                let rowRank = 0; 
                 
-                const match = (val, txt) => {
-                    if (!val || !txt) return false;
-                    let v = val.toLowerCase().trim();
-                    let t = txt.toLowerCase().trim();
-                    return v === t || v.includes(t) || t.includes(v);
+                // Thuật toán quét chữ an toàn (Dò xem giá trị chọn có nằm trong tiêu chí J:M không)
+                const match = (val, txt1, txt2) => {
+                    if (!val) return false;
+                    let v = val.toLowerCase();
+                    let t1 = txt1.toLowerCase();
+                    let t2 = txt2.toLowerCase();
+                    
+                    if (v === t1 || v === t2) return true;
+                    if (v.includes(t1) && isNaN(t1)) return true;
+                    if (v.includes(t2) && isNaN(t2)) return true;
+                    
+                    let numPattern1 = new RegExp('\\b' + t1 + '\\b');
+                    let numPattern2 = new RegExp('\\b' + t2 + '\\b');
+                    if (!isNaN(t1) && t1 !== "" && numPattern1.test(v)) return true;
+                    if (!isNaN(t2) && t2 !== "" && numPattern2.test(v)) return true;
+                    
+                    return false;
                 };
                 
-                // Dò xem kết quả đã chọn thỏa mãn ở mức nào
-                if (match(valJ, selectedText)) rowRank = 4;
-                else if (match(valK, selectedText)) rowRank = 3;
-                else if (match(valL, selectedText)) rowRank = 2;
-                else if (match(valM, selectedText)) rowRank = 1;
-                else {
-                    // Thử khớp bằng số điểm nếu text bị lệch
-                    let valScore = cg.value.trim();
-                    if (match(valJ, valScore)) rowRank = 4;
-                    else if (match(valK, valScore)) rowRank = 3;
-                    else if (match(valL, valScore)) rowRank = 2;
-                    else if (match(valM, valScore)) rowRank = 1;
-                }
+                // Dò tìm từ Xuất sắc hạ dần xuống Không HT
+                if (match(valJ, selectedText, valScore)) rowRank = 4;
+                else if (match(valK, selectedText, valScore)) rowRank = 3;
+                else if (match(valL, selectedText, valScore)) rowRank = 2;
+                else if (match(valM, selectedText, valScore)) rowRank = 1;
                 
-                // Ép hạ bậc toàn hệ thống nếu có 1 tiêu chí bị điểm thấp
-                if (rowRank < minRank) minRank = rowRank;
+                if (rowRank > 0) {
+                    if (rowRank < minRank) minRank = rowRank;
+                    
+                    // Hiển thị trực tiếp đánh giá trên từng dòng
+                    if (xlDong) {
+                        if (rowRank === 4) xlDong.innerHTML = '<span class="badge bg-success">Xuất sắc</span>';
+                        else if (rowRank === 3) xlDong.innerHTML = '<span class="badge bg-primary">Tốt</span>';
+                        else if (rowRank === 2) xlDong.innerHTML = '<span class="badge bg-warning text-dark">Hoàn thành</span>';
+                        else if (rowRank === 1) xlDong.innerHTML = '<span class="badge bg-danger">Không HT</span>';
+                    }
+                }
             }
         }
     });
@@ -394,14 +412,12 @@ function tinhtTdong() {
     let xepLoai = "";
     
     if (!hasEvaluation) {
-        // Fallback an toàn nếu Quản trị viên chưa nhập Cột J:M vào GIAOVIEC
         if (diemCuoiCung >= 90) xepLoai = "Xuất sắc";
         else if (diemCuoiCung >= 70) xepLoai = "Tốt";
         else if (diemCuoiCung >= 50) xepLoai = "Hoàn thành";
         else if (diemCuoiCung > 0) xepLoai = "Không hoàn thành";
         else xepLoai = "Chưa đánh giá";
     } else {
-        // Xếp hạng dựa vào chuẩn đối chiếu minRank
         if (minRank === 4) xepLoai = "Xuất sắc";
         else if (minRank === 3) xepLoai = "Tốt";
         else if (minRank === 2) xepLoai = "Hoàn thành";

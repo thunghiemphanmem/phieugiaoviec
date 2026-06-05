@@ -5,7 +5,6 @@
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  /* THIẾT LẬP KẺ DỌC PHÂN CÁCH CÁC CỘT */
   #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
   #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
@@ -47,7 +46,7 @@
         <thead>
           <tr>
             <th style="width: 40px;">Xóa</th>
-            <th style="width: 40px;">TT</th>
+            <th style="width: 50px;">TT</th>
             <th style="width: 30%;">Nội dung công việc</th>
             <th style="width: 80px;">Điểm T.Đa</th>
             <th style="width: 110px;">TG Giao</th>
@@ -106,7 +105,7 @@
         let tdNoiDung = ptu.closest('td');
         if (isHeader) {
             ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
-            tdNoiDung.colSpan = 6; // Đã giảm từ 7 xuống 6 do bỏ 1 cột
+            tdNoiDung.colSpan = 6;
             tr.querySelectorAll('td:nth-child(n+4)').forEach(td => td.style.display = 'none');
         } else {
             ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
@@ -130,7 +129,7 @@
             lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
         });
         
-        let bstt = dong ? dong[0] : ddemDong; ddemDong = dong ? parseInt(bstt) + 1 : ddemDong + 1;
+        let bstt = dong ? dong[0] : ddemDong; ddemDong = ddemDong + 1;
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
         let vTgGiao = dong ? dong[3] || "" : "";
@@ -139,7 +138,7 @@
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
         
         tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
-        <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${bstt}" readonly></td>
+        <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
         <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
         <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
         <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
@@ -157,9 +156,8 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-    function gvThemDong() { ddemDong = document.querySelectorAll('#gvThanBang tr').length + 1; gvVeDong(null); }
-    function gvXoaDong(btn) { btn.closest('tr').remove(); gvDanhLaiStt(); }
-    function gvDanhLaiStt() { const sds = document.querySelectorAll('#gvThanBang tr'); let tb = 1; sds.forEach(d => { d.querySelector('.oSttGv').value = tb++; }); ddemDong = tb; }
+    function gvThemDong() { gvVeDong(null); }
+    function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {
         const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
@@ -167,7 +165,20 @@
         const gt = ptu.value; if (!gt) return; const gth = gt.toUpperCase(); const nm = document.getElementById('gvLocNam').value; 
         let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
         
-        const nvx = { stt: dong.querySelector('.oSttGv').value, ndung: ndg, diemmax: dong.querySelector('.oDmaxGv').value, tggiao: dong.querySelector('.oTGGiao').value, tdo: dong.querySelector('.oTdoGv').value, tght: dong.querySelector('.oTGHoanThanh').value, diemdg: dong.querySelector('.oDiemDgGv').value, gchu: dong.querySelector('.oGchuGv').value, ngnhan: gt, trangngnhan: gt, tenngnhan: tngn };
+        const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
+        
+        const nvx = { 
+            row_idx: row_idx,
+            stt: dong.querySelector('.oSttGv').value, 
+            ndung: ndg, 
+            diemmax: dong.querySelector('.oDmaxGv').value, 
+            tggiao: dong.querySelector('.oTGGiao').value, 
+            tdo: dong.querySelector('.oTdoGv').value, 
+            tght: dong.querySelector('.oTGHoanThanh').value, 
+            diemdg: dong.querySelector('.oDiemDgGv').value, 
+            gchu: dong.querySelector('.oGchuGv').value, 
+            ngnhan: gt, trangngnhan: gt, tenngnhan: tngn 
+        };
         const th_htai = document.getElementById('gvLocThang').value;
         let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
         gvDatTai(true, tbht); gvGoiMayChu(nm, th_htai, nvx, ptu, gth);
@@ -179,7 +190,21 @@
         document.querySelectorAll('#gvThanBang tr').forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
-                dsNviec.push({ stt: dong.querySelector('.oSttGv').value, ndung: ndg, diemmax: dong.querySelector('.oDmaxGv').value, tggiao: dong.querySelector('.oTGGiao').value, tdo: dong.querySelector('.oTdoGv').value, tght: dong.querySelector('.oTGHoanThanh').value, diemdg: dong.querySelector('.oDiemDgGv').value, gchu: dong.querySelector('.oGchuGv').value.trim(), ngnhan: dong.querySelector('.oNnghanGv').value, trangngnhan: dong.querySelector('.oNnghanGv').value, tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "" });
+                const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
+                dsNviec.push({ 
+                    row_idx: row_idx,
+                    stt: dong.querySelector('.oSttGv').value, 
+                    ndung: ndg, 
+                    diemmax: dong.querySelector('.oDmaxGv').value, 
+                    tggiao: dong.querySelector('.oTGGiao').value, 
+                    tdo: dong.querySelector('.oTdoGv').value, 
+                    tght: dong.querySelector('.oTGHoanThanh').value, 
+                    diemdg: dong.querySelector('.oDiemDgGv').value, 
+                    gchu: dong.querySelector('.oGchuGv').value.trim(), 
+                    ngnhan: dong.querySelector('.oNnghanGv').value, 
+                    trangngnhan: dong.querySelector('.oNnghanGv').value, 
+                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "" 
+                });
             }
         });
         if (dsNviec.length === 0) return;

@@ -26,6 +26,7 @@
   }
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
+  
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -134,9 +135,17 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     else { selectGv.style.display = "none"; selectGv.disabled = true; }
 }
 
-function xuLyCotE(giaTriE, danhSachGiaoVien) { cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; khoiTaoDropdownGiaoVien(dsGiaoVien); kiemTraQuyenTruyCap(); }
+function xuLyCotE(giaTriE, danhSachGiaoVien) { 
+    cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
+    khoiTaoDropdownGiaoVien(dsGiaoVien); 
+    kiemTraQuyenTruyCap(); 
+}
 
-function cdang(ptu) { if(!ptu) return; ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
+function cdang(ptu) { 
+    if(!ptu) return;
+    ptu.style.height = 'auto'; 
+    ptu.style.height = (ptu.scrollHeight) + 'px'; 
+}
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
@@ -146,10 +155,16 @@ function xulyLuuTam(ath = false, xltc = null) {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); return; } 
+            if (!isBGH) { 
+                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
+                return; 
+            } 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); return; }
+    if (!window.PGV_IS_SELF && !isBGH) { 
+        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
+        return; 
+    }
 
     const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
     
@@ -161,14 +176,12 @@ function xulyLuuTam(ath = false, xltc = null) {
         let tGiao = $(this).find('.nhapTgGiao').val() || "";
         let lTdo = $(this).find('.nhapTdo').val() || "";
         let tHt = $(this).find('.nhapTgHt').val() || "";
-        let nTH = $(this).find('.anNguoiTH').val() || "";
-        let gc = $(this).find('.anGhiChu').val() || "";
         
         let inpH = $(this).find('.chonKq');
-        // CHỈ LƯU NGUYÊN GIÁ TRỊ DO WEB GÁN VÀO (Không nối @@@ nữa)
         let valChon = inpH.val() || "";
         
-        dlbg.push([ntt, ndc, dMax, tGiao, lTdo, tHt, nTH, valChon, gc]);
+        // Lưu đúng cấu trúc: [STT, ND, Điểm Max, TG Giao, Tiến độ, TGHT] - các trường gchu/nguoith tự xử lý trên máy chủ
+        dlbg.push([ntt, ndc, tGiao, lTdo, valChon, tHt]);
     });
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
@@ -186,10 +199,14 @@ function nopBcaoChinh() {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); return; 
+            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
+            return; 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); return; }
+    if (!window.PGV_IS_SELF && !isBGH) { 
+        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); 
+        return; 
+    }
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
     if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
     hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
@@ -233,7 +250,7 @@ function veBangNviec(db) {
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
-        let sn = dong[0] || (chs + 1);
+        let sn = dong[0] || "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
         let nTH = dong[6] || ""; let valChon = dong[7] || ""; let gc = dong[8] || "";
         
@@ -251,6 +268,7 @@ function veBangNviec(db) {
         let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
         let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
 
+        // VẼ Ô NHẬP ĐIỂM DỰA VÀO CẤU HÌNH (valConfig)
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" value="${valChon}" style="color:red; ${dsp}" oninput="tinhtTdong()" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
@@ -258,14 +276,13 @@ function veBangNviec(db) {
             let opts = valConfig.split(",");
             opts.forEach(opt => {
                 let kv = opt.split("|"); let txt = kv[0].trim(); let val = kv.length > 1 ? kv[1].trim() : txt;
-                let isSel = (val === valChon) ? "selected" : "";
+                let isSel = (val === valChon || txt === valChon) ? "selected" : "";
                 htmlDiem += `<option value="${val}" ${isSel}>${txt}</option>`;
             });
             htmlDiem += `</select>`;
         }
 
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
-        
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
           <td ${colSp}>
@@ -344,7 +361,6 @@ function tinhtTdong() {
                 hasEvaluation = true;
                 let rowRank = 0; 
                 
-                // Thuật toán quét và cắt chuỗi điều kiện (Hỗ trợ ký tự ||)
                 const match = (condString, txt1, txt2) => {
                     if (!condString) return false;
                     let conditions = condString.split('||').map(s => s.trim().toLowerCase());
@@ -360,7 +376,6 @@ function tinhtTdong() {
                     });
                 };
                 
-                // Dò tìm từ Xuất sắc hạ dần xuống Không HT
                 if (match(valJ, selectedText, valScore)) rowRank = 4;
                 else if (match(valK, selectedText, valScore)) rowRank = 3;
                 else if (match(valL, selectedText, valScore)) rowRank = 2;
@@ -369,7 +384,6 @@ function tinhtTdong() {
                 if (rowRank > 0) {
                     if (rowRank < minRank) minRank = rowRank;
                     
-                    // Hiển thị trực tiếp đánh giá trên từng dòng
                     if (xlDong) {
                         if (rowRank === 4) xlDong.innerHTML = '<span class="badge bg-success">Xuất sắc</span>';
                         else if (rowRank === 3) xlDong.innerHTML = '<span class="badge bg-primary">Tốt</span>';

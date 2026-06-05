@@ -153,32 +153,48 @@ function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.
 
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
-    let maTrangDich = canbHientai.canb.ttrg; // Khởi tạo mã trang đích mặc định
-
-    if (cotETonTai) { 
-        var selectGv = document.getElementById("hopChonGv"); 
-        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (!isBGH) { 
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
-                return; 
-            }
-            // BGH đang thực hiện lưu cho giáo viên được chọn
-            maTrangDich = selectGv.value; 
-        } 
-    }
+    let maTrangDich = "";
     
-    if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
-        return; 
+    // 1. Lấy mã định danh hồ sơ mặc định (nếu có)
+    if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) {
+        maTrangDich = canbHientai.canb.ttrg;
     }
 
-    // Bổ sung chốt chặn: Kiểm tra nếu mã trang đích vẫn rỗng để tránh đẩy lỗi lên Server
-    if (!maTrangDich || maTrangDich.trim() === "") {
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Không xác định được hồ sơ trang tính đích để lưu.");
+    // 2. Xử lý logic chọn giáo viên từ danh sách thả xuống
+    var selectGv = document.getElementById("hopChonGv");
+    var dangChonGv = (cotETonTai && selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "");
+
+    if (dangChonGv) {
+        if (!isBGH) {
+            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác.");
+            return;
+        }
+        // Gán đích lưu là mã trang tính của giáo viên đang được chọn
+        maTrangDich = selectGv.value; 
+    } else {
+        // Xử lý tình huống BGH quên chưa chọn giáo viên
+        if (isBGH && (!maTrangDich || maTrangDich.trim() === "")) {
+            if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng lựa chọn một giáo viên từ danh sách thả xuống trước khi thực hiện Lưu nhật ký.");
+            return;
+        }
+    }
+
+    // 3. Kiểm tra tính hợp lệ về quyền thao tác
+    if (!window.PGV_IS_SELF && !isBGH && !dangChonGv) {
+        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền thao tác trên nhật ký này.");
         return;
     }
 
-    const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
+    // 4. Chốt chặn an toàn cuối cùng: Đảm bảo đã có đích đến
+    if (!maTrangDich || maTrangDich.trim() === "") {
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Hệ thống không xác định được hồ sơ trang tính đích để lưu dữ liệu.");
+        return;
+    }
+
+    // --- Bắt đầu quá trình thu thập và lưu dữ liệu ---
+    const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); 
+    if(ntl && !ath) ntl.disabled = true; 
+    if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
     
     let dlbg = [];
     $('#bangNviec tbody tr.dongNv').each(function() {
@@ -201,14 +217,35 @@ function xulyLuuTam(ath = false, xltc = null) {
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
     
-    // Cập nhật tham số ttrg thành biến maTrangDich đã được xử lý logic
-    const ht = { ttrg: maTrangDich, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
+    // Đóng gói thông tin gửi lên API với maTrangDich đã xử lý
+    const ht = { 
+        ttrg: maTrangDich, 
+        snnghi: $('#nhapSngayNghi').val() || 0, 
+        dthuong: $('#nhapDiemThuong').val() || 0, 
+        ldo: $('#nhapLdoNghi').val() || "", 
+        kienn: $('#nhapYkien').val() || "", 
+        bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), 
+        dlbang: dlbg, 
+        kq: chukq 
+    };
 
     khachApi.luuTam(ht, function(kq) {
-        if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();
-        if (kq && kq.ttai === 'tcong') { if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); } if(xltc) xltc(); } 
-        else { let ltc = kq ? kq.tbao : "Lỗi"; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); }
-    }, function(loi) { if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); });
+        if(!ath) anTaiDl(); 
+        if(ntl && !ath) ntl.disabled = false; 
+        if(typeof mokBcao === 'function') mokBcao();
+        
+        if (kq && kq.ttai === 'tcong') { 
+            if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); } 
+            if(xltc) xltc(); 
+        } else { 
+            let ltc = kq ? kq.tbao : "Lỗi"; 
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); 
+        }
+    }, function(loi) { 
+        if(!ath) anTaiDl(); 
+        if(ntl && !ath) ntl.disabled = false; 
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); 
+    });
 }
 
 function nopBcaoChinh() {

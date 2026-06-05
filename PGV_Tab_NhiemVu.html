@@ -26,7 +26,6 @@
   }
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
-  
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -135,17 +134,9 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     else { selectGv.style.display = "none"; selectGv.disabled = true; }
 }
 
-function xuLyCotE(giaTriE, danhSachGiaoVien) { 
-    cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
-    khoiTaoDropdownGiaoVien(dsGiaoVien); 
-    kiemTraQuyenTruyCap(); 
-}
+function xuLyCotE(giaTriE, danhSachGiaoVien) { cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; khoiTaoDropdownGiaoVien(dsGiaoVien); kiemTraQuyenTruyCap(); }
 
-function cdang(ptu) { 
-    if(!ptu) return;
-    ptu.style.height = 'auto'; 
-    ptu.style.height = (ptu.scrollHeight) + 'px'; 
-}
+function cdang(ptu) { if(!ptu) return; ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
@@ -155,16 +146,10 @@ function xulyLuuTam(ath = false, xltc = null) {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (!isBGH) { 
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
-                return; 
-            } 
+            if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); return; } 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
-        return; 
-    }
+    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); return; }
 
     const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
     
@@ -172,7 +157,6 @@ function xulyLuuTam(ath = false, xltc = null) {
     $('#bangNviec tbody tr.dongNv').each(function() {
         let ntt = $(this).find('.oStt').text() || "";
         let ndc = $(this).find('.nhapNdung').val() || "";
-        let dMax = $(this).find('.nhapDiemMax').val() || "";
         let tGiao = $(this).find('.nhapTgGiao').val() || "";
         let lTdo = $(this).find('.nhapTdo').val() || "";
         let tHt = $(this).find('.nhapTgHt').val() || "";
@@ -180,7 +164,6 @@ function xulyLuuTam(ath = false, xltc = null) {
         let inpH = $(this).find('.chonKq');
         let valChon = inpH.val() || "";
         
-        // Lưu đúng cấu trúc: [STT, ND, Điểm Max, TG Giao, Tiến độ, TGHT] - các trường gchu/nguoith tự xử lý trên máy chủ
         dlbg.push([ntt, ndc, tGiao, lTdo, valChon, tHt]);
     });
 
@@ -199,14 +182,10 @@ function nopBcaoChinh() {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
-            return; 
+            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); return; 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); 
-        return; 
-    }
+    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); return; }
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
     if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
     hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
@@ -260,6 +239,11 @@ function veBangNviec(db) {
         let lVal = dong[12] || "";
         let mVal = dong[13] || "";
         
+        // CƠ CHẾ DỌN RÁC: Nếu phiên bản cũ lưu nhầm chuỗi cấu hình (có dấu |) vào ô Kết quả cá nhân thì xóa nó đi để khỏi bị in ra dải chữ dài.
+        if (valChon.includes("|")) {
+            valChon = ""; 
+        }
+        
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
@@ -268,7 +252,6 @@ function veBangNviec(db) {
         let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
         let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
 
-        // VẼ Ô NHẬP ĐIỂM DỰA VÀO CẤU HÌNH (valConfig)
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" value="${valChon}" style="color:red; ${dsp}" oninput="tinhtTdong()" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
@@ -283,6 +266,7 @@ function veBangNviec(db) {
         }
 
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
+        
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
           <td ${colSp}>
@@ -318,7 +302,6 @@ function addNv() {
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
-/* HÀM ĐỐI CHIẾU TIÊU CHÍ VÀ TÍNH ĐIỂM THỜI GIAN THỰC ĐÃ NÂNG CẤP ĐỌC CÚ PHÁP HOẶC (||) */
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;

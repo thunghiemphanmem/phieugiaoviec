@@ -153,18 +153,29 @@ function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.
 
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
+    let maTrangDich = canbHientai.canb.ttrg; // Khởi tạo mã trang đích mặc định
+
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             if (!isBGH) { 
                 if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
                 return; 
-            } 
+            }
+            // BGH đang thực hiện lưu cho giáo viên được chọn
+            maTrangDich = selectGv.value; 
         } 
     }
+    
     if (!window.PGV_IS_SELF && !isBGH) { 
         if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
         return; 
+    }
+
+    // Bổ sung chốt chặn: Kiểm tra nếu mã trang đích vẫn rỗng để tránh đẩy lỗi lên Server
+    if (!maTrangDich || maTrangDich.trim() === "") {
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Không xác định được hồ sơ trang tính đích để lưu.");
+        return;
     }
 
     const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
@@ -189,7 +200,9 @@ function xulyLuuTam(ath = false, xltc = null) {
     });
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
-    const ht = { ttrg: canbHientai.canb.ttrg, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
+    
+    // Cập nhật tham số ttrg thành biến maTrangDich đã được xử lý logic
+    const ht = { ttrg: maTrangDich, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
 
     khachApi.luuTam(ht, function(kq) {
         if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();

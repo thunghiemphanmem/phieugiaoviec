@@ -26,7 +26,6 @@
   }
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
-  
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -135,17 +134,9 @@ function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     else { selectGv.style.display = "none"; selectGv.disabled = true; }
 }
 
-function xuLyCotE(giaTriE, danhSachGiaoVien) { 
-    cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; 
-    khoiTaoDropdownGiaoVien(dsGiaoVien); 
-    kiemTraQuyenTruyCap(); 
-}
+function xuLyCotE(giaTriE, danhSachGiaoVien) { cotETonTai = true; giaTriCotE = giaTriE; dsGiaoVien = danhSachGiaoVien || []; khoiTaoDropdownGiaoVien(dsGiaoVien); kiemTraQuyenTruyCap(); }
 
-function cdang(ptu) { 
-    if(!ptu) return;
-    ptu.style.height = 'auto'; 
-    ptu.style.height = (ptu.scrollHeight) + 'px'; 
-}
+function cdang(ptu) { if(!ptu) return; ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
@@ -155,16 +146,10 @@ function xulyLuuTam(ath = false, xltc = null) {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (!isBGH) { 
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
-                return; 
-            } 
+            if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); return; } 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
-        return; 
-    }
+    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); return; }
 
     const ntl = document.querySelector('button[onclick="xulyLuuTam()"]'); if(ntl && !ath) ntl.disabled = true; if(!ath) hienTaiDl("✨ Đang ghi nhớ kết quả...");
     
@@ -180,11 +165,10 @@ function xulyLuuTam(ath = false, xltc = null) {
         let gc = $(this).find('.anGhiChu').val() || "";
         
         let inpH = $(this).find('.chonKq');
+        // CHỈ LƯU NGUYÊN GIÁ TRỊ DO WEB GÁN VÀO (Không nối @@@ nữa)
         let valChon = inpH.val() || "";
-        let cfgGoc = inpH.attr('data-config') || "";
-        let diemLuu = cfgGoc.includes("|") ? (valChon + "@@@" + cfgGoc) : valChon;
         
-        dlbg.push([ntt, ndc, dMax, tGiao, lTdo, tHt, nTH, diemLuu, gc]);
+        dlbg.push([ntt, ndc, dMax, tGiao, lTdo, tHt, nTH, valChon, gc]);
     });
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
@@ -202,14 +186,10 @@ function nopBcaoChinh() {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
-            return; 
+            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); return; 
         } 
     }
-    if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); 
-        return; 
-    }
+    if (!window.PGV_IS_SELF && !isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); return; }
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
     if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
     hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
@@ -255,16 +235,13 @@ function veBangNviec(db) {
     db.forEach((dong, chs) => {
         let sn = dong[0] || (chs + 1);
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
-        let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
+        let nTH = dong[6] || ""; let valChon = dong[7] || ""; let gc = dong[8] || "";
         
-        let jVal = dong[9] || "";
-        let kVal = dong[10] || "";
-        let lVal = dong[11] || "";
-        let mVal = dong[12] || "";
-
-        let valChon = ""; let valConfig = rawH;
-        if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
-        else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
+        let valConfig = dong[9] || "";
+        let jVal = dong[10] || "";
+        let kVal = dong[11] || "";
+        let lVal = dong[12] || "";
+        let mVal = dong[13] || "";
         
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
@@ -274,10 +251,9 @@ function veBangNviec(db) {
         let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
         let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
 
-        // BẮT SỰ KIỆN oninput (Gõ phím) VÀ onchange (Chọn select) ĐỂ ĐỐI CHIẾU NGAY
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" oninput="tinhtTdong()" onchange="tinhtTdong()">`;
+        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" value="${valChon}" style="color:red; ${dsp}" oninput="tinhtTdong()" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="">-- Trống --</option>`;
             let opts = valConfig.split(",");
             opts.forEach(opt => {
@@ -319,13 +295,13 @@ function addNv() {
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) { var selectGv = document.getElementById("hopChonGv"); if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác."); return; } } }
     const bg = $('#bangNviec tbody'); if (bg.find('tr td').length === 1) { bg.empty(); } let sn = bg.find('tr.dongNv').length + 1;
-    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""><input type="hidden" class="dkXuatSac" value=""><input type="hidden" class="dkTot" value=""><input type="hidden" class="dkHoanThanh" value=""><input type="hidden" class="dkKhongHT" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config="" oninput="tinhtTdong()" onchange="tinhtTdong()"><div class="mt-1 oXepLoaiDong text-center" style="font-size: 11px;"></div></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
+    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""><input type="hidden" class="dkXuatSac" value=""><input type="hidden" class="dkTot" value=""><input type="hidden" class="dkHoanThanh" value=""><input type="hidden" class="dkKhongHT" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" oninput="tinhtTdong()" onchange="tinhtTdong()"><div class="mt-1 oXepLoaiDong text-center" style="font-size: 11px;"></div></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
 }
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
-/* HÀM ĐỐI CHIẾU TIÊU CHÍ VÀ TÍNH ĐIỂM THỜI GIAN THỰC */
+/* HÀM ĐỐI CHIẾU TIÊU CHÍ VÀ TÍNH ĐIỂM THỜI GIAN THỰC ĐÃ NÂNG CẤP ĐỌC CÚ PHÁP HOẶC (||) */
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -368,23 +344,20 @@ function tinhtTdong() {
                 hasEvaluation = true;
                 let rowRank = 0; 
                 
-                // Thuật toán quét chữ an toàn (Dò xem giá trị chọn có nằm trong tiêu chí J:M không)
-                const match = (val, txt1, txt2) => {
-                    if (!val) return false;
-                    let v = val.toLowerCase();
+                // Thuật toán quét và cắt chuỗi điều kiện (Hỗ trợ ký tự ||)
+                const match = (condString, txt1, txt2) => {
+                    if (!condString) return false;
+                    let conditions = condString.split('||').map(s => s.trim().toLowerCase());
                     let t1 = txt1.toLowerCase();
                     let t2 = txt2.toLowerCase();
                     
-                    if (v === t1 || v === t2) return true;
-                    if (v.includes(t1) && isNaN(t1)) return true;
-                    if (v.includes(t2) && isNaN(t2)) return true;
-                    
-                    let numPattern1 = new RegExp('\\b' + t1 + '\\b');
-                    let numPattern2 = new RegExp('\\b' + t2 + '\\b');
-                    if (!isNaN(t1) && t1 !== "" && numPattern1.test(v)) return true;
-                    if (!isNaN(t2) && t2 !== "" && numPattern2.test(v)) return true;
-                    
-                    return false;
+                    return conditions.some(c => {
+                        if (c === "") return false;
+                        if (t1 === c || t2 === c) return true;
+                        if (c.includes('%') && (t1.includes(c) || t2.includes(c))) return true;
+                        if (!isNaN(c) && (t1 === c || t2 === c)) return true;
+                        return false;
+                    });
                 };
                 
                 // Dò tìm từ Xuất sắc hạ dần xuống Không HT

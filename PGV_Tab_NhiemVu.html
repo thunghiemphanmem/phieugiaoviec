@@ -27,7 +27,6 @@
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
   
-  /* ĐẢM BẢO CHỮ MỜ TRÔNG RÕ RÀNG HƠN CHO MỤC ĐÍCH PLACEHOLDER */
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -58,8 +57,6 @@
      </div>
      <div class="d-flex align-items-center justify-content-end gap-2" style="flex: auto;">
         <select id="hopChonGv" class="form-select form-select-sm border-primary fw-bold text-primary shadow-sm text-nowrap w-auto" style="display: none; height: 30px; font-size: 12px;" onchange="kiemTraQuyenTruyCap()"><option value="">-- Lựa chọn giáo viên --</option></select>
-        
-        <button id="nutTaoCaNhan" class="btn btn-warning btn-sm fw-bold align-items-center px-3 text-nowrap w-auto" onclick="xuLyTaoTrangCaNhan()" style="display: none; height: 30px; justify-content: center;"><i class="bi bi-person-plus me-1"></i> Cá nhân</button>
         
         <button id="nutLuuTam" class="btn btn-success btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto" onclick="xulyLuuTam()" style="height: 30px; justify-content: center;"><i class="bi bi-save me-1"></i> Lưu nhật ký</button>
         <button id="nutNopBcao" class="btn btn-primary btn-sm fw-bold d-flex align-items-center px-3 text-nowrap w-auto" onclick="nopBcaoChinh()" disabled style="height: 30px; justify-content: center;"><i class="bi bi-send me-1"></i> Nộp báo cáo</button>
@@ -98,27 +95,12 @@ function kiemTraLaBGH() {
     return false;
 }
 
-// BỔ SUNG LOGIC: Xử lý hiển thị nút Cá nhân và vô hiệu hóa tính năng lưu khi chưa tạo trang
 function kiemTraQuyenTruyCap() {
     var selectGv = document.getElementById("hopChonGv"); 
     var nutLuu = document.getElementById("nutLuuTam"); 
     var nutNop = document.getElementById("nutNopBcao");
     var diemThuong = document.getElementById("nhapDiemThuong");
-    var nutCaNhan = document.getElementById("nutTaoCaNhan");
     var isBGH = kiemTraLaBGH();
-
-    var laChuaTao = (typeof canbHientai !== 'undefined' && canbHientai.chuaTaoTrang === true);
-
-    // Kiểm soát hiển thị nút Cá nhân
-    if (nutCaNhan) {
-        if (laChuaTao && (!cotETonTai || (selectGv && selectGv.value === ""))) {
-            nutCaNhan.style.display = "flex";
-            nutCaNhan.classList.add("d-flex");
-        } else {
-            nutCaNhan.style.display = "none";
-            nutCaNhan.classList.remove("d-flex");
-        }
-    }
 
     if (cotETonTai && selectGv && selectGv.style.display !== "none") {
         var daChon = selectGv.value && selectGv.value !== "";
@@ -134,15 +116,15 @@ function kiemTraQuyenTruyCap() {
                 if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của giáo viên khác. Chỉ giáo viên đó hoặc Ban Giám hiệu mới được lưu.'); 
             }
         } else { 
-            if (nutLuu) nutLuu.disabled = laChuaTao; 
-            if (nutNop && mbcMo) nutNop.disabled = laChuaTao; 
-            if (diemThuong) diemThuong.disabled = laChuaTao;
+            if (nutLuu) nutLuu.disabled = false; 
+            if (nutNop && mbcMo) nutNop.disabled = false; 
+            if (diemThuong) diemThuong.disabled = false;
         }
     } else { 
         if (window.PGV_IS_SELF || isBGH) { 
-            if (nutLuu) nutLuu.disabled = laChuaTao; 
-            if (nutNop && mbcMo) nutNop.disabled = laChuaTao; 
-            if (diemThuong) diemThuong.disabled = laChuaTao;
+            if (nutLuu) nutLuu.disabled = false; 
+            if (nutNop && mbcMo) nutNop.disabled = false; 
+            if (diemThuong) diemThuong.disabled = false;
         } 
     }
 }
@@ -169,28 +151,6 @@ function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHe
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
 
-// BỔ SUNG: Hàm xử lý gọi Máy chủ tạo trang cá nhân
-function xuLyTaoTrangCaNhan() {
-    if (typeof hienTaiDl === 'function') hienTaiDl("🚀 Đang khởi tạo không gian làm việc cá nhân...");
-    // Gọi chuẩn HtmlService tới Server
-    google.script.run
-        .withSuccessHandler(function(kq) {
-            if (typeof anTaiDl === 'function') anTaiDl();
-            if (kq.ttai === 'tcong') {
-                if (typeof hienThongb === 'function') hienThongb('tcong', kq.tbao);
-                // Load lại dữ liệu hệ thống sau khi tạo trang thành công
-                if (typeof taiDlBdau === 'function') taiDlBdau(); 
-            } else {
-                if (typeof hienThongb === 'function') hienThongb('loi', kq.tbao);
-            }
-        })
-        .withFailureHandler(function(loi) {
-            if (typeof anTaiDl === 'function') anTaiDl();
-            if (typeof hienThongb === 'function') hienThongb('loi', 'Hệ thống báo lỗi: ' + loi.message);
-        })
-        .pgv_chu_dong_tao_trang(window.PGV_ID_TC);
-}
-
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
     let maTrangDich = (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.canb) ? canbHientai.canb.ttrg : "";
@@ -205,7 +165,7 @@ function xulyLuuTam(ath = false, xltc = null) {
             maTrangDich = selectGv.value;
         } else if (isBGH) {
             if (!maTrangDich || maTrangDich.trim() === "") {
-                if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng lựa chọn một giáo viên từ danh sách để lưu nhật ký.");
+                if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một giáo viên từ danh sách trước khi lưu.");
                 return;
             }
         }
@@ -217,7 +177,8 @@ function xulyLuuTam(ath = false, xltc = null) {
     }
 
     if (!maTrangDich || maTrangDich.trim() === "") {
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: Không xác định được mã trang tính đích.");
+        let thongBaoLoi = isBGH ? "Đồng chí vui lòng chọn một giáo viên từ danh sách để lưu nhật ký." : "Lỗi hệ thống: Trang dữ liệu đích không xác định. Đồng chí kiểm tra lại Cột B tại Trang Khai Báo.";
+        if (typeof hienThongb === 'function') hienThongb('loi', thongBaoLoi);
         return;
     }
 
@@ -268,7 +229,7 @@ function nopBcaoChinh() {
         return; 
     }
     if (!maTrangDich || maTrangDich.trim() === "") {
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Không xác định được mã hồ sơ để nộp báo cáo.");
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Không xác định được mã hồ sơ để nộp báo cáo. Hãy kiểm tra lại khai báo.");
         return;
     }
 
@@ -289,7 +250,7 @@ function nopBcaoChinh() {
     });
 }
 
-function mokBcao() { mbcMo = true; const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none' && !(typeof canbHientai !== 'undefined' && canbHientai.chuaTaoTrang === true)) { nt.disabled = false; } }
+function mokBcao() { mbcMo = true; const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') { nt.disabled = false; } }
 function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') nt.disabled = true; } }
 
 function ktraAnHienTieuDe(ptu) {

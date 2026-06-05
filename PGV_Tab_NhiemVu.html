@@ -27,7 +27,6 @@
   #bangNviec textarea.form-control { min-height: 35px; line-height: 1.4; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
   
-  /* ĐẢM BẢO CHỮ MỜ TRÔNG RÕ RÀNG HƠN CHO MỤC ĐÍCH PLACEHOLDER */
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
   .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
@@ -250,7 +249,7 @@ function ktraAnHienTieuDe(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
+    if (!db || db.length === 0) { bg.append('<tr><td colspan="8" class="text-center text-muted py-3 small">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
@@ -258,6 +257,11 @@ function veBangNviec(db) {
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
         let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         
+        let jVal = dong[9] || "";
+        let kVal = dong[10] || "";
+        let lVal = dong[11] || "";
+        let mVal = dong[12] || "";
+
         let valChon = ""; let valConfig = rawH;
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
         else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
@@ -267,7 +271,6 @@ function veBangNviec(db) {
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
         let colSp = isTitle ? 'colspan="7"' : '';
 
-        // BỘ LỌC CHUYỂN dd/mm/yyyy THÀNH CHỮ MỜ PLACEHOLDER
         let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
         let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
 
@@ -291,6 +294,10 @@ function veBangNviec(db) {
               <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc}</textarea>
               <input type="hidden" class="anNguoiTH" value="${nTH}">
               <input type="hidden" class="anGhiChu" value="${gc}">
+              <input type="hidden" class="dkXuatSac" value="${jVal}">
+              <input type="hidden" class="dkTot" value="${kVal}">
+              <input type="hidden" class="dkHoanThanh" value="${lVal}">
+              <input type="hidden" class="dkKhongHT" value="${mVal}">
           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
@@ -307,12 +314,13 @@ function addNv() {
     var isBGH = kiemTraLaBGH();
     if (cotETonTai) { var selectGv = document.getElementById("hopChonGv"); if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác."); return; } } }
     const bg = $('#bangNviec tbody'); if (bg.find('tr td').length === 1) { bg.empty(); } let sn = bg.find('tr.dongNv').length + 1;
-    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
+    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""><input type="hidden" class="dkXuatSac" value=""><input type="hidden" class="dkTot" value=""><input type="hidden" class="dkHoanThanh" value=""><input type="hidden" class="dkKhongHT" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
 }
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
+/* HÀM THUẬT TOÁN ĐỐI CHIẾU XẾP LOẠI (minRank) */
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -324,18 +332,88 @@ function tinhtTdong() {
     }
     
     let tongDiem = 0;
+    let minRank = 4; // Mặc định ở mức Xuất sắc, sẽ bị rớt xuống nếu có tiêu chí không đạt
+    let hasEvaluation = false;
+    
     const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv');
     
     cdt.forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
         if (cg && cg.style.display !== 'none' && cg.value !== "") {
+            // Cộng điểm cơ học
             let diem = parseFloat(cg.value);
             if (!isNaN(diem)) tongDiem += diem;
+            
+            // Trích xuất văn bản đã chọn từ Dropdown
+            let selectedText = "";
+            if (cg.tagName === "SELECT") {
+                selectedText = cg.options[cg.selectedIndex].text.trim();
+            } else {
+                selectedText = cg.value.trim();
+            }
+            
+            // Lấy tiêu chí J, K, L, M
+            let valJ = (dg.querySelector('.dkXuatSac')?.value || "").trim();
+            let valK = (dg.querySelector('.dkTot')?.value || "").trim();
+            let valL = (dg.querySelector('.dkHoanThanh')?.value || "").trim();
+            let valM = (dg.querySelector('.dkKhongHT')?.value || "").trim();
+            
+            // Nếu có cấu hình đối chiếu
+            if (valJ !== "" || valK !== "" || valL !== "" || valM !== "") {
+                hasEvaluation = true;
+                let rowRank = 1; // Rớt xuống CHT nếu không khớp gì cả
+                
+                const match = (val, txt) => {
+                    if (!val || !txt) return false;
+                    let v = val.toLowerCase().trim();
+                    let t = txt.toLowerCase().trim();
+                    return v === t || v.includes(t) || t.includes(v);
+                };
+                
+                // Dò xem kết quả đã chọn thỏa mãn ở mức nào
+                if (match(valJ, selectedText)) rowRank = 4;
+                else if (match(valK, selectedText)) rowRank = 3;
+                else if (match(valL, selectedText)) rowRank = 2;
+                else if (match(valM, selectedText)) rowRank = 1;
+                else {
+                    // Thử khớp bằng số điểm nếu text bị lệch
+                    let valScore = cg.value.trim();
+                    if (match(valJ, valScore)) rowRank = 4;
+                    else if (match(valK, valScore)) rowRank = 3;
+                    else if (match(valL, valScore)) rowRank = 2;
+                    else if (match(valM, valScore)) rowRank = 1;
+                }
+                
+                // Ép hạ bậc toàn hệ thống nếu có 1 tiêu chí bị điểm thấp
+                if (rowRank < minRank) minRank = rowRank;
+            }
         }
     });
     
     let diemCuoiCung = tongDiem + dc;
-    let txtKq = `${diemCuoiCung} điểm`;
+    let xepLoai = "";
+    
+    if (!hasEvaluation) {
+        // Fallback an toàn nếu Quản trị viên chưa nhập Cột J:M vào GIAOVIEC
+        if (diemCuoiCung >= 90) xepLoai = "Xuất sắc";
+        else if (diemCuoiCung >= 70) xepLoai = "Tốt";
+        else if (diemCuoiCung >= 50) xepLoai = "Hoàn thành";
+        else if (diemCuoiCung > 0) xepLoai = "Không hoàn thành";
+        else xepLoai = "Chưa đánh giá";
+    } else {
+        // Xếp hạng dựa vào chuẩn đối chiếu minRank
+        if (minRank === 4) xepLoai = "Xuất sắc";
+        else if (minRank === 3) xepLoai = "Tốt";
+        else if (minRank === 2) xepLoai = "Hoàn thành";
+        else xepLoai = "Không hoàn thành";
+    }
+    
+    let txtKq = "";
+    if (diemCuoiCung === 0 && tongDiem === 0 && !hasEvaluation) {
+        txtKq = "Chưa có kết quả";
+    } else {
+        txtKq = `${xepLoai}: ${diemCuoiCung} điểm`;
+    }
     
     const qht = document.getElementById('chuKqHthi');
     if (qht) { 

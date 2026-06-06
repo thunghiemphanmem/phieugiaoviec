@@ -122,8 +122,11 @@
     </div>
     <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
     <div class="text-end text-nowrap" style="flex: 2;"> 
-     
+      <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
+         <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
+         <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
       </div>
+      <!-- Đã loại bỏ hoàn toàn ô Kết quả bên cạnh -->
     </div>
   </div>
 
@@ -385,7 +388,7 @@ function ktraAnHienTieuDe(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
+    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.<tr></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
@@ -450,7 +453,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </table>`; bg.append(dg);
+        </tr>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -532,7 +535,6 @@ function tinhtTdong() {
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
-        // Chỉ tính những dòng có điểm đánh giá hiển thị (không phải dòng tiêu đề)
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
             const maxInp = dg.querySelector('.nhapDiemMax');
@@ -540,8 +542,6 @@ function tinhtTdong() {
             if (cg.value !== "") {
                 soDaDanhGia++;
                 let valThuc = cg.value.trim();
-                let txtHienThi = valThuc;
-                if (cg.tagName === "SELECT") { let selOpt = cg.options[cg.selectedIndex]; if (selOpt) txtHienThi = selOpt.text; }
                 let diem = parseFloat(valThuc); if (!isNaN(diem)) tongDiem += diem;
                 
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
@@ -571,7 +571,6 @@ function tinhtTdong() {
     } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        // Đã đánh giá hết tất cả nhiệm vụ
         if (hasJMLogic) {
             if (minRank === 4) xpl = "Xuất sắc";
             else if (minRank === 3) xpl = "Hoàn thành tốt";
@@ -587,21 +586,14 @@ function tinhtTdong() {
         }
     }
     
+    // Không còn hiển thị kết quả lên giao diện vì đã bỏ ô Kết quả, nhưng vẫn giữ biến để dùng trong API nếu cần
+    // Các menu dọc (nếu có) vẫn được cập nhật qua selector '#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc'
     let txtKq = xpl;
-    // Chỉ hiển thị điểm nếu đã đánh giá hết và không phải "Chưa giao việc"/"Chưa đánh giá"
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
-    const qht = document.getElementById('chuKqHthi'); 
-    if (qht) { 
-        qht.innerText = txtKq; 
-        qht.className = "fw-bold epMotDong"; 
-        if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
-        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
-        else qht.classList.add("text-danger"); 
-    }
-    
+    // Cập nhật cho các menu dọc (nếu tồn tại)
     document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc').forEach(el => {
         el.innerText = txtKq;
         el.className = "epMotDong"; 
@@ -622,7 +614,6 @@ function khoiTaoTheoQuyen() {
         if(selectGv) selectGv.style.display = 'none';
         kiemTraQuyenTruyCap();
     }
-    // KHÔNG gọi taiDlBdau ở đây. Hệ thống sẽ tự gọi từ bên ngoài.
 }
 
 $(document).ready(function() { 

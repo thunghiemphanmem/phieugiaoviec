@@ -300,7 +300,6 @@
                 if (inpL) vColL = inpL.value;
                 const inpM = dongCuoi.querySelector('.oColM');
                 if (inpM) vColM = inpM.value;
-                // Điểm đánh giá cũng có thể copy nếu cần
                 const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
                 if (inpDiem) vDiemDg = inpDiem.value;
             }
@@ -336,10 +335,12 @@
         const lastRow = tbody.find('tr.dongNv:last');
 
         if (lastRow.length === 0) {
+            // Nếu không có dòng nào, tạo dòng mới trống
             gvVeDong(null);
             return;
         }
 
+        // Clone dòng cuối cùng
         var $newRow = lastRow.clone();
 
         // Reset các trường nhập liệu hiển thị
@@ -351,23 +352,24 @@
         $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
         
-        // Reset cột H (điểm đánh giá) nhưng giữ nguyên cấu trúc (data-config)
+        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc nếu có select
         var $chonKq = $newRow.find('.chonKq');
-        if ($chonKq.length) $chonKq.val(''); // Chọn lại option rỗng
+        if ($chonKq.length) $chonKq.val('');
         
-        // KHÔNG reset các hidden input J, K, L, M - giữ nguyên giá trị từ dòng trước
-        // (đã được clone tự động, nhưng để chắc chắn, ta copy lại từ dòng cuối cùng hiện tại)
-        // Lấy giá trị từ dòng trước (lastRow) để đảm bảo
+        // KHÔNG reset các hidden input J, K, L, M - nhưng cần đảm bảo chúng có giá trị từ dòng trên
+        // Lấy giá trị từ dòng cuối cùng hiện tại (lastRow) để gán lại
         const lastJ = lastRow.find('.oColJ').val() || "";
         const lastK = lastRow.find('.oColK').val() || "";
         const lastL = lastRow.find('.oColL').val() || "";
         const lastM = lastRow.find('.oColM').val() || "";
+        
+        // Tìm các hidden input trong dòng mới và gán giá trị
         $newRow.find('.oColJ').val(lastJ);
         $newRow.find('.oColK').val(lastK);
         $newRow.find('.oColL').val(lastL);
         $newRow.find('.oColM').val(lastM);
         
-        // Reset style
+        // Reset style (xóa màu nền)
         $newRow.find('input, select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
@@ -383,12 +385,13 @@
 
         tbody.append($newRow);
         
+        // Tự động điều chỉnh chiều cao textarea
         $newRow.find('textarea').each(function() { gvCoDan(this); });
     }
     
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
-    // Lấy dữ liệu từ dòng để gửi lên server (bao gồm cả các cột J..M)
+    // Hàm lấy dữ liệu từ một dòng (bao gồm các cột J..M)
     function gvLayDuLieuDong(dong) {
         return {
             stt: dong.querySelector('.oSttGv').value,

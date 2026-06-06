@@ -10,23 +10,26 @@
   #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; border-collapse: collapse; border: none; }
   #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; font-size: 13px; border: none; border-right: 1px solid #7ea8f8;}
   #bangNviec th:last-child { border-right: none; }
-  #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1.3px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
+  #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
   #bangNviec td:last-child { border-right: none !important; }
 
+  /* BỔ SUNG KHỐNG CHẾ ĐỘ RỘNG VÀ ÉP XUỐNG DÒNG CHO Ô DROP */
   #bangNviec textarea.form-control, #bangNviec input.form-control, #bangNviec select.form-select { 
-    border: none !important; 
-    background-color: transparent !important; 
-    box-shadow: none !important; 
-    border-radius: 0 !important;
-    padding: 4px 3px !important; 
-    margin: 0 !important;
-    font-size: 14px;
-    line-height: 1.3 !important; /* Bổ sung dòng này để ép khoảng cách dòng nhỏ lại trên toàn bảng */
-    resize: none; 
-    overflow: hidden;
-}
-  #bangNviec textarea.form-control { min-height: 35px; line-height: 1; white-space: pre-wrap; cursor: default; }
-  #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; height: 30px; font-weight: bold; }
+      border: none !important; 
+      background-color: transparent !important; 
+      box-shadow: none !important; 
+      border-radius: 0 !important;
+      padding: 4px 6px !important; 
+      margin: 0 !important;
+      font-size: 14px;
+      line-height: 1.15 !important; 
+      resize: none; 
+      overflow: hidden;
+      white-space: normal !important; /* Ép chữ tràn xuống dòng thay vì kéo dài vô tận */
+      word-wrap: break-word !important; /* Cho phép bẻ gãy từ dài nếu quá khung */
+  }
+  #bangNviec textarea.form-control { min-height: 35px; white-space: pre-wrap; cursor: default; }
+  #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; font-weight: bold; height: auto; min-height: 30px; }
   
   #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
 
@@ -295,14 +298,14 @@ function veBangNviec(db) {
 
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
-            htmlDiem += `<option value="" style="text-align: left;">-- Trống --</option>`;
+            /* Giới hạn độ rộng khung Drop bằng max-width: 100% để không phá vỡ bảng */
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
+            htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
             let optsArray = [];
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
-                // Thuật toán dọn dẹp các dòng trống và nối các câu bị gãy do Alt+Enter
                 let lines = valConfig.split("\n");
                 let currentOpt = "";
                 for (let i = 0; i < lines.length; i++) {
@@ -320,13 +323,13 @@ function veBangNviec(db) {
 
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
-                // KHỬ SẠCH MỌI KÝ TỰ XUỐNG DÒNG ẨN (\r, \n) gây ra khoảng trắng thưa thớt
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
-                    htmlDiem += `<option value="${val}" ${isSel} style="text-align: left; padding: 0px; margin: 0px;">${txt}</option>`;
+                    /* Gắn thêm thuộc tính title="" để người dùng có thể hover chuột xem toàn văn chữ bị ẩn */
+                    htmlDiem += `<option value="${val}" ${isSel} title="${txt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
                 }
             });
             htmlDiem += `</select>`;

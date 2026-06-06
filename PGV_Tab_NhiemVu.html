@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Nhiệm vụ của tôi - Bảng đánh giá</title>
-    <!-- Bootstrap 5 Icons & CSS (giữ nguyên giao diện hệ thống) -->
+    <!-- Bootstrap 5 Icons & CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
-      /* ---------- GIỮ NGUYÊN CÁC STYLE CŨ (CHỈ SỬA LẠI DROPDOWN KHUNG GIỚI HẠN) ---------- */
+      /* ---------- GIỮ NGUYÊN CÁC STYLE CŨ ---------- */
       .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
       .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
       .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
@@ -24,7 +24,6 @@
       #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
       #bangNviec td:last-child { border-right: none !important; }
 
-      /* Các ô input / textarea mặc định không viền (giữ nguyên cũ) */
       #bangNviec textarea.form-control, 
       #bangNviec input.form-control, 
       #bangNviec select.form-select { 
@@ -43,7 +42,6 @@
       }
       
       /* ========== NÂNG CẤP: KHUNG GIỚI HẠN CHO TẤT CẢ DROPDOWN (ĐIỂM ĐÁNH GIÁ) ========== */
-      /* Áp dụng viền, nền trắng, bo góc rõ ràng cho tất cả select và input thuộc cột điểm đánh giá */
       #bangNviec select.form-select.chonKq,
       #bangNviec input.chonKq {
           border: 1px solid #adb5bd !important;
@@ -57,19 +55,16 @@
           font-weight: 500 !important;
           transition: 0.1s ease;
           cursor: pointer;
-          /* Đảm bảo hiển thị mũi tên dropdown và văn bản dài không bị tràn khung */
           overflow: hidden;
           text-overflow: ellipsis;
       }
       
-      /* Tùy chỉnh cho phần tử <select> để chữ dài bên trong hộp chọn co giãn vừa khung */
       #bangNviec select.form-select.chonKq {
-          appearance: menulist;  /* giữ nguyên bản sắc dropdown */
+          appearance: menulist;
           -webkit-appearance: menulist;
-          white-space: nowrap;   /* giá trị hiển thị trên hộp cho phép cắt nhưng đảm bảo frame ổn định */
+          white-space: nowrap;
       }
       
-      /* Các option bên trong dropdown: tự động xuống dòng khi dài, giới hạn khung văn bản */
       #bangNviec select.chonKq option {
           white-space: normal !important;
           word-break: break-word !important;
@@ -82,7 +77,6 @@
           color: #1e293b;
       }
       
-      /* Đảm bảo input dạng text cũng có khung giới hạn và wrap khi cần (nếu nhập tay) */
       #bangNviec input.chonKq {
           white-space: normal !important;
           word-wrap: break-word !important;
@@ -90,7 +84,6 @@
           text-align: center;
       }
       
-      /* Khi hover hoặc focus cũng rõ ràng khung */
       #bangNviec select.chonKq:hover,
       #bangNviec input.chonKq:hover {
           border-color: #0d6efd !important;
@@ -104,20 +97,17 @@
           box-shadow: 0 0 0 2px rgba(13,110,253,0.2) !important;
       }
       
-      /* Đảm bảo các ô khác (textarea, số ngày, ...) không bị ảnh hưởng bởi khung mới */
       #bangNviec textarea.form-control,
       #bangNviec input:not(.chonKq) {
           border: none !important;
           background-color: transparent !important;
       }
       
-      /* Giữ nguyên style điểm cộng/trừ */
       .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
       .diemTru, .diemTru:disabled { background-color: #dc3545 !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
       .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
       button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
       
-      /* Cải thiện hiển thị dòng dài trong option khi xổ xuống */
       .table-responsive::-webkit-scrollbar { width: 6px; height: 6px; }
       .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
       .table-responsive::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -177,14 +167,14 @@
         <tr><th style="width: 3%;">TT</th><th style="width: 32%;">Nội dung công việc</th><th style="width: 8%;">Điểm Max</th><th style="width: 12%;">TG Giao</th><th style="width: 10%;">Tiến độ</th><th style="width: 12%;">TG Hoàn thành</th><th style="width: 20%;">Điểm đánh giá</th><th style="width: 3%;">Xoá</th></tr>
       </thead>
       <tbody></tbody>
-     </table>
+    </table>
   </div>
   <div class="p-2 text-start bg-light border-top"><button class="btn btn-sm btn-outline-primary fw-bold" onclick="addNv()"><i class="bi bi-plus-circle"></i> Thêm nhiệm vụ</button></div>
 </div>
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ THÊM CSS CHO DROPDOWN) ====================
+// ==================== TOÀN BỘ LOGIC (ĐÃ CẬP NHẬT ĐIỀU KIỆN >=, BỎ ||) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -460,14 +450,14 @@ function veBangNviec(db) {
               <input type="hidden" class="anGhiChu" value="${gc}">
               <input type="hidden" class="oColJ" value="${j_val}"><input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}"><input type="hidden" class="oColM" value="${m_val}">
-           </td>
+            </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-         </tr>`; bg.append(dg);
+        </tr>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -504,31 +494,32 @@ function addNv() {
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); tinhtTdong(); } }
 
+// ==================== HÀM KIỂM TRA ĐIỀU KIỆN J:K:L:M MỚI CHỈ HỖ TRỢ >= VÀ SO KHỚP SỐ CHÍNH XÁC ====================
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
     if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
     let tongDiem = 0, tongMax = 0, soNhiemVu = 0, soDaDanhGia = 0;
     let minRank = 5; let hasJMLogic = false;
+    
+    // Hàm so khớp mới: chỉ xử lý >= hoặc số chính xác, không còn dùng || hay |
     const kiemTraKhop = (giaTriThuc, textHienThi, dieuKienGoc) => {
         if (!dieuKienGoc || dieuKienGoc.trim() === "") return false;
-        let valStr = String(giaTriThuc).trim().toUpperCase();
-        let txtStr = String(textHienThi).trim().toUpperCase();
-        let dkStr = String(dieuKienGoc).trim().toUpperCase();
-        let cacDk = dkStr.split(/\|\||\||,/); 
-        for (let i = 0; i < cacDk.length; i++) {
-            let dk = cacDk[i].trim();
-            if (dk === "") continue;
-            if (valStr === dk || txtStr.includes(dk) || txtStr === dk) return true;
-            let numVal = parseFloat(valStr.replace(/[^\d.-]/g, '')); 
-            if (!isNaN(numVal)) {
-                if (dk.startsWith(">=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal >= parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
-                if (dk.startsWith("<=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal <= parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
-                if (dk.startsWith(">") && !dk.startsWith(">=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal > parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
-                if (dk.startsWith("<") && !dk.startsWith("<=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal < parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
-            }
+        let dk = dieuKienGoc.trim();
+        // Trích xuất số từ giá trị thực tế (có thể là "10", "8.5", "100%")
+        let numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
+        if (isNaN(numVal)) return false;
+        // Xử lý điều kiện >=
+        if (dk.startsWith(">=")) {
+            let threshold = parseFloat(dk.substring(2).replace(/[^\d.-]/g, ''));
+            if (!isNaN(threshold) && numVal >= threshold) return true;
+        } else {
+            // So khớp số chính xác (ví dụ "10", "5")
+            let exact = parseFloat(dk.replace(/[^\d.-]/g, ''));
+            if (!isNaN(exact) && numVal === exact) return true;
         }
         return false;
     };
+
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
         if (cg && cg.style.display !== 'none') {
@@ -541,19 +532,24 @@ function tinhtTdong() {
                 let txtHienThi = valThuc;
                 if (cg.tagName === "SELECT") { let selOpt = cg.options[cg.selectedIndex]; if (selOpt) txtHienThi = selOpt.text; }
                 let diem = parseFloat(valThuc); if (!isNaN(diem)) tongDiem += diem;
-                let j = dg.querySelector('.oColJ')?.value.trim() || "", k = dg.querySelector('.oColK')?.value.trim() || "", l = dg.querySelector('.oColL')?.value.trim() || "", m = dg.querySelector('.oColM')?.value.trim() || "";
+                // Lấy các điều kiện J, K, L, M từ thẻ ẩn
+                let j = dg.querySelector('.oColJ')?.value.trim() || "";
+                let k = dg.querySelector('.oColK')?.value.trim() || "";
+                let l = dg.querySelector('.oColL')?.value.trim() || "";
+                let m = dg.querySelector('.oColM')?.value.trim() || "";
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
                     hasJMLogic = true; let rank = 0;
-                    if (kiemTraKhop(valThuc, txtHienThi, j)) rank = 4;
-                    else if (kiemTraKhop(valThuc, txtHienThi, k)) rank = 3;
-                    else if (kiemTraKhop(valThuc, txtHienThi, l)) rank = 2;
-                    else if (kiemTraKhop(valThuc, txtHienThi, m)) rank = 1;
+                    if (kiemTraKhop(valThuc, txtHienThi, j)) rank = 4;      // Xuất sắc
+                    else if (kiemTraKhop(valThuc, txtHienThi, k)) rank = 3;  // Hoàn thành tốt
+                    else if (kiemTraKhop(valThuc, txtHienThi, l)) rank = 2;  // Hoàn thành
+                    else if (kiemTraKhop(valThuc, txtHienThi, m)) rank = 1;  // Chưa hoàn thành
                     if (rank > 0) minRank = Math.min(minRank, rank);
-                    else minRank = Math.min(minRank, 1);
+                    else minRank = Math.min(minRank, 1); // không khớp bất kỳ -> CHT
                 }
             }
         }
     });
+    
     let diemCuoiCung = tongDiem + dc;
     let xpl = "Chưa hoàn thành";
     if (soNhiemVu === 0) xpl = "Chưa giao việc";
@@ -578,6 +574,7 @@ function tinhtTdong() {
     const qht = document.getElementById('chuKqHthi'); if (qht) { qht.innerText = txtKq; qht.className = "fw-bold epMotDong"; if (xpl === "Xuất sắc") qht.classList.add("text-success"); else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); else qht.classList.add("text-danger"); }
     document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc').forEach(el => { el.innerText = txtKq; el.className = "epMotDong"; if (xpl === "Xuất sắc") el.classList.add("text-success","fw-bold"); else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary","fw-bold"); else el.classList.add("text-danger","fw-bold"); });
 }
+
 function capnhTdong() { tinhtTdong(); }
 function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'xx') {

@@ -320,12 +320,13 @@ function veBangNviec(db) {
 
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
-                let txt = kv[0].replace(/\s+/g, ' ').trim(); 
-                let val = kv.length > 1 ? kv[1].trim() : txt;
+                // KHỬ SẠCH MỌI KÝ TỰ XUỐNG DÒNG ẨN (\r, \n) gây ra khoảng trắng thưa thớt
+                let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
+                let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
+                
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
-                    // Bổ sung text-align: left để các lựa chọn dài không bị dạt ra giữa thưa thớt
-                    htmlDiem += `<option value="${val}" ${isSel} style="text-align: left;">${txt}</option>`;
+                    htmlDiem += `<option value="${val}" ${isSel} style="text-align: left; padding: 0px; margin: 0px;">${txt}</option>`;
                 }
             });
             htmlDiem += `</select>`;

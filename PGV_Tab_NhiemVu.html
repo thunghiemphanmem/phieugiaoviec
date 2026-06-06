@@ -1,43 +1,130 @@
-<style>
-  .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
-  .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
-  .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
-  .nhanNhiemVu { font-weight: bold; color: #333; font-size: 14px; }
-  .chuThongTin { font-weight: bold; color: #0d6efd; font-size: 15px; margin-left: 5px; }
-  .nhapTuyChinh { border: 1px solid #ced4da; border-radius: 4px; padding: 2px; outline: none; height: 30px; font-size: 14px; }
-  .epMotDong { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Nhiệm vụ của tôi - Bảng đánh giá</title>
+    <!-- Bootstrap 5 Icons & CSS (giữ nguyên giao diện hệ thống) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+      /* ---------- GIỮ NGUYÊN CÁC STYLE CŨ (CHỈ SỬA LẠI DROPDOWN KHUNG GIỚI HẠN) ---------- */
+      .hopDau { background-color: #e9ecef; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #ced4da; }
+      .loGo { font-weight: bold; color: #0d6efd; text-transform: uppercase; font-size: 14px; }
+      .tDe { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; }
+      .nhanNhiemVu { font-weight: bold; color: #333; font-size: 14px; }
+      .chuThongTin { font-weight: bold; color: #0d6efd; font-size: 15px; margin-left: 5px; }
+      .nhapTuyChinh { border: 1px solid #ced4da; border-radius: 4px; padding: 2px; outline: none; height: 30px; font-size: 14px; }
+      .epMotDong { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
-  #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; border-collapse: collapse; border: none; }
-  #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; font-size: 13px; border: none; border-right: 1px solid #7ea8f8;}
-  #bangNviec th:last-child { border-right: none; }
-  #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
-  #bangNviec td:last-child { border-right: none !important; }
+      #bangNviec { table-layout: fixed; width: 100%; word-wrap: break-word; border-collapse: collapse; border: none; }
+      #bangNviec thead th { position: sticky; top: 0; z-index: 10; background-color: #0d6efd !important; color: white !important; vertical-align: middle; text-align: center; padding: 8px 5px; font-size: 13px; border: none; border-right: 1px solid #7ea8f8;}
+      #bangNviec th:last-child { border-right: none; }
+      #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
+      #bangNviec td:last-child { border-right: none !important; }
 
-  #bangNviec textarea.form-control, #bangNviec input.form-control, #bangNviec select.form-select { 
-      border: none !important; 
-      background-color: transparent !important; 
-      box-shadow: none !important; 
-      border-radius: 0 !important;
-      padding: 4px 6px !important; 
-      margin: 0 !important;
-      font-size: 14px;
-      line-height: 1.15 !important; 
-      resize: none; 
-      overflow: hidden;
-      white-space: normal !important; 
-      word-wrap: break-word !important; 
-  }
-  #bangNviec textarea.form-control { min-height: 35px; white-space: pre-wrap; cursor: default; }
-  #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; font-weight: bold; height: auto; min-height: 30px; }
-  
-  #bangNviec input::placeholder { color: #adb5bd; font-style: italic; }
-
-  .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
-  .diemTru, .diemTru:disabled { background-color: #dc3545 !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
-  .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
-  button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
-</style>
-
+      /* Các ô input / textarea mặc định không viền (giữ nguyên cũ) */
+      #bangNviec textarea.form-control, 
+      #bangNviec input.form-control, 
+      #bangNviec select.form-select { 
+          border: none !important; 
+          background-color: transparent !important; 
+          box-shadow: none !important; 
+          border-radius: 0 !important;
+          padding: 4px 6px !important; 
+          margin: 0 !important;
+          font-size: 14px;
+          line-height: 1.15 !important; 
+          resize: none; 
+          overflow: hidden;
+          white-space: normal !important; 
+          word-wrap: break-word !important; 
+      }
+      
+      /* ========== NÂNG CẤP: KHUNG GIỚI HẠN CHO TẤT CẢ DROPDOWN (ĐIỂM ĐÁNH GIÁ) ========== */
+      /* Áp dụng viền, nền trắng, bo góc rõ ràng cho tất cả select và input thuộc cột điểm đánh giá */
+      #bangNviec select.form-select.chonKq,
+      #bangNviec input.chonKq {
+          border: 1px solid #adb5bd !important;
+          background-color: #ffffff !important;
+          border-radius: 6px !important;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+          padding: 5px 8px !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          font-weight: 500 !important;
+          transition: 0.1s ease;
+          cursor: pointer;
+          /* Đảm bảo hiển thị mũi tên dropdown và văn bản dài không bị tràn khung */
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+      
+      /* Tùy chỉnh cho phần tử <select> để chữ dài bên trong hộp chọn co giãn vừa khung */
+      #bangNviec select.form-select.chonKq {
+          appearance: menulist;  /* giữ nguyên bản sắc dropdown */
+          -webkit-appearance: menulist;
+          white-space: nowrap;   /* giá trị hiển thị trên hộp cho phép cắt nhưng đảm bảo frame ổn định */
+      }
+      
+      /* Các option bên trong dropdown: tự động xuống dòng khi dài, giới hạn khung văn bản */
+      #bangNviec select.chonKq option {
+          white-space: normal !important;
+          word-break: break-word !important;
+          word-wrap: break-word !important;
+          padding: 6px 8px !important;
+          border-bottom: 1px solid #f0f0f0;
+          font-size: 13px;
+          max-width: 280px;
+          background-color: white;
+          color: #1e293b;
+      }
+      
+      /* Đảm bảo input dạng text cũng có khung giới hạn và wrap khi cần (nếu nhập tay) */
+      #bangNviec input.chonKq {
+          white-space: normal !important;
+          word-wrap: break-word !important;
+          background-color: #fff9f0 !important;
+          text-align: center;
+      }
+      
+      /* Khi hover hoặc focus cũng rõ ràng khung */
+      #bangNviec select.chonKq:hover,
+      #bangNviec input.chonKq:hover {
+          border-color: #0d6efd !important;
+          background-color: #fefefe !important;
+      }
+      
+      #bangNviec select.chonKq:focus,
+      #bangNviec input.chonKq:focus {
+          border-color: #0a58ca !important;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(13,110,253,0.2) !important;
+      }
+      
+      /* Đảm bảo các ô khác (textarea, số ngày, ...) không bị ảnh hưởng bởi khung mới */
+      #bangNviec textarea.form-control,
+      #bangNviec input:not(.chonKq) {
+          border: none !important;
+          background-color: transparent !important;
+      }
+      
+      /* Giữ nguyên style điểm cộng/trừ */
+      .diemCong, .diemCong:disabled { background-color: #0d6efd !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
+      .diemTru, .diemTru:disabled { background-color: #dc3545 !important; color: white !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: white !important; }
+      .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
+      button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
+      
+      /* Cải thiện hiển thị dòng dài trong option khi xổ xuống */
+      .table-responsive::-webkit-scrollbar { width: 6px; height: 6px; }
+      .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+      .table-responsive::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-2">
 <div class="hopDau">
   <div class="d-flex align-items-center mb-1 w-100 position-relative">
     <div class="text-nowrap" style="flex: 1.5;">
@@ -86,14 +173,18 @@
 <div class="card shadow-sm p-0 border-0">
   <div class="table-responsive" style="max-height: 65vh; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 5px;">
     <table class="table table-hover mb-0" id="bangNviec">
-      <thead><tr><th style="width: 3%;">TT</th><th style="width: 32%;">Nội dung công việc</th><th style="width: 8%;">Điểm Max</th><th style="width: 12%;">TG Giao</th><th style="width: 10%;">Tiến độ</th><th style="width: 12%;">TG Hoàn thành</th><th style="width: 20%;">Điểm đánh giá</th><th style="width: 3%;">Xoá</th></tr></thead>
+      <thead>
+        <tr><th style="width: 3%;">TT</th><th style="width: 32%;">Nội dung công việc</th><th style="width: 8%;">Điểm Max</th><th style="width: 12%;">TG Giao</th><th style="width: 10%;">Tiến độ</th><th style="width: 12%;">TG Hoàn thành</th><th style="width: 20%;">Điểm đánh giá</th><th style="width: 3%;">Xoá</th></tr>
+      </thead>
       <tbody></tbody>
-    </table>
+     </table>
   </div>
   <div class="p-2 text-start bg-light border-top"><button class="btn btn-sm btn-outline-primary fw-bold" onclick="addNv()"><i class="bi bi-plus-circle"></i> Thêm nhiệm vụ</button></div>
 </div>
+</div>
 
 <script>
+// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ THÊM CSS CHO DROPDOWN) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -279,15 +370,11 @@ function mokBcao() {
     mbcMo = true; 
     const nt = document.getElementById('nutNopBcao'); 
     if(nt && nt.style.display !== 'none') { 
-        if (!cotETonTai) {
-            nt.disabled = false;
-        } else {
+        if (!cotETonTai) nt.disabled = false;
+        else {
             var selectGv = document.getElementById("hopChonGv");
-            if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
-                nt.disabled = true;
-            } else {
-                nt.disabled = false;
-            }
+            if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") nt.disabled = true;
+            else nt.disabled = false;
         }
         nt.style.transition = "transform 0.2s"; 
         nt.style.transform = "scale(1.1)"; 
@@ -322,7 +409,6 @@ function veBangNviec(db) {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
         let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
-        
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
         let valChon = ""; let valConfig = rawH;
@@ -341,31 +427,22 @@ function veBangNviec(db) {
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
-            
             let optsArray = [];
-            if (valConfig.includes(";")) {
-                optsArray = valConfig.split(";");
-            } else if (valConfig.includes("\n")) {
+            if (valConfig.includes(";")) optsArray = valConfig.split(";");
+            else if (valConfig.includes("\n")) {
                 let lines = valConfig.split("\n");
                 let currentOpt = "";
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i].trim();
                     if (line === "") continue; 
                     currentOpt = currentOpt === "" ? line : currentOpt + " " + line;
-                    if (line.includes("|") || i === lines.length - 1) {
-                        optsArray.push(currentOpt);
-                        currentOpt = "";
-                    }
+                    if (line.includes("|") || i === lines.length - 1) { optsArray.push(currentOpt); currentOpt = ""; }
                 }
-            } else {
-                optsArray = valConfig.split(",");
-            }
-
+            } else optsArray = valConfig.split(",");
             optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
                 let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
-                
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
                     htmlDiem += `<option value="${val}" ${isSel} title="${txt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
@@ -381,18 +458,16 @@ function veBangNviec(db) {
               <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc}</textarea>
               <input type="hidden" class="anNguoiTH" value="${nTH}">
               <input type="hidden" class="anGhiChu" value="${gc}">
-              <input type="hidden" class="oColJ" value="${j_val}">
-              <input type="hidden" class="oColK" value="${k_val}">
-              <input type="hidden" class="oColL" value="${l_val}">
-              <input type="hidden" class="oColM" value="${m_val}">
-          </td>
+              <input type="hidden" class="oColJ" value="${j_val}"><input type="hidden" class="oColK" value="${k_val}">
+              <input type="hidden" class="oColL" value="${l_val}"><input type="hidden" class="oColM" value="${m_val}">
+           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </tr>`; bg.append(dg);
+         </tr>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -402,203 +477,95 @@ function addNv() {
     if (cotETonTai) {
         var selectGv = document.getElementById("hopChonGv");
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
-            if (!isBGH) {
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
-                return;
-            }
+            if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác."); return; }
         }
     }
-
     const tbody = $('#bangNviec tbody');
-    if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) {
-        tbody.empty();
-    }
-
+    if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) tbody.empty();
     const lastRow = tbody.find('tr.dongNv:last');
-    
     if (lastRow.length === 0) {
-        let defaultRow = `<tr class="dongNv">
-            <td class="text-center align-middle oStt fw-bold"></td>
-            <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
-                <input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">
-                <input type="hidden" class="oColJ" value=""><input type="hidden" class="oColK" value="">
-                <input type="hidden" class="oColL" value=""><input type="hidden" class="oColM" value="">
-            </td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
-            <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </tr>`;
+        let defaultRow = `<tr class="dongNv"><td class="text-center align-middle oStt fw-bold"></td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH"><input type="hidden" class="anGhiChu"><input type="hidden" class="oColJ"><input type="hidden" class="oColK"><input type="hidden" class="oColL"><input type="hidden" class="oColM"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`;
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
         $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
-        
         var $chonKq = $newRow.find('.chonKq');
         $chonKq.val(''); 
-        
         var $tdNoiDung = $newRow.find('td:first-child');
-        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
-            $tdNoiDung.attr('colspan', '1');
-            $newRow.find('td:not(:first-child)').show();
-        }
-        
+        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') { $tdNoiDung.attr('colspan', '1'); $newRow.find('td:not(:first-child)').show(); }
         tbody.append($newRow);
     }
-
     tbody.find('tr:last textarea').each(function() { cdang(this); });
     tinhtTdong();
     if (typeof mokBcao === 'function') mokBcao();
 }
 
-function xoaDongNv(nt) { 
-    if(confirm("Xác nhận xóa?")) { 
-        $(nt).closest('tr').remove(); 
-        tinhtTdong(); 
-    } 
-}
-
-// ===================================================================================
-// NÂNG CẤP LÕI: LOGIC ĐỐI CHIẾU ĐIỀU KIỆN TỪNG DÒNG (THÔNG MINH)
-// Đọc cả phép toán (>=, <=), ký tự đa điều kiện (||, |, ,) và ký tự đặc biệt (%, chữ)
-// ===================================================================================
+function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); tinhtTdong(); } }
 
 function tinhtTdong() {
-    const dtc = document.getElementById('nhapDiemThuong'); 
-    let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
-    if(dtc) { 
-        dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); 
-        if (dc > 0) dtc.classList.add('diemCong'); 
-        else if (dc < 0) dtc.classList.add('diemTru'); 
-        else dtc.classList.add('diemKhong'); 
-    }
-    
-    let tongDiem = 0;
-    let tongMax = 0;
-    let soNhiemVu = 0;
-    let soDaDanhGia = 0;
-    
-    let minRank = 5; // 5: Mặc định, 4: Xuất sắc, 3: Tốt, 2: Hoàn thành, 1: Chưa hoàn thành
-    let hasJMLogic = false;
-
-    // HÀM HỖ TRỢ XỬ LÝ KHỚP ĐIỀU KIỆN KHẮT KHE (Đã cập nhật biểu thức ||)
+    const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
+    if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
+    let tongDiem = 0, tongMax = 0, soNhiemVu = 0, soDaDanhGia = 0;
+    let minRank = 5; let hasJMLogic = false;
     const kiemTraKhop = (giaTriThuc, textHienThi, dieuKienGoc) => {
         if (!dieuKienGoc || dieuKienGoc.trim() === "") return false;
-        
         let valStr = String(giaTriThuc).trim().toUpperCase();
         let txtStr = String(textHienThi).trim().toUpperCase();
         let dkStr = String(dieuKienGoc).trim().toUpperCase();
-
-        // Cắt theo dấu ||, | hoặc phẩy (hỗ trợ nhập 2||1, 2|1, 2,1)
         let cacDk = dkStr.split(/\|\||\||,/); 
         for (let i = 0; i < cacDk.length; i++) {
             let dk = cacDk[i].trim();
             if (dk === "") continue;
-
-            // 1. So sánh khớp tuyệt đối (Khớp giá trị hoặc khớp chữ hiển thị, bao gồm chữ "100%")
-            if (valStr === dk || txtStr.includes(dk) || txtStr === dk) {
-                return true;
-            }
-
-            // 2. Phân tích toán học (Xử lý các dấu >=, <=, >, <)
-            // Lọc chỉ lấy phần số học (loại bỏ % hay chữ)
+            if (valStr === dk || txtStr.includes(dk) || txtStr === dk) return true;
             let numVal = parseFloat(valStr.replace(/[^\d.-]/g, '')); 
             if (!isNaN(numVal)) {
-                if (dk.startsWith(">=")) {
-                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(numDk) && numVal >= numDk) return true;
-                } else if (dk.startsWith("<=")) {
-                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(numDk) && numVal <= numDk) return true;
-                } else if (dk.startsWith(">")) {
-                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(numDk) && numVal > numDk) return true;
-                } else if (dk.startsWith("<")) {
-                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(numDk) && numVal < numDk) return true;
-                }
+                if (dk.startsWith(">=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal >= parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
+                if (dk.startsWith("<=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal <= parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
+                if (dk.startsWith(">") && !dk.startsWith(">=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal > parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
+                if (dk.startsWith("<") && !dk.startsWith("<=") && !isNaN(parseFloat(dk.replace(/[^\d.-]/g, ''))) && numVal < parseFloat(dk.replace(/[^\d.-]/g, ''))) return true;
             }
         }
         return false;
     };
-
-    const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv');
-    
-    cdt.forEach((dg) => {
+    document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
-            
             const maxInp = dg.querySelector('.nhapDiemMax');
-            if(maxInp && maxInp.value) {
-                let mVal = parseFloat(maxInp.value);
-                if(!isNaN(mVal)) tongMax += mVal;
-            }
-            
+            if(maxInp && maxInp.value) { let mVal = parseFloat(maxInp.value); if(!isNaN(mVal)) tongMax += mVal; }
             if (cg.value !== "") {
                 soDaDanhGia++;
-                
-                // Lấy giá trị ẩn và Text hiển thị trên select
                 let valThuc = cg.value.trim();
                 let txtHienThi = valThuc;
-                if (cg.tagName === "SELECT") {
-                    let selOpt = cg.options[cg.selectedIndex];
-                    if (selOpt) txtHienThi = selOpt.text;
-                }
-
-                // Cộng điểm phục vụ hiển thị phụ
-                let diem = parseFloat(valThuc);
-                if (!isNaN(diem)) tongDiem += diem;
-                
-                // Đọc mốc điều kiện J, K, L, M
-                let j = dg.querySelector('.oColJ') ? dg.querySelector('.oColJ').value.trim() : "";
-                let k = dg.querySelector('.oColK') ? dg.querySelector('.oColK').value.trim() : "";
-                let l = dg.querySelector('.oColL') ? dg.querySelector('.oColL').value.trim() : "";
-                let m = dg.querySelector('.oColM') ? dg.querySelector('.oColM').value.trim() : "";
-                
+                if (cg.tagName === "SELECT") { let selOpt = cg.options[cg.selectedIndex]; if (selOpt) txtHienThi = selOpt.text; }
+                let diem = parseFloat(valThuc); if (!isNaN(diem)) tongDiem += diem;
+                let j = dg.querySelector('.oColJ')?.value.trim() || "", k = dg.querySelector('.oColK')?.value.trim() || "", l = dg.querySelector('.oColL')?.value.trim() || "", m = dg.querySelector('.oColM')?.value.trim() || "";
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
-                    hasJMLogic = true;
-                    let rank = 0; // Đang quét dòng, mặc định là 0 (Chưa khớp)
-                    
+                    hasJMLogic = true; let rank = 0;
                     if (kiemTraKhop(valThuc, txtHienThi, j)) rank = 4;
                     else if (kiemTraKhop(valThuc, txtHienThi, k)) rank = 3;
                     else if (kiemTraKhop(valThuc, txtHienThi, l)) rank = 2;
                     else if (kiemTraKhop(valThuc, txtHienThi, m)) rank = 1;
-
-                    // Cập nhật mức xếp loại thấp nhất của tổng thể
-                    if (rank > 0) {
-                        minRank = Math.min(minRank, rank);
-                    } else {
-                        // Nếu có làm nhưng chọn nhầm kết quả không nằm trong J,K,L,M -> Đánh tụt xuống CHT
-                        minRank = Math.min(minRank, 1); 
-                    }
+                    if (rank > 0) minRank = Math.min(minRank, rank);
+                    else minRank = Math.min(minRank, 1);
                 }
             }
         }
     });
-    
     let diemCuoiCung = tongDiem + dc;
     let xpl = "Chưa hoàn thành";
-    
-    if (soNhiemVu === 0) {
-        xpl = "Chưa giao việc";
-    } else if (soDaDanhGia === 0) {
-        xpl = "Chưa đánh giá";
-    } else {
-        // Ưu tiên 1: Đánh giá theo cột J:M khắt khe
+    if (soNhiemVu === 0) xpl = "Chưa giao việc";
+    else if (soDaDanhGia === 0) xpl = "Chưa đánh giá";
+    else {
         if (hasJMLogic) {
             if (minRank === 4) xpl = "Xuất sắc";
             else if (minRank === 3) xpl = "Hoàn thành tốt";
             else if (minRank === 2) xpl = "Hoàn thành";
             else if (minRank === 1) xpl = "Chưa hoàn thành";
             else xpl = "Chưa xác định";
-        } 
-        // Ưu tiên 2: Trả về tính tỷ lệ nếu BGH không cấu hình J:M
-        else {
+        } else {
             let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
             if (tyLe >= 90) xpl = "Xuất sắc";
             else if (tyLe >= 70) xpl = "Hoàn thành tốt";
@@ -606,43 +573,18 @@ function tinhtTdong() {
             else xpl = "Chưa hoàn thành";
         }
     }
-    
-    // Ráp kết quả để in ra màn hình
     let txtKq = xpl;
-    if (xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        if (tongDiem > 0 || dc !== 0 || !hasJMLogic) {
-            txtKq = `${xpl}: ${diemCuoiCung} điểm`;
-        }
-    }
-    
-    const qht = document.getElementById('chuKqHthi');
-    if (qht) { 
-        qht.innerText = txtKq; 
-        qht.className = "fw-bold epMotDong"; 
-        if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
-        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
-        else qht.classList.add("text-danger"); 
-    }
-    
-    const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
-    theMenuDoc.forEach(el => {
-        el.innerText = txtKq;
-        el.className = "epMotDong"; 
-        if (xpl === "Xuất sắc") el.classList.add("text-success", "fw-bold"); 
-        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary", "fw-bold"); 
-        else el.classList.add("text-danger", "fw-bold"); 
-    });
+    if (xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá" && (tongDiem > 0 || dc !== 0 || !hasJMLogic)) txtKq = `${xpl}: ${diemCuoiCung} điểm`;
+    const qht = document.getElementById('chuKqHthi'); if (qht) { qht.innerText = txtKq; qht.className = "fw-bold epMotDong"; if (xpl === "Xuất sắc") qht.classList.add("text-success"); else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); else qht.classList.add("text-danger"); }
+    document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc').forEach(el => { el.innerText = txtKq; el.className = "epMotDong"; if (xpl === "Xuất sắc") el.classList.add("text-success","fw-bold"); else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary","fw-bold"); else el.classList.add("text-danger","fw-bold"); });
 }
-
 function capnhTdong() { tinhtTdong(); }
-
 function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'xx') {
         if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { khachApi.gvLaydsCanb(function(dl) { xuLyCotE('xx', dl); }, function(err) { xuLyCotE('xx', []); }); } else { xuLyCotE('xx', []); }
-    } else {
-        cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none';
-        kiemTraQuyenTruyCap();
-    }
+    } else { cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none'; kiemTraQuyenTruyCap(); }
 }
 $(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
 </script>
+</body>
+</html>

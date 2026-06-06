@@ -1,28 +1,166 @@
 <style>
-  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; }
-  #khuGvChinh .hopDau { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
-  #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
-  #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
-  #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
+  #khuGvChinh { 
+    font-family: 'Times New Roman', Times, serif; 
+    font-size: 14px; 
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #khuGvChinh .hopDau { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 5px; 
+    border-bottom: 2px solid #0d6efd; 
+    padding: 10px; 
+    background-color: #f8f9fa; 
+    border-radius: 4px; 
+    flex-shrink: 0;
+  }
+  #khuGvChinh .tDe { 
+    font-weight: bold; 
+    font-size: 20px; 
+    color: #dc3545; 
+    text-transform: uppercase; 
+    margin: 0; 
+  }
+  #khuGvChinh .hopLoc { 
+    display: flex; 
+    gap: 10px; 
+    align-items: center; 
+  }
+  #khuGvChinh .nhapTuyChinh { 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #0d6efd; 
+    border: 1px solid #ced4da; 
+    padding: 4px 10px; 
+    border-radius: 4px; 
+    height: 34px; 
+  }
   
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
-  #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
-  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
+  #khuGvChinh .hopBang { 
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: white; 
+    border-radius: 5px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+    padding: 0; 
+  }
+  
+  /* Vùng cuộn bảng */
+  .table-scroll-wrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+  
+  /* Nút thêm luôn hiển thị ở cuối */
+  .nutThem-footer {
+    flex-shrink: 0;
+    margin: 8px 12px;
+    text-align: left;
+  }
+  
+  #khuGvChinh table { 
+    width: 100%; 
+    min-width: 1050px; 
+    border-collapse: collapse; 
+    table-layout: fixed; 
+    border: none; 
+  }
+  #khuGvChinh th { 
+    background-color: #0d6efd; 
+    color: white; 
+    text-align: center; 
+    padding: 8px 4px; 
+    border: none; 
+    border-right: 1px solid #7ea8f8; 
+    vertical-align: middle; 
+    font-size: 13px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+  }
   #khuGvChinh th:last-child { border-right: none; }
-  #khuGvChinh td { border: none; border-bottom: 1px dashed #dee2e6; border-right: 1px solid #dee2e6; padding: 2px !important; vertical-align: middle; }
+  #khuGvChinh td { 
+    border: none; 
+    border-bottom: 1px dashed #dee2e6; 
+    border-right: 1px solid #dee2e6; 
+    padding: 2px !important; 
+    vertical-align: middle; 
+  }
   #khuGvChinh td:last-child { border-right: none; }
   
-  #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
-  #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
+  #gvBangNv textarea.form-control { 
+    font-family: 'Times New Roman', Times, serif; 
+    font-size: 14px; 
+    border: none !important; 
+    border-radius: 0; 
+    box-shadow: none !important; 
+    width: 100%; 
+    padding: 6px 4px; 
+    margin: 0; 
+    background-color: transparent; 
+    resize: none; 
+    overflow-y: hidden; 
+    min-height: 35px; 
+    line-height: 1.4; 
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+    box-sizing: border-box; 
+  }
+  #gvBangNv input.form-control, #gvBangNv select.form-select { 
+    font-family: 'Times New Roman', Times, serif; 
+    font-size: 14px; 
+    border: none !important; 
+    box-shadow: none !important; 
+    width: 100%; 
+    height: 100%; 
+    padding: 4px; 
+    background-color: transparent; 
+  }
   
   #gvBangNv input::placeholder { color: #adb5bd; font-style: italic; }
 
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
-  #khuGvChinh .nutThem { margin: 5px; font-size: 13px; font-weight: bold; }
   
-  #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
-  #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
-  #khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: transparent !important; cursor: not-allowed; color: #333; font-weight: normal;}
+  #gvLopPhuTai { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(255,255,255,0.95); 
+    display: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 9999; 
+    backdrop-filter: blur(5px); 
+  }
+  #gvChuTai { 
+    margin-top: 20px; 
+    font-size: 22px; 
+    font-weight: 900; 
+    text-align: center; 
+    letter-spacing: 1.5px; 
+    text-transform: uppercase; 
+    background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); 
+    background-size: 300% 300%; 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    font-family: 'Segoe UI', sans-serif; 
+  }
+  #khuGvChinh input:disabled, #khuGvChinh select:disabled {
+    background-color: transparent !important; 
+    cursor: not-allowed; 
+    color: #333; 
+    font-weight: normal;
+  }
 </style>
 
 <div id="khuGvChinh">
@@ -42,22 +180,26 @@
     </div>
 
     <div class="hopBang">
-      <table id="gvBangNv" class="table-hover">
-        <thead>
-          <tr>
-            <th style="width: 40px;">Xóa</th>
-            <th style="width: 50px;">TT</th>
-            <th style="width: 30%;">Nội dung công việc</th>
-            <th style="width: 80px;">Điểm T.Đa</th>
-            <th style="width: 110px;">TG Giao</th>
-            <th style="width: 15%;">Tiến độ</th>
-            <th style="width: 15%;">Người thực hiện</th>
-            <th style="width: 20%;">Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody id="gvThanBang"></tbody>
-      </table>
-      <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
+      <div class="table-scroll-wrapper">
+        <table id="gvBangNv" class="table-hover">
+          <thead>
+            <tr>
+              <th style="width: 40px;">Xóa</th>
+              <th style="width: 50px;">TT</th>
+              <th style="width: 30%;">Nội dung công việc</th>
+              <th style="width: 80px;">Điểm T.Đa</th>
+              <th style="width: 110px;">TG Giao</th>
+              <th style="width: 15%;">Tiến độ</th>
+              <th style="width: 15%;">Người thực hiện</th>
+              <th style="width: 20%;">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="gvThanBang"></tbody>
+        </table>
+      </div>
+      <div class="nutThem-footer">
+        <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
+      </div>
     </div>
 </div>
 
@@ -169,53 +311,52 @@
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
     function gvThemDong() {
-    const tbody = $('#gvThanBang');
-    const lastRow = tbody.find('tr.dongNv:last');
+        const tbody = $('#gvThanBang');
+        const lastRow = tbody.find('tr.dongNv:last');
 
-    // Nếu bảng chưa có dòng nào, tạo dòng mặc định
-    if (lastRow.length === 0) {
-        gvVeDong(null);
-        return;
+        // Nếu bảng chưa có dòng nào, tạo dòng mặc định
+        if (lastRow.length === 0) {
+            gvVeDong(null);
+            return;
+        }
+
+        // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
+        var $newRow = lastRow.clone();
+
+        // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
+        $newRow.find('.oSttGv').val(''); // Để trống STT theo yêu cầu
+        $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
+        $newRow.find('.oDmaxGv').val('');
+        $newRow.find('.oTGGiao').val('');
+        $newRow.find('.oTdoGv').val(''); // Reset select tiến độ
+        $newRow.find('.oNnghanGv').val(''); // Reset select người thực hiện
+        $newRow.find('.oTGHoanThanh').val('');
+        $newRow.find('.oDiemDgGv').val(''); // Xóa giá trị điểm đánh giá
+        
+        // 2. Reset ô Đánh giá (cột H) - Phải giữ nguyên cấu trúc select nếu dòng trên là select
+        var $chonKq = $newRow.find('.chonKq');
+        $chonKq.val(''); // Đưa về giá trị rỗng (đúng với option --Trống--)
+
+        // 3. Reset trạng thái ô (bỏ hiệu ứng input-success/d1e7dd nếu có)
+        $newRow.find('input, select').css({
+            'background-color': 'transparent',
+            'border-color': 'transparent',
+            'font-weight': 'normal'
+        });
+
+        // 4. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
+        var $tdNoiDung = $newRow.find('td:nth-child(2)');
+        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
+            $tdNoiDung.attr('colspan', '1');
+            $newRow.find('td:nth-child(n+3)').show();
+        }
+
+        tbody.append($newRow);
+        
+        // Tự động điều chỉnh chiều cao textarea mới
+        $newRow.find('textarea').each(function() { gvCoDan(this); });
+        // Không gọi tinhtTdong hay mokBcao vì file này không có các hàm đó, chỉ có giao việc
     }
-
-    // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
-    var $newRow = lastRow.clone();
-
-    // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
-    $newRow.find('.oSttGv').val(''); // Để trống STT theo yêu cầu
-    $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
-    $newRow.find('.oDmaxGv').val('');
-    $newRow.find('.oTGGiao').val('');
-    $newRow.find('.oTdoGv').val(''); // Reset select tiến độ
-    $newRow.find('.oNnghanGv').val(''); // Reset select người thực hiện
-    $newRow.find('.oTGHoanThanh').val('');
-    $newRow.find('.oDiemDgGv').val(''); // Xóa giá trị điểm đánh giá
-    
-    // 2. Reset ô Đánh giá (cột H) - Phải giữ nguyên cấu trúc select nếu dòng trên là select
-    var $chonKq = $newRow.find('.chonKq');
-    $chonKq.val(''); // Đưa về giá trị rỗng (đúng với option --Trống--)
-
-    // 3. Reset trạng thái ô (bỏ hiệu ứng input-success/d1e7dd nếu có)
-    $newRow.find('input, select').css({
-        'background-color': 'transparent',
-        'border-color': 'transparent',
-        'font-weight': 'normal'
-    });
-
-    // 4. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
-    var $tdNoiDung = $newRow.find('td:nth-child(2)');
-    if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
-        $tdNoiDung.attr('colspan', '1');
-        $newRow.find('td:nth-child(n+3)').show();
-    }
-
-    tbody.append($newRow);
-    
-    // Tự động điều chỉnh chiều cao textarea mới
-    $newRow.find('textarea').each(function() { gvCoDan(this); });
-    tinhtTdong();
-    if (typeof mokBcao === 'function') mokBcao();
-}
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {

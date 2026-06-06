@@ -297,10 +297,12 @@
         const tr = document.createElement('tr');
         let ngnth = (dong && dong[6]) ? dong[6] : ""; 
         let ngnthH = ngnth.toUpperCase(); 
+        // QUAN TRỌNG: dòng mới (dong === null) sẽ luôn mở khóa, không disabled
         let dcb = (dong && ngnth !== "") ? "disabled" : "";
         let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
         
         let lchon = `<option value="">--Chọn--</option>`;
+        // Nếu dòng hiện tại là dòng có sẵn (đã giao việc) thì khóa, còn dòng mới thì mở
         if (!dcb || ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') { 
             let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : ""; 
             lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`; 
@@ -318,7 +320,6 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // Lấy giá trị cột H (điểm đánh giá) và các cột ẩn J,K,L,M
         let vDiemDg = "";
         let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
@@ -328,7 +329,6 @@
             vColL = dong[11] || "";
             vColM = dong[12] || "";
         } else {
-            // Nếu tạo dòng mới (không có dong), lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
                 const dongCuoi = cacDong[cacDong.length - 1];
@@ -356,7 +356,6 @@
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
             <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
-            <!-- Các cột ẩn J, K, L, M để lưu cấu hình điều kiện -->
             <input type="hidden" class="oColJ" value="${vColJ}">
             <input type="hidden" class="oColK" value="${vColK}">
             <input type="hidden" class="oColL" value="${vColL}">
@@ -379,21 +378,16 @@
         ptu.value = v; 
     }
     
-    // Hàm thêm dòng mới - sao chép dòng cuối và giữ nguyên các cột J..M
     function gvThemDong() {
         const tbody = $('#gvThanBang');
         const lastRow = tbody.find('tr');
 
         if (lastRow.length === 0) {
-            // Nếu chưa có dòng nào, tạo dòng mới trống
             gvVeDong(null);
             return;
         }
 
-        // Lấy dòng cuối cùng
         const $lastRow = lastRow.last();
-        
-        // Clone dòng cuối cùng
         var $newRow = $lastRow.clone();
 
         // Reset các trường nhập liệu hiển thị
@@ -401,20 +395,21 @@
         $newRow.find('.oNdGv, .oGchuGv').val('');
         $newRow.find('.oDmaxGv').val('');
         $newRow.find('.oTGGiao').val('');
-        $newRow.find('.oTdoGv').val('');
-        $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
         
-        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc nếu có select
+        // Reset select Tiến độ và Người thực hiện, đồng thời BỎ disabled
+        $newRow.find('.oTdoGv').val('').removeAttr('disabled');
+        $newRow.find('.oNnghanGv').val('').removeAttr('disabled');
+        
+        // Reset cột H (điểm đánh giá)
         var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.length) $chonKq.val('');
         
-        // QUAN TRỌNG: Sao chép giá trị các cột J, K, L, M từ dòng cuối cùng
+        // Sao chép các cột J, K, L, M từ dòng cuối
         const lastJ = $lastRow.find('.oColJ').val() || "";
         const lastK = $lastRow.find('.oColK').val() || "";
         const lastL = $lastRow.find('.oColL').val() || "";
         const lastM = $lastRow.find('.oColM').val() || "";
-        
         $newRow.find('.oColJ').val(lastJ);
         $newRow.find('.oColK').val(lastK);
         $newRow.find('.oColL').val(lastL);
@@ -427,7 +422,7 @@
             'font-weight': 'normal'
         });
 
-        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
+        // Xóa hiệu ứng colspan nếu có
         var $tdNoiDung = $newRow.find('td:nth-child(2)');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -435,8 +430,6 @@
         }
 
         tbody.append($newRow);
-        
-        // Tự động điều chỉnh chiều cao textarea
         $newRow.find('textarea').each(function() { gvCoDan(this); });
     }
     
@@ -446,7 +439,6 @@
         }
     }
 
-    // Hàm lấy dữ liệu từ một dòng (bao gồm các cột J..M)
     function gvLayDuLieuDong(dong) {
         return {
             stt: dong.querySelector('.oSttGv').value,

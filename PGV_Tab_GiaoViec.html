@@ -205,37 +205,76 @@
     let dsCanbgv = [];
     setTimeout(function() { gvTaiCanb(); }, 500);
 
-    function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
-    function gvTbaoNhanh(loai, tb) { if (typeof hienThongb === 'function') hienThongb(loai, tb); else alert(tb); }
+    function gvDatTai(dt, tbt = null) { 
+        const mh = document.getElementById('gvLopPhuTai'); 
+        const ct = document.getElementById('gvChuTai'); 
+        if (dt) { 
+            ct.innerText = tbt || "Đang xử lý..."; 
+            mh.style.display = 'flex'; 
+        } else mh.style.display = 'none'; 
+    }
+    function gvTbaoNhanh(loai, tb) { 
+        if (typeof hienThongb === 'function') hienThongb(loai, tb); 
+        else alert(tb); 
+    }
 
     function gvTaiCanb() { 
         gvDatTai(true, "Đang tải danh sách nhân sự..."); 
-        khachApi.gvLaydsCanb(function(dl) { dsCanbgv = dl; gvLaydlGoc(); }, function(l) { gvTbaoNhanh('loi', "Lỗi tải nhân sự: " + l.message); gvDatTai(false); }); 
+        khachApi.gvLaydsCanb(function(dl) { 
+            dsCanbgv = dl; 
+            gvLaydlGoc(); 
+        }, function(l) { 
+            gvTbaoNhanh('loi', "Lỗi tải nhân sự: " + l.message); 
+            gvDatTai(false); 
+        }); 
     }
 
     function gvLaydlGoc() { 
         gvDatTai(true, "✨ Đang cập nhật nhiệm vụ mới ✨"); 
-        khachApi.gvLaydlBdau(gvKhiTaiXong, function(l) { gvTbaoNhanh('loi', "Lỗi tải dữ liệu: " + l.message); gvDatTai(false); }); 
+        khachApi.gvLaydlBdau(gvKhiTaiXong, function(l) { 
+            gvTbaoNhanh('loi', "Lỗi tải dữ liệu: " + l.message); 
+            gvDatTai(false); 
+        }); 
     }
 
     function gvKhiTaiXong(dl) {
         gvDatTai(false); 
-        let namValue = dl.nam; const inputNam = document.getElementById('gvLocNam');
-        if (namValue && namValue.trim() !== "") { inputNam.value = namValue; } else { inputNam.value = ""; }
-        inputNam.disabled = true; if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
+        let namValue = dl.nam; 
+        const inputNam = document.getElementById('gvLocNam');
+        if (namValue && namValue.trim() !== "") { inputNam.value = namValue; } 
+        else { inputNam.value = ""; }
+        inputNam.disabled = true; 
+        if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
-        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; 
+        const bns = dl.dlbang; 
+        const tb = document.getElementById('gvThanBang'); 
+        tb.innerHTML = ""; 
         if (bns && bns.length > 0) { 
             bns.forEach(dong => { gvVeDong(dong); }); 
-            setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
-        } else { gvVeDong(); }
+            setTimeout(() => { 
+                document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); 
+            }, 300); 
+        } else { 
+            gvVeDong(); 
+        }
 
-        let quyen = ''; if (typeof canbHientai !== 'undefined' && canbHientai.quyen) { quyen = canbHientai.quyen; }
+        let quyen = ''; 
+        if (typeof canbHientai !== 'undefined' && canbHientai.quyen) { quyen = canbHientai.quyen; }
         const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
-        const btnChung = document.getElementById('btnCapNhatChung'); const btnChuyenThang = document.getElementById('gvNutChth');
-        if (quyen === 'x') { if (btnChung) btnChung.style.display = 'none'; if (btnChuyenThang) btnChuyenThang.style.display = 'none'; } 
-        else if (quyen === 'xx') { if (btnChung) btnChung.style.display = 'none'; if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; }
-        else { if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; }
+        const btnChung = document.getElementById('btnCapNhatChung'); 
+        const btnChuyenThang = document.getElementById('gvNutChth');
+        if (quyen === 'x') { 
+            if (btnChung) btnChung.style.display = 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'none'; 
+        } 
+        else if (quyen === 'xx') { 
+            if (btnChung) btnChung.style.display = 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'flex';
+        }
+        else { 
+            if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; 
+        }
     }
 
     function gvKiemTraTieuDe(ptu) {
@@ -254,8 +293,11 @@
     }
 
     function gvVeDong(dong = null) {
-        const tb = document.getElementById('gvThanBang'); const tr = document.createElement('tr');
-        let ngnth = (dong && dong[6]) ? dong[6] : ""; let ngnthH = ngnth.toUpperCase(); let dcb = (dong && ngnth !== "") ? "disabled" : "";
+        const tb = document.getElementById('gvThanBang'); 
+        const tr = document.createElement('tr');
+        let ngnth = (dong && dong[6]) ? dong[6] : ""; 
+        let ngnthH = ngnth.toUpperCase(); 
+        let dcb = (dong && ngnth !== "") ? "disabled" : "";
         let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
         
         let lchon = `<option value="">--Chọn--</option>`;
@@ -276,6 +318,7 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
+        // Lấy giá trị cột H (điểm đánh giá) và các cột ẩn J,K,L,M
         let vDiemDg = "";
         let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
@@ -285,6 +328,7 @@
             vColL = dong[11] || "";
             vColM = dong[12] || "";
         } else {
+            // Nếu tạo dòng mới (không có dong), lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
                 const dongCuoi = cacDong[cacDong.length - 1];
@@ -312,6 +356,7 @@
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
             <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+            <!-- Các cột ẩn J, K, L, M để lưu cấu hình điều kiện -->
             <input type="hidden" class="oColJ" value="${vColJ}">
             <input type="hidden" class="oColK" value="${vColK}">
             <input type="hidden" class="oColL" value="${vColL}">
@@ -322,20 +367,36 @@
         gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
     }
     
-    function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
-    function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
+    function gvCoDan(ptu) { 
+        ptu.style.height = 'auto'; 
+        ptu.style.height = (ptu.scrollHeight) + 'px'; 
+    }
+    function gvDinhDangNgay(ptu, e) { 
+        if (e && (e.which === 8 || e.which === 46)) return; 
+        let v = ptu.value.replace(/\D/g, ''); 
+        if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); 
+        if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); 
+        ptu.value = v; 
+    }
     
+    // Hàm thêm dòng mới - sao chép dòng cuối và giữ nguyên các cột J..M
     function gvThemDong() {
         const tbody = $('#gvThanBang');
-        const lastRow = tbody.find('tr.dongNv:last');
+        const lastRow = tbody.find('tr');
 
         if (lastRow.length === 0) {
+            // Nếu chưa có dòng nào, tạo dòng mới trống
             gvVeDong(null);
             return;
         }
 
-        var $newRow = lastRow.clone();
+        // Lấy dòng cuối cùng
+        const $lastRow = lastRow.last();
+        
+        // Clone dòng cuối cùng
+        var $newRow = $lastRow.clone();
 
+        // Reset các trường nhập liệu hiển thị
         $newRow.find('.oSttGv').val('');
         $newRow.find('.oNdGv, .oGchuGv').val('');
         $newRow.find('.oDmaxGv').val('');
@@ -344,26 +405,29 @@
         $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
         
+        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc nếu có select
         var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.length) $chonKq.val('');
         
-        // Lấy giá trị cột J..M từ dòng cuối cùng (lastRow) để gán lại cho dòng mới
-        const lastJ = lastRow.find('.oColJ').val() || "";
-        const lastK = lastRow.find('.oColK').val() || "";
-        const lastL = lastRow.find('.oColL').val() || "";
-        const lastM = lastRow.find('.oColM').val() || "";
+        // QUAN TRỌNG: Sao chép giá trị các cột J, K, L, M từ dòng cuối cùng
+        const lastJ = $lastRow.find('.oColJ').val() || "";
+        const lastK = $lastRow.find('.oColK').val() || "";
+        const lastL = $lastRow.find('.oColL').val() || "";
+        const lastM = $lastRow.find('.oColM').val() || "";
         
         $newRow.find('.oColJ').val(lastJ);
         $newRow.find('.oColK').val(lastK);
         $newRow.find('.oColL').val(lastL);
         $newRow.find('.oColM').val(lastM);
         
+        // Reset style
         $newRow.find('input, select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
             'font-weight': 'normal'
         });
 
+        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
         var $tdNoiDung = $newRow.find('td:nth-child(2)');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -372,11 +436,17 @@
 
         tbody.append($newRow);
         
+        // Tự động điều chỉnh chiều cao textarea
         $newRow.find('textarea').each(function() { gvCoDan(this); });
     }
     
-    function gvXoaDong(btn) { btn.closest('tr').remove(); }
+    function gvXoaDong(btn) { 
+        if (confirm("Xác nhận xóa dòng này?")) {
+            $(btn).closest('tr').remove(); 
+        }
+    }
 
+    // Hàm lấy dữ liệu từ một dòng (bao gồm các cột J..M)
     function gvLayDuLieuDong(dong) {
         return {
             stt: dong.querySelector('.oSttGv').value,
@@ -398,10 +468,21 @@
     }
 
     function gvDoiNgn(ptu) {
-        const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
-        if (!ndg) { gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); ptu.value = ""; return; }
-        const gt = ptu.value; if (!gt) return; const gth = gt.toUpperCase(); const nm = document.getElementById('gvLocNam').value; 
-        let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
+        const dong = ptu.closest('tr'); 
+        const ndg = dong.querySelector('.oNdGv').value.trim();
+        if (!ndg) { 
+            gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); 
+            ptu.value = ""; 
+            return; 
+        }
+        const gt = ptu.value; 
+        if (!gt) return; 
+        const gth = gt.toUpperCase(); 
+        const nm = document.getElementById('gvLocNam').value; 
+        let tngn = ""; 
+        if (gth !== 'DELETE' && gth !== 'ALL') { 
+            tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); 
+        }
         
         const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
         const data = gvLayDuLieuDong(dong);
@@ -425,11 +506,13 @@
         };
         const th_htai = document.getElementById('gvLocThang').value;
         let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
-        gvDatTai(true, tbht); gvGoiMayChu(nm, th_htai, nvx, ptu, gth);
+        gvDatTai(true, tbht); 
+        gvGoiMayChu(nm, th_htai, nvx, ptu, gth);
     }
 
     function gvCapNhatNhiemVuChung() {
-        const nm = document.getElementById('gvLocNam').value; const th_htai = document.getElementById('gvLocThang').value;
+        const nm = document.getElementById('gvLocNam').value; 
+        const th_htai = document.getElementById('gvLocThang').value;
         let dsNviec = [];
         document.querySelectorAll('#gvThanBang tr').forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
@@ -458,8 +541,30 @@
         });
         if (dsNviec.length === 0) return;
         gvDatTai(true, "⏳ Đang cập nhật toàn bộ nhiệm vụ...");
-        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') setTimeout(gvLaydlGoc, 1000); else gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); });
+        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { 
+            gvDatTai(false); 
+            if (kq && kq.ttai === 'tcong') setTimeout(gvLaydlGoc, 1000); 
+            else gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); 
+        }, function(l) { 
+            gvDatTai(false); 
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); 
+        });
     }
 
-    function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }
+    function gvGoiMayChu(n, t, nv, ptu, hth) { 
+        khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { 
+            gvDatTai(false); 
+            if (kq && kq.ttai === 'tcong') { 
+                ptu.style.backgroundColor = '#d1e7dd'; 
+                ptu.style.borderColor = '#badbcc'; 
+                ptu.style.fontWeight = 'bold'; 
+            } else { 
+                gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); 
+                if (ptu.tagName !== 'BUTTON') ptu.value = ""; 
+            } 
+        }, function(l) { 
+            gvDatTai(false); 
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); 
+        }); 
+    }
 </script>

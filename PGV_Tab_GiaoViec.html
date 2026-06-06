@@ -56,7 +56,7 @@
           </tr>
         </thead>
         <tbody id="gvThanBang"></tbody>
-       </table>
+      </table>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
     </div>
 </div>
@@ -136,7 +136,6 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // Lấy giá trị cột H và các cột ẩn J,K,L,M
         let vDiemDg = "";
         let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
@@ -157,6 +156,8 @@
                 if (inpL) vColL = inpL.value;
                 const inpM = dongCuoi.querySelector('.oColM');
                 if (inpM) vColM = inpM.value;
+                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
+                if (inpDiem) vDiemDg = inpDiem.value;
             }
         }
         
@@ -183,7 +184,6 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-    
     function gvThemDong() {
         const tbody = $('#gvThanBang');
         const lastRow = tbody.find('tr:last');
@@ -208,8 +208,15 @@
         var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.length) $chonKq.val('');
         
-        // Quan trọng: giữ nguyên các hidden J,K,L,M (đã được clone tự động)
-        // Không cần làm gì thêm vì clone đã copy giá trị
+        // Quan trọng: sao chép các cột J, K, L, M từ dòng cuối cùng
+        const lastJ = lastRow.find('.oColJ').val() || "";
+        const lastK = lastRow.find('.oColK').val() || "";
+        const lastL = lastRow.find('.oColL').val() || "";
+        const lastM = lastRow.find('.oColM').val() || "";
+        $newRow.find('.oColJ').val(lastJ);
+        $newRow.find('.oColK').val(lastK);
+        $newRow.find('.oColL').val(lastL);
+        $newRow.find('.oColM').val(lastM);
         
         // Reset style
         $newRow.find('input, select').css({
@@ -235,6 +242,27 @@
         }
     }
 
+    // Hàm lấy dữ liệu từ một dòng (bao gồm J..M)
+    function gvLayDuLieuDong(dong) {
+        return {
+            stt: dong.querySelector('.oSttGv').value,
+            ndung: dong.querySelector('.oNdGv').value.trim(),
+            diemmax: dong.querySelector('.oDmaxGv').value,
+            tggiao: dong.querySelector('.oTGGiao').value,
+            tdo: dong.querySelector('.oTdoGv').value,
+            tght: dong.querySelector('.oTGHoanThanh').value,
+            diemdg: dong.querySelector('.oDiemDgGv').value,
+            gchu: dong.querySelector('.oGchuGv').value,
+            ngnhan: dong.querySelector('.oNnghanGv').value,
+            trangngnhan: dong.querySelector('.oNnghanGv').value,
+            tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "",
+            colJ: dong.querySelector('.oColJ')?.value || "",
+            colK: dong.querySelector('.oColK')?.value || "",
+            colL: dong.querySelector('.oColL')?.value || "",
+            colM: dong.querySelector('.oColM')?.value || ""
+        };
+    }
+
     function gvDoiNgn(ptu) {
         const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
         if (!ndg) { gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); ptu.value = ""; return; }
@@ -242,23 +270,7 @@
         let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
         
         const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-        
-        // Lấy dữ liệu bao gồm J,K,L,M
-        const data = {
-            stt: dong.querySelector('.oSttGv').value,
-            ndung: ndg,
-            diemmax: dong.querySelector('.oDmaxGv').value,
-            tggiao: dong.querySelector('.oTGGiao').value,
-            tdo: dong.querySelector('.oTdoGv').value,
-            tght: dong.querySelector('.oTGHoanThanh').value,
-            diemdg: dong.querySelector('.oDiemDgGv').value,
-            gchu: dong.querySelector('.oGchuGv').value,
-            colJ: dong.querySelector('.oColJ')?.value || "",
-            colK: dong.querySelector('.oColK')?.value || "",
-            colL: dong.querySelector('.oColL')?.value || "",
-            colM: dong.querySelector('.oColM')?.value || ""
-        };
-        
+        const data = gvLayDuLieuDong(dong);
         const nvx = { 
             row_idx: row_idx,
             stt: data.stt,
@@ -288,24 +300,8 @@
         document.querySelectorAll('#gvThanBang tr').forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
+                const data = gvLayDuLieuDong(dong);
                 const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-                const data = {
-                    stt: dong.querySelector('.oSttGv').value,
-                    ndung: ndg,
-                    diemmax: dong.querySelector('.oDmaxGv').value,
-                    tggiao: dong.querySelector('.oTGGiao').value,
-                    tdo: dong.querySelector('.oTdoGv').value,
-                    tght: dong.querySelector('.oTGHoanThanh').value,
-                    diemdg: dong.querySelector('.oDiemDgGv').value,
-                    gchu: dong.querySelector('.oGchuGv').value,
-                    ngnhan: dong.querySelector('.oNnghanGv').value,
-                    trangngnhan: dong.querySelector('.oNnghanGv').value,
-                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "",
-                    colJ: dong.querySelector('.oColJ')?.value || "",
-                    colK: dong.querySelector('.oColK')?.value || "",
-                    colL: dong.querySelector('.oColL')?.value || "",
-                    colM: dong.querySelector('.oColM')?.value || ""
-                };
                 dsNviec.push({ 
                     row_idx: row_idx,
                     stt: data.stt,

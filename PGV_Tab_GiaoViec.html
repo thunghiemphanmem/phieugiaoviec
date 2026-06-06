@@ -58,7 +58,7 @@
     min-height: 0;
   }
   
- /* Nút thêm luôn hiển thị ở cuối, cách mép dưới 16px */
+  /* Nút thêm luôn hiển thị ở cuối, cách mép dưới 16px */
   .nutThem-footer {
     flex-shrink: 0;
     margin: 8px 12px 16px 12px;
@@ -270,7 +270,6 @@
             lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
         });
         
-        // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG ĐÁNH SỐ THỨ TỰ NỮA
         let bstt = dong ? dong[0] : ""; 
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
@@ -279,15 +278,30 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // KẾT THỪA CẤU HÌNH ẨN TỪ DÒNG TRƯỚC ĐÓ ĐỂ CÓ DROP-DOWN ĐIỂM Ở TRANG CÁ NHÂN
+        // Lấy giá trị cột H (điểm đánh giá) và các cột ẩn J,K,L,M
         let vDiemDg = "";
+        let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
             vDiemDg = dong[7] || "";
+            vColJ = dong[9] || "";
+            vColK = dong[10] || "";
+            vColL = dong[11] || "";
+            vColM = dong[12] || "";
         } else {
+            // Nếu tạo dòng mới (không có dong), lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
-                const inpCuoi = cacDong[cacDong.length - 1].querySelector('.oDiemDgGv');
-                if (inpCuoi) vDiemDg = inpCuoi.value;
+                const dongCuoi = cacDong[cacDong.length - 1];
+                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
+                if (inpDiem) vDiemDg = inpDiem.value;
+                const inpJ = dongCuoi.querySelector('.oColJ');
+                if (inpJ) vColJ = inpJ.value;
+                const inpK = dongCuoi.querySelector('.oColK');
+                if (inpK) vColK = inpK.value;
+                const inpL = dongCuoi.querySelector('.oColL');
+                if (inpL) vColL = inpL.value;
+                const inpM = dongCuoi.querySelector('.oColM');
+                if (inpM) vColM = inpM.value;
             }
         }
         
@@ -302,6 +316,11 @@
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
             <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+            <!-- Các cột ẩn J, K, L, M để lưu cấu hình điều kiện -->
+            <input type="hidden" class="oColJ" value="${vColJ}">
+            <input type="hidden" class="oColK" value="${vColK}">
+            <input type="hidden" class="oColL" value="${vColL}">
+            <input type="hidden" class="oColM" value="${vColM}">
         </td>`;
         
         tb.appendChild(tr);
@@ -310,41 +329,42 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
+    
     function gvThemDong() {
         const tbody = $('#gvThanBang');
         const lastRow = tbody.find('tr.dongNv:last');
 
-        // Nếu bảng chưa có dòng nào, tạo dòng mặc định
         if (lastRow.length === 0) {
             gvVeDong(null);
             return;
         }
 
-        // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
         var $newRow = lastRow.clone();
 
-        // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
-        $newRow.find('.oSttGv').val(''); // Để trống STT theo yêu cầu
-        $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
+        // Reset các trường nhập liệu hiển thị
+        $newRow.find('.oSttGv').val('');
+        $newRow.find('.oNdGv, .oGchuGv').val('');
         $newRow.find('.oDmaxGv').val('');
         $newRow.find('.oTGGiao').val('');
-        $newRow.find('.oTdoGv').val(''); // Reset select tiến độ
-        $newRow.find('.oNnghanGv').val(''); // Reset select người thực hiện
+        $newRow.find('.oTdoGv').val('');
+        $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
-        $newRow.find('.oDiemDgGv').val(''); // Xóa giá trị điểm đánh giá
         
-        // 2. Reset ô Đánh giá (cột H) - Phải giữ nguyên cấu trúc select nếu dòng trên là select
+        // Reset cột H (điểm đánh giá) nhưng giữ nguyên cấu trúc (data-config)
         var $chonKq = $newRow.find('.chonKq');
-        $chonKq.val(''); // Đưa về giá trị rỗng (đúng với option --Trống--)
-
-        // 3. Reset trạng thái ô (bỏ hiệu ứng input-success/d1e7dd nếu có)
+        $chonKq.val(''); // Chọn lại option rỗng
+        
+        // KHÔNG reset các hidden input J, K, L, M - giữ nguyên giá trị từ dòng trước
+        // (đã được clone tự động)
+        
+        // Reset style
         $newRow.find('input, select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
             'font-weight': 'normal'
         });
 
-        // 4. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
+        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
         var $tdNoiDung = $newRow.find('td:nth-child(2)');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -353,10 +373,9 @@
 
         tbody.append($newRow);
         
-        // Tự động điều chỉnh chiều cao textarea mới
         $newRow.find('textarea').each(function() { gvCoDan(this); });
-        // Không gọi tinhtTdong hay mokBcao vì file này không có các hàm đó, chỉ có giao việc
     }
+    
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {

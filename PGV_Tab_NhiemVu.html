@@ -174,7 +174,7 @@
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC (ĐÃ CẬP NHẬT ĐIỀU KIỆN >=, BỎ ||, XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG CỘT) ====================
+// ==================== TOÀN BỘ LOGIC (XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG MỘT CỘT J/K/L/M) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -392,7 +392,7 @@ function ktraAnHienTieuDe(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
+    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></td>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
@@ -457,7 +457,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </table>`; bg.append(dg);
+         </tr>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -494,7 +494,7 @@ function addNv() {
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); tinhtTdong(); } }
 
-// ==================== LOGIC XẾP LOẠI MỚI: XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG MỘT CỘT J/K/L/M ====================
+// ==================== LOGIC XẾP LOẠI CHÍNH XÁC: XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG MỘT CỘT ====================
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
     if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
@@ -506,7 +506,7 @@ function tinhtTdong() {
     const kiemTraTatCaRangBuoc = (giaTriThuc, chuoiDieuKien) => {
         if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
         let str = chuoiDieuKien.trim();
-        // Tách các ràng buộc: có thể bằng dấu phẩy hoặc khoảng trắng (nếu không có dấu phẩy)
+        // Tách các ràng buộc: ưu tiên dấu phẩy, nếu không có dấu phẩy thì tách bằng khoảng trắng
         let constraints = [];
         if (str.includes(',')) {
             constraints = str.split(',').map(s => s.trim()).filter(s => s !== "");
@@ -547,7 +547,7 @@ function tinhtTdong() {
                 // So khớp chính xác số
                 let exact = parseFloat(cond.replace(/[^\d.-]/g, ''));
                 if (isNaN(exact)) return false;
-                if (!(numVal === exact)) return false;
+                if (!(Math.abs(numVal - exact) < 1e-9)) return false; // so sánh số thực
             }
         }
         return true;

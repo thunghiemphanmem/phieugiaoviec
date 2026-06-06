@@ -13,7 +13,6 @@
   #bangNviec td { vertical-align: middle !important; padding: 0 !important; border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; overflow: hidden; }
   #bangNviec td:last-child { border-right: none !important; }
 
-  /* BỔ SUNG KHỐNG CHẾ ĐỘ RỘNG VÀ ÉP XUỐNG DÒNG CHO Ô DROP */
   #bangNviec textarea.form-control, #bangNviec input.form-control, #bangNviec select.form-select { 
       border: none !important; 
       background-color: transparent !important; 
@@ -25,8 +24,8 @@
       line-height: 1.15 !important; 
       resize: none; 
       overflow: hidden;
-      white-space: normal !important; /* Ép chữ tràn xuống dòng thay vì kéo dài vô tận */
-      word-wrap: break-word !important; /* Cho phép bẻ gãy từ dài nếu quá khung */
+      white-space: normal !important; 
+      word-wrap: break-word !important; 
   }
   #bangNviec textarea.form-control { min-height: 35px; white-space: pre-wrap; cursor: default; }
   #bangNviec .nhapNgay, #bangNviec .chonKq { text-align: center; font-weight: bold; height: auto; min-height: 30px; }
@@ -46,10 +45,14 @@
       <span class="nhanNhiemVu border-start ps-3">Năm học:</span><span id="chuNamHoc" class="chuThongTin">...</span>
     </div>
     <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
-    <div class="text-end text-nowrap" style="flex: 1.5;"> 
-      <div class="d-inline-block">
+    <div class="text-end text-nowrap" style="flex: 2;"> 
+      <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
          <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
          <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+      </div>
+      <div class="d-inline-block">
+         <label class="me-1 fw-bold text-danger text-uppercase" style="font-size:13px;">Tổng điểm:</label>
+         <span id="chuKqHthi" class="fw-bold text-danger" style="font-size:16px;">0 điểm</span>
       </div>
     </div>
   </div>
@@ -298,7 +301,6 @@ function veBangNviec(db) {
 
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
-            /* Giới hạn độ rộng khung Drop bằng max-width: 100% để không phá vỡ bảng */
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
@@ -328,7 +330,6 @@ function veBangNviec(db) {
                 
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
-                    /* Gắn thêm thuộc tính title="" để người dùng có thể hover chuột xem toàn văn chữ bị ẩn */
                     htmlDiem += `<option value="${val}" ${isSel} title="${txt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
                 }
             });

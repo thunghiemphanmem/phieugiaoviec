@@ -319,7 +319,7 @@ function veBangNviec(db) {
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
-        let sn = dong[0] || (chs + 1);
+        let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
         let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         
@@ -410,12 +410,10 @@ function addNv() {
         tbody.empty();
     }
 
-    // Lấy dòng cuối cùng (nếu có) để làm mẫu cấu trúc
     const lastRow = tbody.find('tr.dongNv:last');
-    let newStt = tbody.find('tr.dongNv').length + 1;
+    let newStt = ""; // <-- BỎ ĐÁNH SỐ TỰ ĐỘNG THEO YÊU CẦU
 
     if (lastRow.length === 0) {
-        // Trường hợp chưa có dòng nào: tạo dòng mới mặc định (input text cho cột H)
         let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold">${newStt}</td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
@@ -430,12 +428,9 @@ function addNv() {
         </tr>`;
         tbody.append(defaultRow);
     } else {
-        // Clone dòng cuối cùng để giữ nguyên cấu trúc (kiểu input/select, data-config, class, style)
         var $newRow = lastRow.clone();
-        // Reset số thứ tự
         $newRow.find('.oStt').text(newStt);
         
-        // Reset tất cả các trường nhập liệu (không copy giá trị)
         $newRow.find('.nhapNdung').val('').removeClass('fw-bold text-primary text-uppercase');
         $newRow.find('.nhapDiemMax').val('');
         $newRow.find('.nhapTgGiao').val('');
@@ -444,15 +439,13 @@ function addNv() {
         $newRow.find('.anNguoiTH').val('');
         $newRow.find('.anGhiChu').val('');
         
-        // Xử lý ô Điểm đánh giá (cột H) - giữ nguyên cấu trúc select/input, chỉ xóa giá trị
         var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.prop('tagName') === 'SELECT') {
-            $chonKq.val(''); // Chọn option rỗng (-- Trống --)
+            $chonKq.val('');
         } else {
             $chonKq.val('');
         }
         
-        // Nếu dòng trên là tiêu đề (có colspan), reset colspan về 1 và hiển thị lại các cột
         var $tdNoiDung = $newRow.find('td:first-child');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -462,14 +455,18 @@ function addNv() {
         tbody.append($newRow);
     }
 
-    // Điều chỉnh chiều cao textarea mới thêm
     tbody.find('tr:last textarea').each(function() { cdang(this); });
     tinhtTdong();
     if (typeof mokBcao === 'function') mokBcao();
 }
 
-function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
-function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
+function xoaDongNv(nt) { 
+    if(confirm("Xác nhận xóa?")) { 
+        $(nt).closest('tr').remove(); 
+        // Đã xóa hàm dlStt() để KHÔNG chạy lại STT
+        tinhtTdong(); 
+    } 
+}
 
 // ===================================================================================
 // NÂNG CẤP LÕI: LOGIC TÍNH ĐIỂM, PHÂN LOẠI MÀU SẮC & XUẤT RA MENU DỌC (Theo File tham khảo)

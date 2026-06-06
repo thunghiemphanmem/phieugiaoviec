@@ -292,8 +292,6 @@
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
                 const dongCuoi = cacDong[cacDong.length - 1];
-                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
-                if (inpDiem) vDiemDg = inpDiem.value;
                 const inpJ = dongCuoi.querySelector('.oColJ');
                 if (inpJ) vColJ = inpJ.value;
                 const inpK = dongCuoi.querySelector('.oColK');
@@ -302,6 +300,9 @@
                 if (inpL) vColL = inpL.value;
                 const inpM = dongCuoi.querySelector('.oColM');
                 if (inpM) vColM = inpM.value;
+                // Điểm đánh giá cũng có thể copy nếu cần
+                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
+                if (inpDiem) vDiemDg = inpDiem.value;
             }
         }
         
@@ -352,10 +353,19 @@
         
         // Reset cột H (điểm đánh giá) nhưng giữ nguyên cấu trúc (data-config)
         var $chonKq = $newRow.find('.chonKq');
-        $chonKq.val(''); // Chọn lại option rỗng
+        if ($chonKq.length) $chonKq.val(''); // Chọn lại option rỗng
         
         // KHÔNG reset các hidden input J, K, L, M - giữ nguyên giá trị từ dòng trước
-        // (đã được clone tự động)
+        // (đã được clone tự động, nhưng để chắc chắn, ta copy lại từ dòng cuối cùng hiện tại)
+        // Lấy giá trị từ dòng trước (lastRow) để đảm bảo
+        const lastJ = lastRow.find('.oColJ').val() || "";
+        const lastK = lastRow.find('.oColK').val() || "";
+        const lastL = lastRow.find('.oColL').val() || "";
+        const lastM = lastRow.find('.oColM').val() || "";
+        $newRow.find('.oColJ').val(lastJ);
+        $newRow.find('.oColK').val(lastK);
+        $newRow.find('.oColL').val(lastL);
+        $newRow.find('.oColM').val(lastM);
         
         // Reset style
         $newRow.find('input, select').css({
@@ -378,6 +388,27 @@
     
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
+    // Lấy dữ liệu từ dòng để gửi lên server (bao gồm cả các cột J..M)
+    function gvLayDuLieuDong(dong) {
+        return {
+            stt: dong.querySelector('.oSttGv').value,
+            ndung: dong.querySelector('.oNdGv').value.trim(),
+            diemmax: dong.querySelector('.oDmaxGv').value,
+            tggiao: dong.querySelector('.oTGGiao').value,
+            tdo: dong.querySelector('.oTdoGv').value,
+            tght: dong.querySelector('.oTGHoanThanh').value,
+            diemdg: dong.querySelector('.oDiemDgGv').value,
+            gchu: dong.querySelector('.oGchuGv').value,
+            ngnhan: dong.querySelector('.oNnghanGv').value,
+            trangngnhan: dong.querySelector('.oNnghanGv').value,
+            tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "",
+            colJ: dong.querySelector('.oColJ')?.value || "",
+            colK: dong.querySelector('.oColK')?.value || "",
+            colL: dong.querySelector('.oColL')?.value || "",
+            colM: dong.querySelector('.oColM')?.value || ""
+        };
+    }
+
     function gvDoiNgn(ptu) {
         const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
         if (!ndg) { gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); ptu.value = ""; return; }
@@ -385,18 +416,24 @@
         let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
         
         const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-        
+        const data = gvLayDuLieuDong(dong);
         const nvx = { 
             row_idx: row_idx,
-            stt: dong.querySelector('.oSttGv').value, 
-            ndung: ndg, 
-            diemmax: dong.querySelector('.oDmaxGv').value, 
-            tggiao: dong.querySelector('.oTGGiao').value, 
-            tdo: dong.querySelector('.oTdoGv').value, 
-            tght: dong.querySelector('.oTGHoanThanh').value, 
-            diemdg: dong.querySelector('.oDiemDgGv').value, 
-            gchu: dong.querySelector('.oGchuGv').value, 
-            ngnhan: gt, trangngnhan: gt, tenngnhan: tngn 
+            stt: data.stt,
+            ndung: data.ndung,
+            diemmax: data.diemmax,
+            tggiao: data.tggiao,
+            tdo: data.tdo,
+            tght: data.tght,
+            diemdg: data.diemdg,
+            gchu: data.gchu,
+            ngnhan: gt,
+            trangngnhan: gt,
+            tenngnhan: tngn,
+            colJ: data.colJ,
+            colK: data.colK,
+            colL: data.colL,
+            colM: data.colM
         };
         const th_htai = document.getElementById('gvLocThang').value;
         let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
@@ -410,19 +447,24 @@
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
                 const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
+                const data = gvLayDuLieuDong(dong);
                 dsNviec.push({ 
                     row_idx: row_idx,
-                    stt: dong.querySelector('.oSttGv').value, 
-                    ndung: ndg, 
-                    diemmax: dong.querySelector('.oDmaxGv').value, 
-                    tggiao: dong.querySelector('.oTGGiao').value, 
-                    tdo: dong.querySelector('.oTdoGv').value, 
-                    tght: dong.querySelector('.oTGHoanThanh').value, 
-                    diemdg: dong.querySelector('.oDiemDgGv').value, 
-                    gchu: dong.querySelector('.oGchuGv').value.trim(), 
-                    ngnhan: dong.querySelector('.oNnghanGv').value, 
-                    trangngnhan: dong.querySelector('.oNnghanGv').value, 
-                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "" 
+                    stt: data.stt,
+                    ndung: data.ndung,
+                    diemmax: data.diemmax,
+                    tggiao: data.tggiao,
+                    tdo: data.tdo,
+                    tght: data.tght,
+                    diemdg: data.diemdg,
+                    gchu: data.gchu,
+                    ngnhan: data.ngnhan,
+                    trangngnhan: data.trangngnhan,
+                    tenngnhan: data.tenngnhan,
+                    colJ: data.colJ,
+                    colK: data.colK,
+                    colL: data.colL,
+                    colM: data.colM
                 });
             }
         });

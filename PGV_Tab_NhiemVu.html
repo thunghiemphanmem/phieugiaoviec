@@ -78,10 +78,7 @@
          <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
          <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
       </div>
-      <div class="d-inline-block">
-         <label class="me-1 fw-bold text-danger text-uppercase" style="font-size:13px;">Kết quả:</label>
-         <span id="chuKqHthi" class="fw-bold text-danger" style="font-size:15px;">Chưa đánh giá</span>
-      </div>
+      <!-- Đã xóa hoàn toàn ô Kết quả -->
     </div>
   </div>
 
@@ -121,7 +118,13 @@
   <div class="p-2 text-start bg-light border-top"><button class="btn btn-sm btn-outline-primary fw-bold" onclick="addNv()"><i class="bi bi-plus-circle"></i> Thêm nhiệm vụ</button></div>
 </div>
 
+<!-- Thẻ span ẩn để giữ kết quả cho các hàm JS, không hiển thị trên giao diện -->
+<div style="display: none;">
+  <span id="chuKqHthi" class="fw-bold text-danger">Chưa đánh giá</span>
+</div>
+
 <script>
+// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ DI CHUYỂN SPAN KẾT QUẢ) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -420,7 +423,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </tr>`; bg.append(dg);
+        <tr>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -458,7 +461,7 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
             <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </tr>`;
+        </table>`;
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
@@ -489,11 +492,6 @@ function xoaDongNv(nt) {
         tinhtTdong(); 
     } 
 }
-
-// ===================================================================================
-// LOGIC MỚI: XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG MỘT CỘT (J, K, L, M)
-// Hỗ trợ >=, <=, >, <, số chính xác, nhiều điều kiện cách nhau bằng dấu phẩy hoặc khoảng trắng
-// ===================================================================================
 
 function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
     if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
@@ -545,7 +543,7 @@ function tinhtTdong() {
     let tongMax = 0;
     let soNhiemVu = 0;
     let soDaDanhGia = 0;
-    let minRank = 5; // 4: XS, 3: HTT, 2: HT, 1: CHT
+    let minRank = 5;
     let hasJMLogic = false;
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {

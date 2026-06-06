@@ -296,11 +296,24 @@ function veBangNviec(db) {
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="">-- Trống --</option>`;
-            let opts = valConfig.split(",");
+            
+            let opts = [];
+            if (valConfig.includes(";")) {
+                opts = valConfig.split(";");
+            } else if (valConfig.includes("\n")) {
+                opts = valConfig.split("\n");
+            } else {
+                opts = valConfig.split(",");
+            }
+
             opts.forEach(opt => {
-                let kv = opt.split("|"); let txt = kv[0].trim(); let val = kv.length > 1 ? kv[1].trim() : txt;
-                let isSel = (val === valChon) ? "selected" : "";
-                htmlDiem += `<option value="${val}" ${isSel}>${txt}</option>`;
+                let kv = opt.split("|"); 
+                let txt = kv[0].trim(); 
+                let val = kv.length > 1 ? kv[1].trim() : txt;
+                if(txt !== "") {
+                    let isSel = (val === valChon) ? "selected" : "";
+                    htmlDiem += `<option value="${val}" ${isSel}>${txt}</option>`;
+                }
             });
             htmlDiem += `</select>`;
         }

@@ -137,22 +137,21 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // Lấy giá trị cột H (điểm đánh giá) và các cột ẩn J, K, L, M
+        // Lấy giá trị cột H và các cột ẩn J, K, L, M
         let vDiemDg = "";
         let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
+            // Dữ liệu từ server: dong[7] là cột H, dong[9..12] là J..M
             vDiemDg = dong[7] || "";
             vColJ = dong[9] || "";
             vColK = dong[10] || "";
             vColL = dong[11] || "";
             vColM = dong[12] || "";
         } else {
-            // Khi thêm dòng mới, lấy từ dòng cuối cùng hiện có (nếu có)
+            // Khi thêm dòng mới, lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
                 const dongCuoi = cacDong[cacDong.length - 1];
-                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
-                if (inpDiem) vDiemDg = inpDiem.value;
                 const inpJ = dongCuoi.querySelector('.oColJ');
                 if (inpJ) vColJ = inpJ.value;
                 const inpK = dongCuoi.querySelector('.oColK');
@@ -161,6 +160,8 @@
                 if (inpL) vColL = inpL.value;
                 const inpM = dongCuoi.querySelector('.oColM');
                 if (inpM) vColM = inpM.value;
+                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
+                if (inpDiem) vDiemDg = inpDiem.value;
             }
         }
         
@@ -187,8 +188,67 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-    function gvThemDong() { gvVeDong(null); }
-    function gvXoaDong(btn) { btn.closest('tr').remove(); }
+    
+    function gvThemDong() {
+        const tbody = $('#gvThanBang');
+        const lastRow = tbody.find('tr:last');
+
+        if (lastRow.length === 0) {
+            gvVeDong(null);
+            return;
+        }
+
+        var $newRow = lastRow.clone();
+
+        // Reset các trường nhập liệu hiển thị
+        $newRow.find('.oSttGv').val('');
+        $newRow.find('.oNdGv, .oGchuGv').val('');
+        $newRow.find('.oDmaxGv').val('');
+        $newRow.find('.oTGGiao').val('');
+        $newRow.find('.oTdoGv').val('');
+        $newRow.find('.oNnghanGv').val('');
+        $newRow.find('.oTGHoanThanh').val('');
+        
+        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc select nếu có
+        var $chonKq = $newRow.find('.chonKq');
+        if ($chonKq.length) $chonKq.val('');
+        
+        // QUAN TRỌNG: Lấy giá trị các cột J, K, L, M từ dòng cuối và gán lại cho dòng mới
+        const lastJ = lastRow.find('.oColJ').val() || "";
+        const lastK = lastRow.find('.oColK').val() || "";
+        const lastL = lastRow.find('.oColL').val() || "";
+        const lastM = lastRow.find('.oColM').val() || "";
+        
+        $newRow.find('.oColJ').val(lastJ);
+        $newRow.find('.oColK').val(lastK);
+        $newRow.find('.oColL').val(lastL);
+        $newRow.find('.oColM').val(lastM);
+        
+        // Reset style
+        $newRow.find('input, select').css({
+            'background-color': 'transparent',
+            'border-color': 'transparent',
+            'font-weight': 'normal'
+        });
+
+        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
+        var $tdNoiDung = $newRow.find('td:nth-child(2)');
+        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
+            $tdNoiDung.attr('colspan', '1');
+            $newRow.find('td:nth-child(n+3)').show();
+        }
+
+        tbody.append($newRow);
+        
+        // Tự động điều chỉnh chiều cao textarea mới
+        $newRow.find('textarea').each(function() { gvCoDan(this); });
+    }
+    
+    function gvXoaDong(btn) { 
+        if (confirm("Xác nhận xóa dòng này?")) {
+            $(btn).closest('tr').remove(); 
+        }
+    }
 
     // Hàm lấy dữ liệu từ một dòng (bao gồm J..M)
     function gvLayDuLieuDong(dong) {
@@ -248,8 +308,8 @@
         document.querySelectorAll('#gvThanBang tr').forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
-                const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
                 const data = gvLayDuLieuDong(dong);
+                const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
                 dsNviec.push({ 
                     row_idx: row_idx,
                     stt: data.stt,

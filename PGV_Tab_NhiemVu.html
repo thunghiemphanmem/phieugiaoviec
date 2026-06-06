@@ -323,6 +323,8 @@ function veBangNviec(db) {
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
         let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         
+        let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
+        
         let valChon = ""; let valConfig = rawH;
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
         else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
@@ -379,6 +381,10 @@ function veBangNviec(db) {
               <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc}</textarea>
               <input type="hidden" class="anNguoiTH" value="${nTH}">
               <input type="hidden" class="anGhiChu" value="${gc}">
+              <input type="hidden" class="oColJ" value="${j_val}">
+              <input type="hidden" class="oColK" value="${k_val}">
+              <input type="hidden" class="oColL" value="${l_val}">
+              <input type="hidden" class="oColM" value="${m_val}">
           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
@@ -393,7 +399,6 @@ function veBangNviec(db) {
 
 function addNv() {
     var isBGH = kiemTraLaBGH();
-    // Kiểm tra quyền khi đang xem giáo viên khác
     if (cotETonTai) {
         var selectGv = document.getElementById("hopChonGv");
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
@@ -405,19 +410,19 @@ function addNv() {
     }
 
     const tbody = $('#bangNviec tbody');
-    // Xóa dòng thông báo "Chưa có nhiệm vụ" nếu có
     if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) {
         tbody.empty();
     }
 
     const lastRow = tbody.find('tr.dongNv:last');
-    let newStt = ""; // <-- BỎ ĐÁNH SỐ TỰ ĐỘNG THEO YÊU CẦU
-
+    
     if (lastRow.length === 0) {
         let defaultRow = `<tr class="dongNv">
-            <td class="text-center align-middle oStt fw-bold">${newStt}</td>
+            <td class="text-center align-middle oStt fw-bold"></td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
                 <input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">
+                <input type="hidden" class="oColJ" value=""><input type="hidden" class="oColK" value="">
+                <input type="hidden" class="oColL" value=""><input type="hidden" class="oColM" value="">
             </td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>
@@ -429,22 +434,12 @@ function addNv() {
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
-        $newRow.find('.oStt').text(newStt);
-        
-        $newRow.find('.nhapNdung').val('').removeClass('fw-bold text-primary text-uppercase');
-        $newRow.find('.nhapDiemMax').val('');
-        $newRow.find('.nhapTgGiao').val('');
-        $newRow.find('.nhapTdo').val('');
-        $newRow.find('.nhapTgHt').val('');
-        $newRow.find('.anNguoiTH').val('');
-        $newRow.find('.anGhiChu').val('');
+        $newRow.find('.oStt').text('');
+        $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
+        $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
         
         var $chonKq = $newRow.find('.chonKq');
-        if ($chonKq.prop('tagName') === 'SELECT') {
-            $chonKq.val('');
-        } else {
-            $chonKq.val('');
-        }
+        $chonKq.val(''); 
         
         var $tdNoiDung = $newRow.find('td:first-child');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
@@ -463,14 +458,15 @@ function addNv() {
 function xoaDongNv(nt) { 
     if(confirm("Xác nhận xóa?")) { 
         $(nt).closest('tr').remove(); 
-        // Đã xóa hàm dlStt() để KHÔNG chạy lại STT
         tinhtTdong(); 
     } 
 }
 
 // ===================================================================================
-// NÂNG CẤP LÕI: LOGIC TÍNH ĐIỂM, PHÂN LOẠI MÀU SẮC & XUẤT RA MENU DỌC (Theo File tham khảo)
+// NÂNG CẤP LÕI: LOGIC ĐỐI CHIẾU ĐIỀU KIỆN TỪNG DÒNG (THÔNG MINH)
+// Đọc cả phép toán (>=, <=), ký tự đa điều kiện (||, |, ,) và ký tự đặc biệt (%, chữ)
 // ===================================================================================
+
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -485,6 +481,51 @@ function tinhtTdong() {
     let tongMax = 0;
     let soNhiemVu = 0;
     let soDaDanhGia = 0;
+    
+    let minRank = 5; // 5: Mặc định, 4: Xuất sắc, 3: Tốt, 2: Hoàn thành, 1: Chưa hoàn thành
+    let hasJMLogic = false;
+
+    // HÀM HỖ TRỢ XỬ LÝ KHỚP ĐIỀU KIỆN KHẮT KHE (Đã cập nhật biểu thức ||)
+    const kiemTraKhop = (giaTriThuc, textHienThi, dieuKienGoc) => {
+        if (!dieuKienGoc || dieuKienGoc.trim() === "") return false;
+        
+        let valStr = String(giaTriThuc).trim().toUpperCase();
+        let txtStr = String(textHienThi).trim().toUpperCase();
+        let dkStr = String(dieuKienGoc).trim().toUpperCase();
+
+        // Cắt theo dấu ||, | hoặc phẩy (hỗ trợ nhập 2||1, 2|1, 2,1)
+        let cacDk = dkStr.split(/\|\||\||,/); 
+        for (let i = 0; i < cacDk.length; i++) {
+            let dk = cacDk[i].trim();
+            if (dk === "") continue;
+
+            // 1. So sánh khớp tuyệt đối (Khớp giá trị hoặc khớp chữ hiển thị, bao gồm chữ "100%")
+            if (valStr === dk || txtStr.includes(dk) || txtStr === dk) {
+                return true;
+            }
+
+            // 2. Phân tích toán học (Xử lý các dấu >=, <=, >, <)
+            // Lọc chỉ lấy phần số học (loại bỏ % hay chữ)
+            let numVal = parseFloat(valStr.replace(/[^\d.-]/g, '')); 
+            if (!isNaN(numVal)) {
+                if (dk.startsWith(">=")) {
+                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
+                    if (!isNaN(numDk) && numVal >= numDk) return true;
+                } else if (dk.startsWith("<=")) {
+                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
+                    if (!isNaN(numDk) && numVal <= numDk) return true;
+                } else if (dk.startsWith(">")) {
+                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
+                    if (!isNaN(numDk) && numVal > numDk) return true;
+                } else if (dk.startsWith("<")) {
+                    let numDk = parseFloat(dk.replace(/[^\d.-]/g, ''));
+                    if (!isNaN(numDk) && numVal < numDk) return true;
+                }
+            }
+        }
+        return false;
+    };
+
     const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv');
     
     cdt.forEach((dg) => {
@@ -492,18 +533,50 @@ function tinhtTdong() {
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
             
-            // Tính tổng điểm Max chuẩn của toàn bảng
             const maxInp = dg.querySelector('.nhapDiemMax');
             if(maxInp && maxInp.value) {
                 let mVal = parseFloat(maxInp.value);
                 if(!isNaN(mVal)) tongMax += mVal;
             }
             
-            // Tính điểm đánh giá thực tế
             if (cg.value !== "") {
                 soDaDanhGia++;
-                let diem = parseFloat(cg.value);
+                
+                // Lấy giá trị ẩn và Text hiển thị trên select
+                let valThuc = cg.value.trim();
+                let txtHienThi = valThuc;
+                if (cg.tagName === "SELECT") {
+                    let selOpt = cg.options[cg.selectedIndex];
+                    if (selOpt) txtHienThi = selOpt.text;
+                }
+
+                // Cộng điểm phục vụ hiển thị phụ
+                let diem = parseFloat(valThuc);
                 if (!isNaN(diem)) tongDiem += diem;
+                
+                // Đọc mốc điều kiện J, K, L, M
+                let j = dg.querySelector('.oColJ') ? dg.querySelector('.oColJ').value.trim() : "";
+                let k = dg.querySelector('.oColK') ? dg.querySelector('.oColK').value.trim() : "";
+                let l = dg.querySelector('.oColL') ? dg.querySelector('.oColL').value.trim() : "";
+                let m = dg.querySelector('.oColM') ? dg.querySelector('.oColM').value.trim() : "";
+                
+                if (j !== "" || k !== "" || l !== "" || m !== "") {
+                    hasJMLogic = true;
+                    let rank = 0; // Đang quét dòng, mặc định là 0 (Chưa khớp)
+                    
+                    if (kiemTraKhop(valThuc, txtHienThi, j)) rank = 4;
+                    else if (kiemTraKhop(valThuc, txtHienThi, k)) rank = 3;
+                    else if (kiemTraKhop(valThuc, txtHienThi, l)) rank = 2;
+                    else if (kiemTraKhop(valThuc, txtHienThi, m)) rank = 1;
+
+                    // Cập nhật mức xếp loại thấp nhất của tổng thể
+                    if (rank > 0) {
+                        minRank = Math.min(minRank, rank);
+                    } else {
+                        // Nếu có làm nhưng chọn nhầm kết quả không nằm trong J,K,L,M -> Đánh tụt xuống CHT
+                        minRank = Math.min(minRank, 1); 
+                    }
+                }
             }
         }
     });
@@ -511,24 +584,37 @@ function tinhtTdong() {
     let diemCuoiCung = tongDiem + dc;
     let xpl = "Chưa hoàn thành";
     
-    // Thuật toán gán Xếp loại tự động
     if (soNhiemVu === 0) {
         xpl = "Chưa giao việc";
     } else if (soDaDanhGia === 0) {
         xpl = "Chưa đánh giá";
     } else {
-        // Quy đổi thành tỷ lệ phần trăm (đề phòng bảng không dùng thang 100)
-        let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
-        if (tyLe >= 90) xpl = "Xuất sắc";
-        else if (tyLe >= 70) xpl = "Hoàn thành tốt";
-        else if (tyLe >= 50) xpl = "Hoàn thành";
-        else xpl = "Chưa hoàn thành";
+        // Ưu tiên 1: Đánh giá theo cột J:M khắt khe
+        if (hasJMLogic) {
+            if (minRank === 4) xpl = "Xuất sắc";
+            else if (minRank === 3) xpl = "Hoàn thành tốt";
+            else if (minRank === 2) xpl = "Hoàn thành";
+            else if (minRank === 1) xpl = "Chưa hoàn thành";
+            else xpl = "Chưa xác định";
+        } 
+        // Ưu tiên 2: Trả về tính tỷ lệ nếu BGH không cấu hình J:M
+        else {
+            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
+            if (tyLe >= 90) xpl = "Xuất sắc";
+            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
+            else if (tyLe >= 50) xpl = "Hoàn thành";
+            else xpl = "Chưa hoàn thành";
+        }
     }
     
-    // Gộp chuỗi giống cấu trúc chuẩn của file tham khảo (VD: "Xuất sắc: 95 điểm")
-    let txtKq = (xpl === "Chưa giao việc" || xpl === "Chưa đánh giá") ? xpl : `${xpl}: ${diemCuoiCung} điểm`;
+    // Ráp kết quả để in ra màn hình
+    let txtKq = xpl;
+    if (xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
+        if (tongDiem > 0 || dc !== 0 || !hasJMLogic) {
+            txtKq = `${xpl}: ${diemCuoiCung} điểm`;
+        }
+    }
     
-    // 1. Cập nhật vào Ô kết quả trên bảng nhiệm vụ
     const qht = document.getElementById('chuKqHthi');
     if (qht) { 
         qht.innerText = txtKq; 
@@ -538,7 +624,6 @@ function tinhtTdong() {
         else qht.classList.add("text-danger"); 
     }
     
-    // 2. Cập nhật vào thẻ chứa của Menu dọc (Đúng định dạng và màu sắc)
     const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
     theMenuDoc.forEach(el => {
         el.innerText = txtKq;

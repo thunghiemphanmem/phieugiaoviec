@@ -51,14 +51,12 @@
     padding: 0; 
   }
   
-  /* Vùng cuộn bảng */
   .table-scroll-wrapper {
     flex: 1;
     overflow: auto;
     min-height: 0;
   }
   
-  /* Nút thêm luôn hiển thị ở cuối, cách mép dưới 16px */
   .nutThem-footer {
     flex-shrink: 0;
     margin: 8px 12px 16px 12px;
@@ -204,7 +202,7 @@
 </div>
 
 <script>
-    let dsCanbgv = []; let tdtaiXoaCho = null; let ptuChoXoa = null;
+    let dsCanbgv = [];
     setTimeout(function() { gvTaiCanb(); }, 500);
 
     function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
@@ -278,7 +276,6 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // Lấy giá trị cột H (điểm đánh giá) và các cột ẩn J,K,L,M
         let vDiemDg = "";
         let vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
@@ -288,7 +285,6 @@
             vColL = dong[11] || "";
             vColM = dong[12] || "";
         } else {
-            // Nếu tạo dòng mới (không có dong), lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
                 const dongCuoi = cacDong[cacDong.length - 1];
@@ -316,7 +312,6 @@
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
             <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
-            <!-- Các cột ẩn J, K, L, M để lưu cấu hình điều kiện -->
             <input type="hidden" class="oColJ" value="${vColJ}">
             <input type="hidden" class="oColK" value="${vColK}">
             <input type="hidden" class="oColL" value="${vColL}">
@@ -335,15 +330,12 @@
         const lastRow = tbody.find('tr.dongNv:last');
 
         if (lastRow.length === 0) {
-            // Nếu không có dòng nào, tạo dòng mới trống
             gvVeDong(null);
             return;
         }
 
-        // Clone dòng cuối cùng
         var $newRow = lastRow.clone();
 
-        // Reset các trường nhập liệu hiển thị
         $newRow.find('.oSttGv').val('');
         $newRow.find('.oNdGv, .oGchuGv').val('');
         $newRow.find('.oDmaxGv').val('');
@@ -352,31 +344,26 @@
         $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
         
-        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc nếu có select
         var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.length) $chonKq.val('');
         
-        // KHÔNG reset các hidden input J, K, L, M - nhưng cần đảm bảo chúng có giá trị từ dòng trên
-        // Lấy giá trị từ dòng cuối cùng hiện tại (lastRow) để gán lại
+        // Lấy giá trị cột J..M từ dòng cuối cùng (lastRow) để gán lại cho dòng mới
         const lastJ = lastRow.find('.oColJ').val() || "";
         const lastK = lastRow.find('.oColK').val() || "";
         const lastL = lastRow.find('.oColL').val() || "";
         const lastM = lastRow.find('.oColM').val() || "";
         
-        // Tìm các hidden input trong dòng mới và gán giá trị
         $newRow.find('.oColJ').val(lastJ);
         $newRow.find('.oColK').val(lastK);
         $newRow.find('.oColL').val(lastL);
         $newRow.find('.oColM').val(lastM);
         
-        // Reset style (xóa màu nền)
         $newRow.find('input, select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
             'font-weight': 'normal'
         });
 
-        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
         var $tdNoiDung = $newRow.find('td:nth-child(2)');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -385,13 +372,11 @@
 
         tbody.append($newRow);
         
-        // Tự động điều chỉnh chiều cao textarea
         $newRow.find('textarea').each(function() { gvCoDan(this); });
     }
     
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
-    // Hàm lấy dữ liệu từ một dòng (bao gồm các cột J..M)
     function gvLayDuLieuDong(dong) {
         return {
             stt: dong.querySelector('.oSttGv').value,

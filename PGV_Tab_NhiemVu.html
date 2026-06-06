@@ -295,24 +295,36 @@ function veBangNviec(db) {
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
             htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
-            htmlDiem += `<option value="">-- Trống --</option>`;
+            htmlDiem += `<option value="" style="text-align: left;">-- Trống --</option>`;
             
-            let opts = [];
+            let optsArray = [];
             if (valConfig.includes(";")) {
-                opts = valConfig.split(";");
+                optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
-                opts = valConfig.split("\n");
+                // Thuật toán dọn dẹp các dòng trống và nối các câu bị gãy do Alt+Enter
+                let lines = valConfig.split("\n");
+                let currentOpt = "";
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (line === "") continue; 
+                    currentOpt = currentOpt === "" ? line : currentOpt + " " + line;
+                    if (line.includes("|") || i === lines.length - 1) {
+                        optsArray.push(currentOpt);
+                        currentOpt = "";
+                    }
+                }
             } else {
-                opts = valConfig.split(",");
+                optsArray = valConfig.split(",");
             }
 
-            opts.forEach(opt => {
+            optsArray.forEach(opt => {
                 let kv = opt.split("|"); 
-                let txt = kv[0].trim(); 
+                let txt = kv[0].replace(/\s+/g, ' ').trim(); 
                 let val = kv.length > 1 ? kv[1].trim() : txt;
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
-                    htmlDiem += `<option value="${val}" ${isSel}>${txt}</option>`;
+                    // Bổ sung text-align: left để các lựa chọn dài không bị dạt ra giữa thưa thớt
+                    htmlDiem += `<option value="${val}" ${isSel} style="text-align: left;">${txt}</option>`;
                 }
             });
             htmlDiem += `</select>`;

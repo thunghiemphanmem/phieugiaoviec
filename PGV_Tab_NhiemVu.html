@@ -51,8 +51,8 @@
          <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
       </div>
       <div class="d-inline-block">
-         <label class="me-1 fw-bold text-danger text-uppercase" style="font-size:13px;">Tổng điểm:</label>
-         <span id="chuKqHthi" class="fw-bold text-danger" style="font-size:16px;">0 điểm</span>
+         <label class="me-1 fw-bold text-danger text-uppercase" style="font-size:13px;">Kết quả:</label>
+         <span id="chuKqHthi" class="fw-bold text-danger" style="font-size:15px;">Chưa đánh giá</span>
       </div>
     </div>
   </div>
@@ -240,7 +240,6 @@ function nopBcaoChinh() {
         return;
     }
 
-    // --- KIỂM DUYỆT DỮ LIỆU ĐẦU VÀO TỪ MÃ CỦA ĐỒNG CHÍ ---
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
     if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
     
@@ -251,17 +250,15 @@ function nopBcaoChinh() {
     $('#bangNviec tbody tr.dongNv').each(function(i) {
       let selectKq = $(this).find('.chonKq');
       let inputNgay = $(this).find('.nhapTgHt');
-      // Bỏ qua kiểm tra đối với dòng tiêu đề (có display: none ở ô chọn kết quả)
       if (selectKq.css('display') !== 'none') {
           if (!selectKq.val() || !inputNgay.val()) { 
               hienThongb('loi', `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!`); 
               bhl = false; 
-              return false; // dừng vòng lặp
+              return false; 
           }
       }
     }); 
     if (!bhl) return;
-    // -----------------------------------------------------
 
     hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
       const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
@@ -282,7 +279,6 @@ function mokBcao() {
     mbcMo = true; 
     const nt = document.getElementById('nutNopBcao'); 
     if(nt && nt.style.display !== 'none') { 
-        // Logic mở khóa kế thừa từ mã đồng chí
         if (!cotETonTai) {
             nt.disabled = false;
         } else {
@@ -293,7 +289,6 @@ function mokBcao() {
                 nt.disabled = false;
             }
         }
-        // Thêm hiệu ứng nẩy nút báo cáo 
         nt.style.transition = "transform 0.2s"; 
         nt.style.transform = "scale(1.1)"; 
         setTimeout(() => nt.style.transform = "scale(1)", 200); 
@@ -406,6 +401,9 @@ function addNv() {
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }
 function dlStt() { $('#bangNviec tbody tr.dongNv').each(function(chs) { $(this).find('.oStt').text(chs + 1); }); }
 
+// ===================================================================================
+// NÂNG CẤP LÕI: LOGIC TÍNH ĐIỂM, PHÂN LOẠI MÀU SẮC & XUẤT RA MENU DỌC (Theo File tham khảo)
+// ===================================================================================
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); 
     let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
@@ -417,28 +415,70 @@ function tinhtTdong() {
     }
     
     let tongDiem = 0;
+    let tongMax = 0;
+    let soNhiemVu = 0;
+    let soDaDanhGia = 0;
     const cdt = document.querySelectorAll('#bangNviec tbody tr.dongNv');
     
     cdt.forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
-        if (cg && cg.style.display !== 'none' && cg.value !== "") {
-            let diem = parseFloat(cg.value);
-            if (!isNaN(diem)) tongDiem += diem;
+        if (cg && cg.style.display !== 'none') {
+            soNhiemVu++;
+            
+            // Tính tổng điểm Max chuẩn của toàn bảng
+            const maxInp = dg.querySelector('.nhapDiemMax');
+            if(maxInp && maxInp.value) {
+                let mVal = parseFloat(maxInp.value);
+                if(!isNaN(mVal)) tongMax += mVal;
+            }
+            
+            // Tính điểm đánh giá thực tế
+            if (cg.value !== "") {
+                soDaDanhGia++;
+                let diem = parseFloat(cg.value);
+                if (!isNaN(diem)) tongDiem += diem;
+            }
         }
     });
     
     let diemCuoiCung = tongDiem + dc;
-    let txtKq = `${diemCuoiCung} điểm`;
+    let xpl = "Chưa hoàn thành";
     
+    // Thuật toán gán Xếp loại tự động
+    if (soNhiemVu === 0) {
+        xpl = "Chưa giao việc";
+    } else if (soDaDanhGia === 0) {
+        xpl = "Chưa đánh giá";
+    } else {
+        // Quy đổi thành tỷ lệ phần trăm (đề phòng bảng không dùng thang 100)
+        let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
+        if (tyLe >= 90) xpl = "Xuất sắc";
+        else if (tyLe >= 70) xpl = "Hoàn thành tốt";
+        else if (tyLe >= 50) xpl = "Hoàn thành";
+        else xpl = "Chưa hoàn thành";
+    }
+    
+    // Gộp chuỗi giống cấu trúc chuẩn của file tham khảo (VD: "Xuất sắc: 95 điểm")
+    let txtKq = (xpl === "Chưa giao việc" || xpl === "Chưa đánh giá") ? xpl : `${xpl}: ${diemCuoiCung} điểm`;
+    
+    // 1. Cập nhật vào Ô kết quả trên bảng nhiệm vụ
     const qht = document.getElementById('chuKqHthi');
     if (qht) { 
         qht.innerText = txtKq; 
-        qht.className = "fw-bold text-danger epMotDong"; 
+        qht.className = "fw-bold epMotDong"; 
+        if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
+        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
+        else qht.classList.add("text-danger"); 
     }
     
+    // 2. Cập nhật vào thẻ chứa của Menu dọc (Đúng định dạng và màu sắc)
     const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
     theMenuDoc.forEach(el => {
         el.innerText = txtKq;
+        el.className = "epMotDong"; 
+        if (xpl === "Xuất sắc") el.classList.add("text-success", "fw-bold"); 
+        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary", "fw-bold"); 
+        else el.classList.add("text-danger", "fw-bold"); 
     });
 }
 

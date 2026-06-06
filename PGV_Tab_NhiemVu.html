@@ -405,19 +405,18 @@ function addNv() {
     }
 
     const tbody = $('#bangNviec tbody');
-    // Nếu bảng đang có thông báo "Chưa có nhiệm vụ" thì xóa nó đi
+    // Xóa dòng thông báo "Chưa có nhiệm vụ" nếu có
     if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) {
         tbody.empty();
     }
 
-    // Lấy dòng cuối cùng (nếu có) để làm mẫu
+    // Lấy dòng cuối cùng (nếu có) để làm mẫu cấu trúc
     const lastRow = tbody.find('tr.dongNv:last');
-    let newRowHtml = '';
     let newStt = tbody.find('tr.dongNv').length + 1;
 
     if (lastRow.length === 0) {
-        // Trường hợp chưa có dòng nào: tạo dòng mới theo mẫu cũ
-        newRowHtml = `<tr class="dongNv">
+        // Trường hợp chưa có dòng nào: tạo dòng mới mặc định (input text cho cột H)
+        let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold">${newStt}</td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
                 <input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">
@@ -429,44 +428,41 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
             <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
         </tr>`;
+        tbody.append(defaultRow);
     } else {
-        // Clone dòng cuối cùng và reset các giá trị
-        var $clone = lastRow.clone();
+        // Clone dòng cuối cùng để giữ nguyên cấu trúc (kiểu input/select, data-config, class, style)
+        var $newRow = lastRow.clone();
         // Reset số thứ tự
-        $clone.find('.oStt').text(newStt);
-        // Reset textarea nội dung
-        $clone.find('.nhapNdung').val('').removeClass('fw-bold text-primary text-uppercase');
-        // Reset các input và select
-        $clone.find('.nhapDiemMax').val('');
-        $clone.find('.nhapTgGiao').val('');
-        $clone.find('.nhapTdo').val('');
-        $clone.find('.nhapTgHt').val('');
-        // Reset ẩn
-        $clone.find('.anNguoiTH').val('');
-        $clone.find('.anGhiChu').val('');
+        $newRow.find('.oStt').text(newStt);
         
-        // Xử lý ô Điểm đánh giá (cột H)
-        var $chonKq = $clone.find('.chonKq');
-        var dataConfig = $chonKq.attr('data-config') || '';
-        // Nếu là select box (tagName SELECT) thì reset về option rỗng
+        // Reset tất cả các trường nhập liệu (không copy giá trị)
+        $newRow.find('.nhapNdung').val('').removeClass('fw-bold text-primary text-uppercase');
+        $newRow.find('.nhapDiemMax').val('');
+        $newRow.find('.nhapTgGiao').val('');
+        $newRow.find('.nhapTdo').val('');
+        $newRow.find('.nhapTgHt').val('');
+        $newRow.find('.anNguoiTH').val('');
+        $newRow.find('.anGhiChu').val('');
+        
+        // Xử lý ô Điểm đánh giá (cột H) - giữ nguyên cấu trúc select/input, chỉ xóa giá trị
+        var $chonKq = $newRow.find('.chonKq');
         if ($chonKq.prop('tagName') === 'SELECT') {
-            $chonKq.val('');  // chọn option đầu tiên (-- Trống --)
+            $chonKq.val(''); // Chọn option rỗng (-- Trống --)
         } else {
-            // Nếu là input text thì xóa giá trị
             $chonKq.val('');
         }
         
-        // Reset thuộc tính colspan của ô nội dung (phòng trường hợp dòng trên là tiêu đề có colspan)
-        var $tdNoiDung = $clone.find('td:first-child');
-        $tdNoiDung.attr('colspan', '1');
-        // Hiển thị lại các cột bị ẩn (nếu có)
-        $clone.find('td:not(:first-child)').show();
+        // Nếu dòng trên là tiêu đề (có colspan), reset colspan về 1 và hiển thị lại các cột
+        var $tdNoiDung = $newRow.find('td:first-child');
+        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
+            $tdNoiDung.attr('colspan', '1');
+            $newRow.find('td:not(:first-child)').show();
+        }
         
-        newRowHtml = $clone[0].outerHTML;
+        tbody.append($newRow);
     }
 
-    tbody.append(newRowHtml);
-    // Điều chỉnh lại chiều cao textarea sau khi thêm
+    // Điều chỉnh chiều cao textarea mới thêm
     tbody.find('tr:last textarea').each(function() { cdang(this); });
     tinhtTdong();
     if (typeof mokBcao === 'function') mokBcao();

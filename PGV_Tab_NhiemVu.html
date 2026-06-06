@@ -391,7 +391,7 @@ function ktraAnHienTieuDe(ptu) {
 
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
-    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></table>'); tinhtTdong(); return; }
+    if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
@@ -493,9 +493,7 @@ function addNv() {
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); tinhtTdong(); } }
 
-// ==================== LOGIC XẾP LOẠI CHÍNH XÁC (SỬA THEO YÊU CẦU) ====================
-// Hàm kiểm tra một chuỗi điều kiện (có thể nhiều ràng buộc cách nhau bằng dấu phẩy hoặc khoảng trắng)
-// Yêu cầu: TẤT CẢ các ràng buộc con đều phải thỏa mãn thì trả về true.
+// ==================== LOGIC XẾP LOẠI CHÍNH XÁC (ĐÃ SỬA: CHỈ TÍNH KHI ĐÃ ĐÁNH GIÁ HẾT) ====================
 function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
     if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
     let str = chuoiDieuKien.trim();
@@ -535,96 +533,87 @@ function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
     if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
-    
-    let tongDiem = 0, tongMax = 0;
-    let soNhiemVu = 0, soDaDanhGia = 0;
-    let coDangDanhGia = false;
-    let minRank = 5; // 4 XS, 3 HTT, 2 HT, 1 CHT
+    let tongDiem = 0, tongMax = 0, soNhiemVu = 0, soDaDanhGia = 0;
+    let minRank = 5; let hasJMLogic = false;
 
-    // Duyệt từng dòng
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
         const cg = dg.querySelector('.chonKq');
-        // Bỏ qua các dòng bị ẩn (tiêu đề)
+        // Chỉ tính những dòng có điểm đánh giá hiển thị (không phải dòng tiêu đề)
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
             const maxInp = dg.querySelector('.nhapDiemMax');
             if(maxInp && maxInp.value) { let mVal = parseFloat(maxInp.value); if(!isNaN(mVal)) tongMax += mVal; }
-            
-            const giaTriChon = cg.value;
-            if (giaTriChon !== "") {
+            if (cg.value !== "") {
                 soDaDanhGia++;
-                coDangDanhGia = true;
-                let valThuc = giaTriChon.trim();
-                let diem = parseFloat(valThuc.replace(/[^\d.-]/g, ''));
-                if (!isNaN(diem)) tongDiem += diem;
+                let valThuc = cg.value.trim();
+                let txtHienThi = valThuc;
+                if (cg.tagName === "SELECT") { let selOpt = cg.options[cg.selectedIndex]; if (selOpt) txtHienThi = selOpt.text; }
+                let diem = parseFloat(valThuc); if (!isNaN(diem)) tongDiem += diem;
                 
-                // Lấy các điều kiện từ cột J, K, L, M
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
                 let k = dg.querySelector('.oColK')?.value.trim() || "";
                 let l = dg.querySelector('.oColL')?.value.trim() || "";
                 let m = dg.querySelector('.oColM')?.value.trim() || "";
                 
-                // Xác định mức xếp loại của dòng này (theo thứ tự ưu tiên: J -> K -> L -> M)
-                let rankDong = 0;
-                if (j !== "" && kiemTraTatCaRangBuoc(valThuc, j)) rankDong = 4;
-                else if (k !== "" && kiemTraTatCaRangBuoc(valThuc, k)) rankDong = 3;
-                else if (l !== "" && kiemTraTatCaRangBuoc(valThuc, l)) rankDong = 2;
-                else if (m !== "" && kiemTraTatCaRangBuoc(valThuc, m)) rankDong = 1;
-                else {
-                    // Nếu không có điều kiện nào hoặc không thỏa, mặc định là Chưa hoàn thành (1)
-                    rankDong = 1;
+                if (j !== "" || k !== "" || l !== "" || m !== "") {
+                    hasJMLogic = true;
+                    let rank = 0;
+                    if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;
+                    else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;
+                    else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;
+                    else if (kiemTraTatCaRangBuoc(valThuc, m)) rank = 1;
+                    if (rank > 0) minRank = Math.min(minRank, rank);
+                    else minRank = Math.min(minRank, 1);
                 }
-                // Cập nhật minRank (lấy mức thấp nhất)
-                if (rankDong < minRank) minRank = rankDong;
             }
         }
     });
     
-    // Xử lý kết quả tổng thể
+    let diemCuoiCung = tongDiem + dc;
     let xpl = "Chưa hoàn thành";
-    let hienThiDiem = false;
     
     if (soNhiemVu === 0) {
         xpl = "Chưa giao việc";
-    } else if (soDaDanhGia === 0) {
+    } else if (soDaDanhGia < soNhiemVu) {
         xpl = "Chưa đánh giá";
     } else {
-        // Đã có ít nhất một dòng được đánh giá
-        // Nếu có dòng nào chưa đánh giá (soDaDanhGia < soNhiemVu) thì kết quả vẫn là "Chưa đánh giá"
-        if (soDaDanhGia < soNhiemVu) {
-            xpl = "Chưa đánh giá";
-        } else {
-            // Tất cả các dòng đã được đánh giá, lấy mức thấp nhất
+        // Đã đánh giá hết tất cả nhiệm vụ
+        if (hasJMLogic) {
             if (minRank === 4) xpl = "Xuất sắc";
             else if (minRank === 3) xpl = "Hoàn thành tốt";
             else if (minRank === 2) xpl = "Hoàn thành";
+            else if (minRank === 1) xpl = "Chưa hoàn thành";
+            else xpl = "Chưa xác định";
+        } else {
+            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
+            if (tyLe >= 90) xpl = "Xuất sắc";
+            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
+            else if (tyLe >= 50) xpl = "Hoàn thành";
             else xpl = "Chưa hoàn thành";
-            hienThiDiem = true;
         }
     }
     
-    let diemCuoiCung = tongDiem + dc;
     let txtKq = xpl;
-    if (hienThiDiem && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
+    // Chỉ hiển thị điểm nếu đã đánh giá hết và không phải "Chưa giao việc"/"Chưa đánh giá"
+    if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
-    const qht = document.getElementById('chuKqHthi');
-    if (qht) {
-        qht.innerText = txtKq;
-        qht.className = "fw-bold epMotDong";
-        if (xpl === "Xuất sắc") qht.classList.add("text-success");
-        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary");
-        else qht.classList.add("text-danger");
+    const qht = document.getElementById('chuKqHthi'); 
+    if (qht) { 
+        qht.innerText = txtKq; 
+        qht.className = "fw-bold epMotDong"; 
+        if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
+        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
+        else qht.classList.add("text-danger"); 
     }
     
-    // Cập nhật các menu dọc nếu có
     document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc').forEach(el => {
         el.innerText = txtKq;
-        el.className = "epMotDong";
-        if (xpl === "Xuất sắc") el.classList.add("text-success","fw-bold");
-        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary","fw-bold");
-        else el.classList.add("text-danger","fw-bold");
+        el.className = "epMotDong"; 
+        if (xpl === "Xuất sắc") el.classList.add("text-success","fw-bold"); 
+        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary","fw-bold"); 
+        else el.classList.add("text-danger","fw-bold"); 
     });
 }
 
@@ -644,7 +633,6 @@ function khoiTaoTheoQuyen() {
 
 $(document).ready(function() { 
     setTimeout(khoiTaoTheoQuyen, 500); 
-    // Hệ thống gốc sẽ gọi taiDlBdau() để load dữ liệu
 });
 </script>
 </body>

@@ -174,7 +174,7 @@
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC (ĐÃ CẬP NHẬT ĐIỀU KIỆN >=, BỎ ||) ====================
+// ==================== TOÀN BỘ LOGIC (ĐÃ CẬP NHẬT ĐIỀU KIỆN >=, BỎ ||, XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG CỘT) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -457,7 +457,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </tr>`; bg.append(dg);
+        </table>`; bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -494,30 +494,63 @@ function addNv() {
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); tinhtTdong(); } }
 
-// ==================== HÀM KIỂM TRA ĐIỀU KIỆN J:K:L:M MỚI CHỈ HỖ TRỢ >= VÀ SO KHỚP SỐ CHÍNH XÁC ====================
+// ==================== LOGIC XẾP LOẠI MỚI: XÉT TẤT CẢ RÀNG BUỘC TRONG CÙNG MỘT CỘT J/K/L/M ====================
 function tinhtTdong() {
     const dtc = document.getElementById('nhapDiemThuong'); let dc = dtc ? (parseFloat(dtc.value) || 0) : 0;
     if(dtc) { dtc.classList.remove('diemCong', 'diemTru', 'diemKhong'); if (dc > 0) dtc.classList.add('diemCong'); else if (dc < 0) dtc.classList.add('diemTru'); else dtc.classList.add('diemKhong'); }
     let tongDiem = 0, tongMax = 0, soNhiemVu = 0, soDaDanhGia = 0;
     let minRank = 5; let hasJMLogic = false;
     
-    // Hàm so khớp mới: chỉ xử lý >= hoặc số chính xác, không còn dùng || hay |
-    const kiemTraKhop = (giaTriThuc, textHienThi, dieuKienGoc) => {
-        if (!dieuKienGoc || dieuKienGoc.trim() === "") return false;
-        let dk = dieuKienGoc.trim();
-        // Trích xuất số từ giá trị thực tế (có thể là "10", "8.5", "100%")
+    // Hàm kiểm tra một chuỗi điều kiện (có thể chứa nhiều ràng buộc cách nhau bằng dấu phẩy hoặc khoảng trắng)
+    // Yêu cầu: TẤT CẢ các ràng buộc con đều phải thỏa mãn thì mới trả về true.
+    const kiemTraTatCaRangBuoc = (giaTriThuc, chuoiDieuKien) => {
+        if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
+        let str = chuoiDieuKien.trim();
+        // Tách các ràng buộc: có thể bằng dấu phẩy hoặc khoảng trắng (nếu không có dấu phẩy)
+        let constraints = [];
+        if (str.includes(',')) {
+            constraints = str.split(',').map(s => s.trim()).filter(s => s !== "");
+        } else if (str.includes(' ')) {
+            constraints = str.split(/\s+/).filter(s => s !== "");
+        } else {
+            constraints = [str];
+        }
+        if (constraints.length === 0) return false;
+        
+        // Lấy giá trị số từ kết quả thực tế (bỏ qua ký tự không phải số, dấu trừ, dấu chấm)
         let numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
         if (isNaN(numVal)) return false;
-        // Xử lý điều kiện >=
-        if (dk.startsWith(">=")) {
-            let threshold = parseFloat(dk.substring(2).replace(/[^\d.-]/g, ''));
-            if (!isNaN(threshold) && numVal >= threshold) return true;
-        } else {
-            // So khớp số chính xác (ví dụ "10", "5")
-            let exact = parseFloat(dk.replace(/[^\d.-]/g, ''));
-            if (!isNaN(exact) && numVal === exact) return true;
+        
+        // Kiểm tra từng ràng buộc con, tất cả phải đúng
+        for (let cond of constraints) {
+            if (cond.startsWith(">=")) {
+                let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
+                if (isNaN(threshold)) return false;
+                if (!(numVal >= threshold)) return false;
+            } 
+            else if (cond.startsWith("<=")) {
+                let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
+                if (isNaN(threshold)) return false;
+                if (!(numVal <= threshold)) return false;
+            }
+            else if (cond.startsWith(">") && !cond.startsWith(">=")) {
+                let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
+                if (isNaN(threshold)) return false;
+                if (!(numVal > threshold)) return false;
+            }
+            else if (cond.startsWith("<") && !cond.startsWith("<=")) {
+                let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
+                if (isNaN(threshold)) return false;
+                if (!(numVal < threshold)) return false;
+            }
+            else {
+                // So khớp chính xác số
+                let exact = parseFloat(cond.replace(/[^\d.-]/g, ''));
+                if (isNaN(exact)) return false;
+                if (!(numVal === exact)) return false;
+            }
         }
-        return false;
+        return true;
     };
 
     document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
@@ -532,19 +565,21 @@ function tinhtTdong() {
                 let txtHienThi = valThuc;
                 if (cg.tagName === "SELECT") { let selOpt = cg.options[cg.selectedIndex]; if (selOpt) txtHienThi = selOpt.text; }
                 let diem = parseFloat(valThuc); if (!isNaN(diem)) tongDiem += diem;
-                // Lấy các điều kiện J, K, L, M từ thẻ ẩn
+                
                 let j = dg.querySelector('.oColJ')?.value.trim() || "";
                 let k = dg.querySelector('.oColK')?.value.trim() || "";
                 let l = dg.querySelector('.oColL')?.value.trim() || "";
                 let m = dg.querySelector('.oColM')?.value.trim() || "";
+                
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
-                    hasJMLogic = true; let rank = 0;
-                    if (kiemTraKhop(valThuc, txtHienThi, j)) rank = 4;      // Xuất sắc
-                    else if (kiemTraKhop(valThuc, txtHienThi, k)) rank = 3;  // Hoàn thành tốt
-                    else if (kiemTraKhop(valThuc, txtHienThi, l)) rank = 2;  // Hoàn thành
-                    else if (kiemTraKhop(valThuc, txtHienThi, m)) rank = 1;  // Chưa hoàn thành
+                    hasJMLogic = true;
+                    let rank = 0;
+                    if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;      // Xuất sắc
+                    else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;  // Hoàn thành tốt
+                    else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;  // Hoàn thành
+                    else if (kiemTraTatCaRangBuoc(valThuc, m)) rank = 1;  // Chưa hoàn thành
                     if (rank > 0) minRank = Math.min(minRank, rank);
-                    else minRank = Math.min(minRank, 1); // không khớp bất kỳ -> CHT
+                    else minRank = Math.min(minRank, 1); // không khớp bất kỳ mức nào -> CHT
                 }
             }
         }

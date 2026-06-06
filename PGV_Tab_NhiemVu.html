@@ -240,8 +240,29 @@ function nopBcaoChinh() {
         return;
     }
 
+    // --- KIỂM DUYỆT DỮ LIỆU ĐẦU VÀO TỪ MÃ CỦA ĐỒNG CHÍ ---
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
     if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
+    
+    const yk = $('#nhapYkien').val().trim(), bc = $('#nhapBcao').val().trim();
+    if (yk === "" || bc === "") { hienThongb('loi', "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt"); return; }
+    
+    let bhl = true;
+    $('#bangNviec tbody tr.dongNv').each(function(i) {
+      let selectKq = $(this).find('.chonKq');
+      let inputNgay = $(this).find('.nhapTgHt');
+      // Bỏ qua kiểm tra đối với dòng tiêu đề (có display: none ở ô chọn kết quả)
+      if (selectKq.css('display') !== 'none') {
+          if (!selectKq.val() || !inputNgay.val()) { 
+              hienThongb('loi', `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!`); 
+              bhl = false; 
+              return false; // dừng vòng lặp
+          }
+      }
+    }); 
+    if (!bhl) return;
+    // -----------------------------------------------------
+
     hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
       const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
       xulyLuuTam(true, function() {
@@ -257,7 +278,27 @@ function nopBcaoChinh() {
     });
 }
 
-function mokBcao() { mbcMo = true; const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') { nt.disabled = false; } }
+function mokBcao() { 
+    mbcMo = true; 
+    const nt = document.getElementById('nutNopBcao'); 
+    if(nt && nt.style.display !== 'none') { 
+        // Logic mở khóa kế thừa từ mã đồng chí
+        if (!cotETonTai) {
+            nt.disabled = false;
+        } else {
+            var selectGv = document.getElementById("hopChonGv");
+            if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
+                nt.disabled = true;
+            } else {
+                nt.disabled = false;
+            }
+        }
+        // Thêm hiệu ứng nẩy nút báo cáo 
+        nt.style.transition = "transform 0.2s"; 
+        nt.style.transform = "scale(1.1)"; 
+        setTimeout(() => nt.style.transform = "scale(1)", 200); 
+    } 
+}
 function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') nt.disabled = true; } }
 
 function ktraAnHienTieuDe(ptu) {

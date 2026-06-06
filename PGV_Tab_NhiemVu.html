@@ -393,9 +393,83 @@ function veBangNviec(db) {
 
 function addNv() {
     var isBGH = kiemTraLaBGH();
-    if (cotETonTai) { var selectGv = document.getElementById("hopChonGv"); if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { if (!isBGH) { if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác."); return; } } }
-    const bg = $('#bangNviec tbody'); if (bg.find('tr td').length === 1) { bg.empty(); } let sn = bg.find('tr.dongNv').length + 1;
-    let dg = `<tr class="dongNv"><td class="text-center align-middle oStt">${sn}</td><td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea><input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value=""></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td><td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td><td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td></tr>`; bg.append(dg); tinhtTdong(); if(typeof mokBcao === 'function') mokBcao();
+    // Kiểm tra quyền khi đang xem giáo viên khác
+    if (cotETonTai) {
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
+            if (!isBGH) {
+                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
+                return;
+            }
+        }
+    }
+
+    const tbody = $('#bangNviec tbody');
+    // Nếu bảng đang có thông báo "Chưa có nhiệm vụ" thì xóa nó đi
+    if (tbody.find('tr td').length === 1 && tbody.find('td[colspan="8"]').length) {
+        tbody.empty();
+    }
+
+    // Lấy dòng cuối cùng (nếu có) để làm mẫu
+    const lastRow = tbody.find('tr.dongNv:last');
+    let newRowHtml = '';
+    let newStt = tbody.find('tr.dongNv').length + 1;
+
+    if (lastRow.length === 0) {
+        // Trường hợp chưa có dòng nào: tạo dòng mới theo mẫu cũ
+        newRowHtml = `<tr class="dongNv">
+            <td class="text-center align-middle oStt fw-bold">${newStt}</td>
+            <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
+                <input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">
+            </td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
+            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
+            <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
+        </tr>`;
+    } else {
+        // Clone dòng cuối cùng và reset các giá trị
+        var $clone = lastRow.clone();
+        // Reset số thứ tự
+        $clone.find('.oStt').text(newStt);
+        // Reset textarea nội dung
+        $clone.find('.nhapNdung').val('').removeClass('fw-bold text-primary text-uppercase');
+        // Reset các input và select
+        $clone.find('.nhapDiemMax').val('');
+        $clone.find('.nhapTgGiao').val('');
+        $clone.find('.nhapTdo').val('');
+        $clone.find('.nhapTgHt').val('');
+        // Reset ẩn
+        $clone.find('.anNguoiTH').val('');
+        $clone.find('.anGhiChu').val('');
+        
+        // Xử lý ô Điểm đánh giá (cột H)
+        var $chonKq = $clone.find('.chonKq');
+        var dataConfig = $chonKq.attr('data-config') || '';
+        // Nếu là select box (tagName SELECT) thì reset về option rỗng
+        if ($chonKq.prop('tagName') === 'SELECT') {
+            $chonKq.val('');  // chọn option đầu tiên (-- Trống --)
+        } else {
+            // Nếu là input text thì xóa giá trị
+            $chonKq.val('');
+        }
+        
+        // Reset thuộc tính colspan của ô nội dung (phòng trường hợp dòng trên là tiêu đề có colspan)
+        var $tdNoiDung = $clone.find('td:first-child');
+        $tdNoiDung.attr('colspan', '1');
+        // Hiển thị lại các cột bị ẩn (nếu có)
+        $clone.find('td:not(:first-child)').show();
+        
+        newRowHtml = $clone[0].outerHTML;
+    }
+
+    tbody.append(newRowHtml);
+    // Điều chỉnh lại chiều cao textarea sau khi thêm
+    tbody.find('tr:last textarea').each(function() { cdang(this); });
+    tinhtTdong();
+    if (typeof mokBcao === 'function') mokBcao();
 }
 
 function xoaDongNv(nt) { if(confirm("Xác nhận xóa?")) { $(nt).closest('tr').remove(); dlStt(); tinhtTdong(); } }

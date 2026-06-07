@@ -168,20 +168,20 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-   function gvThemDong() {
+  function gvThemDong() {
     const tbody = $('#gvThanBang');
     const lastRow = tbody.find('tr.dongNv:last');
 
-    // Nếu bảng chưa có dòng nào, tạo dòng mặc định với STT "I.1"
+    // Nếu bảng chưa có dòng nào, tạo dòng đầu tiên với STT "I.1"
     if (lastRow.length === 0) {
         gvVeDong(null, "I.1");
         return;
     }
 
-    // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
+    // Sao chép dòng cuối cùng để giữ định dạng
     var $newRow = lastRow.clone();
 
-    // Tính số thứ tự mới dựa trên dòng cuối
+    // Lấy STT và nội dung dòng cuối để tính STT mới
     let lastStt = lastRow.find('.oSttGv').val();
     let lastContent = lastRow.find('.oNdGv').val().trim();
     let isLastHeader = lastContent.startsWith('*');
@@ -199,33 +199,30 @@
             let nextCon = currentCon + 1;
             newStt = roman + "." + nextCon;
         } else {
-            // Fallback: nếu stt không đúng định dạng, đặt mặc định
+            // Fallback nếu STT không đúng định dạng
             newStt = lastStt + ".1";
         }
     }
 
-    // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
-    $newRow.find('.oSttGv').val(newStt); // Gán STT mới tính
-    $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
+    // Reset các trường nhập liệu, giữ nguyên cấu trúc
+    $newRow.find('.oSttGv').val(newStt);
+    $newRow.find('.oNdGv, .oGchuGv').val('');
     $newRow.find('.oDmaxGv').val('');
     $newRow.find('.oTGGiao').val('');
-    $newRow.find('.oTdoGv').val(''); // Reset select tiến độ
-    $newRow.find('.oNnghanGv').val(''); // Reset select người thực hiện
+    $newRow.find('.oTdoGv').val('');
+    $newRow.find('.oNnghanGv').val('');
     $newRow.find('.oTGHoanThanh').val('');
-    $newRow.find('.oDiemDgGv').val(''); // Xóa giá trị điểm đánh giá
+    $newRow.find('.oDiemDgGv').val('');
     
-    // 2. Reset ô Đánh giá (cột H) - Phải giữ nguyên cấu trúc select nếu dòng trên là select
-    var $chonKq = $newRow.find('.chonKq');
-    $chonKq.val(''); // Đưa về giá trị rỗng (đúng với option --Trống--)
-
-    // 3. Reset trạng thái ô (bỏ hiệu ứng input-success/d1e7dd nếu có)
+    $newRow.find('.chonKq').val('');
+    
     $newRow.find('input, select').css({
         'background-color': 'transparent',
         'border-color': 'transparent',
         'font-weight': 'normal'
     });
 
-    // 4. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
+    // Nếu dòng trước là tiêu đề (colspan), khôi phục hiển thị đầy đủ cột
     var $tdNoiDung = $newRow.find('td:nth-child(2)');
     if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
         $tdNoiDung.attr('colspan', '1');
@@ -234,7 +231,7 @@
 
     tbody.append($newRow);
     
-    // Tự động điều chỉnh chiều cao textarea mới
+    // Tự động điều chỉnh chiều cao textarea
     $newRow.find('textarea').each(function() { gvCoDan(this); });
     tinhtTdong();
     if (typeof mokBcao === 'function') mokBcao();

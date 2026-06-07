@@ -219,29 +219,42 @@
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {
-        const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
-        if (!ndg) { gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); ptu.value = ""; return; }
-        const gt = ptu.value; if (!gt) return; const gth = gt.toUpperCase(); const nm = document.getElementById('gvLocNam').value; 
-        let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
-        
-        const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-        
-        const nvx = { 
-            row_idx: row_idx,
-            stt: dong.querySelector('.oSttGv').value, 
-            ndung: ndg, 
-            diemmax: dong.querySelector('.oDmaxGv').value, 
-            tggiao: dong.querySelector('.oTGGiao').value, 
-            tdo: dong.querySelector('.oTdoGv').value, 
-            tght: dong.querySelector('.oTGHoanThanh').value, 
-            diemdg: dong.querySelector('.oDiemDgGv').value, 
-            gchu: dong.querySelector('.oGchuGv').value, 
-            ngnhan: gt, trangngnhan: gt, tenngnhan: tngn 
-        };
-        const th_htai = document.getElementById('gvLocThang').value;
-        let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
-        gvDatTai(true, tbht); gvGoiMayChu(nm, th_htai, nvx, ptu, gth);
+    const dong = ptu.closest('tr');
+    const ndg = dong.querySelector('.oNdGv').value.trim();
+    if (!ndg) {
+        gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!");
+        ptu.value = "";
+        return;
     }
+    const gt = ptu.value;
+    if (!gt) return;
+    const gth = gt.toUpperCase();
+    const nm = document.getElementById('gvLocNam').value;
+    let tngn = "";
+    if (gth !== 'DELETE' && gth !== 'ALL') {
+        tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name');
+    }
+    
+    // Lấy dữ liệu từ dòng hiện tại để tạo nhiệm vụ mới
+    const newTask = {
+        stt: "",   // QUAN TRỌNG: để rỗng -> backend tạo mới
+        ndung: ndg,
+        diemmax: dong.querySelector('.oDmaxGv').value,
+        tggiao: dong.querySelector('.oTGGiao').value,
+        tdo: dong.querySelector('.oTdoGv').value,
+        tght: dong.querySelector('.oTGHoanThanh').value,
+        diemdg: dong.querySelector('.oDiemDgGv').value,
+        gchu: dong.querySelector('.oGchuGv').value,
+        ngnhan: gt,
+        trangngnhan: gt,
+        tenngnhan: tngn
+    };
+    
+    const th_htai = document.getElementById('gvLocThang').value;
+    let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
+    gvDatTai(true, tbht);
+    gvGoiMayChu(nm, th_htai, newTask, ptu, gth);
+}
 
     function gvCapNhatNhiemVuChung() {
         const nm = document.getElementById('gvLocNam').value; const th_htai = document.getElementById('gvLocThang').value;

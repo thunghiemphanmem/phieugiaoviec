@@ -137,8 +137,8 @@
         
         let vTgGiao = dong ? dong[3] || "" : "";
         let vTgHt = dong ? dong[5] || "" : "";
-        if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
-        if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
+        if (typeof vTgGiao === 'string' && vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
+        if (typeof vTgHt === 'string' && vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
         // =========================================================================
         // MỞ RỘNG KẾ THỪA: Đọc cả Điểm đánh giá (H) và Điều kiện (J, K, L, M) từ dòng liền trước

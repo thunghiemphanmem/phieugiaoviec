@@ -4,20 +4,39 @@
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; }
-  #khuGvChinh table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; overflow-x: auto; }
+  #khuGvChinh table { width: 100%; border-collapse: collapse; table-layout: auto; min-width: 1200px; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: 1px solid #dee2e6; vertical-align: middle; font-size: 13px; }
   #khuGvChinh td { border: 1px solid #999; padding: 0 !important; vertical-align: middle; }
   
-  #gvBangNv textarea.form-control { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; border-radius: 0; box-shadow: none !important; width: 100%; padding: 6px 4px; margin: 0; background-color: transparent; resize: none; overflow-y: hidden; min-height: 35px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; }
-  
-  #gvBangNv input.form-control, #gvBangNv select.form-select { font-family: 'Times New Roman', Times, serif; font-size: 14px; border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent; }
+  #gvBangNv textarea.form-control, #gvBangNv input.form-control, #gvBangNv select.form-select {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    border: none !important;
+    border-radius: 0;
+    box-shadow: none !important;
+    width: 100%;
+    padding: 6px 4px;
+    margin: 0;
+    background-color: transparent;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 35px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    box-sizing: border-box;
+  }
+  #gvBangNv input.form-control, #gvBangNv select.form-select {
+    height: 100%;
+    padding: 4px;
+  }
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: #f8f9fa; }
   #khuGvChinh .nutThem { margin-top: 5px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: gradientMove 3s ease infinite, pulseText 1.5s infinite ease-in-out; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-#khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: #ffffff !important;  /* nền trắng */cursor: not-allowed;color: #333;font-weight: normal;}
+  #khuGvChinh input:disabled, #khuGvChinh select:disabled { background-color: #ffffff !important; cursor: not-allowed; color: #333; font-weight: normal; }
 </style>
 
 <div id="khuGvChinh">
@@ -40,7 +59,18 @@
 
     <div class="hopBang">
       <table id="gvBangNv">
-        <thead><tr><th style="width: 40px;">Xóa</th><th style="width: 40px;">TT</th><th style="width: 35%;">Nội dung công việc</th><th style="width: 120px;">Thời gian HT</th><th style="width: 15%;">Loại tiến độ</th><th style="width: 15%;">Người thực hiện</th><th style="width: 20%;">Ghi chú</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="width: 40px;">Xóa</th>
+            <th style="width: 50px;">TT</th>
+            <th style="width: 25%;">Nội dung công việc</th>
+            <th style="width: 100px;">Thời gian giao</th>
+            <th style="width: 120px;">Loại tiến độ</th>
+            <th style="width: 100px;">Thời gian HT</th>
+            <th style="width: 15%;">Người thực hiện</th>
+            <th style="width: 20%;">Ghi chú</th>
+          </tr>
+        </thead>
         <tbody id="gvThanBang"></tbody>
       </table>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
@@ -57,15 +87,10 @@
 
 <script>
     let dsCanbgv = []; 
-    let ddemDong = 1; 
     let tdtaiXoaCho = null; 
     let ptuChoXoa = null;
 
-    setTimeout(function() { 
-        gvTaiCanb(); 
-    }, 500);
-
-    // ================= TỰ ĐỘNG ĐÁNH SỐ LA MÃ & SỐ CON =================
+    // Helper: chuyển số thành số La Mã (tối đa 3999)
     function toRoman(num) {
         const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
         let roman = '';
@@ -78,26 +103,27 @@
         return roman;
     }
 
+    // Tự động đánh số thứ tự La Mã cho mục chính (*), số thường cho mục con
     function gvCapNhatSoThuTuTuDong() {
         const rows = document.querySelectorAll('#gvThanBang tr');
         let laMaCount = 0;
         let arabicCount = 0;
-
         rows.forEach(dong => {
             const ndung = dong.querySelector('.oNdGv').value.trim();
             const sttInput = dong.querySelector('.oSttGv');
-            
             if (ndung.startsWith('*')) {
                 laMaCount++;
-                arabicCount = 0; // Reset số mục con
+                arabicCount = 0;
                 sttInput.value = toRoman(laMaCount);
                 sttInput.style.fontWeight = 'bold';
-                sttInput.style.color = '#0d6efd'; // Màu xanh như mẫu
+                sttInput.style.color = '#0d6efd';
             } else if (ndung !== "") {
                 arabicCount++;
                 sttInput.value = arabicCount;
                 sttInput.style.fontWeight = 'normal';
                 sttInput.style.color = '#000';
+            } else {
+                sttInput.value = "";
             }
         });
     }
@@ -108,10 +134,8 @@
         const td = document.getElementById('gvTdeHtTb');
         const ct = document.getElementById('gvNdHtTb');
         const bg = document.getElementById('gvBtuongHtTb');
-        
         hd.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'text-dark', 'text-white'); 
         ct.innerText = tb;
-        
         if (loai === 'tcong') { 
             hd.classList.add('bg-success', 'text-white'); 
             td.innerText = "THÀNH CÔNG"; 
@@ -130,7 +154,6 @@
             td.innerText = "THÔNG BÁO"; 
             bg.innerHTML = '<i class="bi bi-info-circle-fill text-primary"></i>'; 
         }
-        
         const hm = new bootstrap.Modal(mh); 
         hm.show();
     }
@@ -139,7 +162,6 @@
         const mh = document.getElementById('gvLopPhuTai');
         const ct = document.getElementById('gvChuTai');
         const vq = mh.querySelector('.spinner-border');
-        
         if (dt) { 
             ct.innerText = tbt || "Đang xử lý..."; 
             if (tbt && (tbt.toLowerCase().includes("nhiệm vụ chung") || tbt.toLowerCase().includes("dọn"))) { 
@@ -156,7 +178,7 @@
     }
 
     function gvTaiCanb() { 
-        gvDatTai(true, "Đang tải danh sách nhân sự (để giao việc)..."); 
+        gvDatTai(true, "Đang tải danh sách nhân sự..."); 
         khachApi.gvLaydsCanb(
             function(dl) { 
                 dsCanbgv = dl; 
@@ -180,124 +202,7 @@
         ); 
     }
 
-    function gvKhiTaiXong(dl) {
-        gvDatTai(false); 
-        
-        let namValue = dl.nam;
-        const inputNam = document.getElementById('gvLocNam');
-        if (namValue && namValue.trim() !== "") {
-            inputNam.value = namValue;
-        } else {
-            inputNam.value = "";
-            gvTbaoNhanh('cbh', "Ô C7 sheet GIAOVIEC chưa có dữ liệu năm học. Vui lòng nhập năm học (ví dụ: 2025-2026) vào ô đó.");
-        }
-        inputNam.disabled = true;
-        
-        if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
-        
-        const bns = dl.dlbang;
-        const tb = document.getElementById('gvThanBang'); 
-        tb.innerHTML = ""; 
-        ddemDong = 1; 
-        
-        if (bns && bns.length > 0) { 
-            bns.forEach(dong => { 
-                gvVeDong(dong); 
-            }); 
-            
-            setTimeout(() => { 
-                document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); 
-                gvCapNhatSoThuTuTuDong(); // Format định dạng phân cấp sau khi tải xong
-                const isReadonlyMode = (window.PGV_GIAO_VIEC_READONLY === true);
-                if (isReadonlyMode) {
-                    document.querySelectorAll('#gvBangNv input.oNgayGv').forEach(inp => inp.readOnly = true);
-                    document.querySelectorAll('#gvBangNv select.oNnghanGv').forEach(sel => sel.disabled = true);
-                }
-            }, 300); 
-        } else { 
-            gvVeDong(); 
-        }
-
-        let quyen = '';
-        if (typeof canbHientai !== 'undefined' && canbHientai.quyen) {
-            quyen = canbHientai.quyen;
-        } else if (window.PGV_COT_E) {
-            quyen = window.PGV_COT_E;
-        }
-        
-        const btnChung = document.getElementById('btnCapNhatChung');
-        const btnChuyenThang = document.getElementById('gvNutChth');
-        const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
-
-        if (quyen === 'x') {
-            if (btnChung) btnChung.style.display = 'none';
-            if (btnChuyenThang) btnChuyenThang.style.display = 'none';
-        } 
-        else if (quyen === 'xx') {
-            if (btnChung) btnChung.style.display = 'none';
-            if (btnChuyenThang) btnChuyenThang.style.display = 'flex';
-        }
-        else {
-            if (btnChung) {
-                btnChung.style.display = isAdmin ? 'inline-block' : 'none';
-            }
-            if (btnChuyenThang) {
-                btnChuyenThang.style.display = isAdmin ? 'flex' : 'none';
-            }
-        }
-    }
-
-    function gvVeDong(dong = null) {
-        const tb = document.getElementById('gvThanBang');
-        const tr = document.createElement('tr');
-        
-        let ngnth = (dong && dong[4]) ? dong[4] : "";
-        let ngnthH = ngnth.toUpperCase();
-        let dcb = (dong && ngnth !== "") ? "disabled" : "";
-        
-        let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
-        
-        let lchon = `<option value="">--Chọn--</option>`;
-        if (!dcb || ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') { 
-            let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : ""; 
-            lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`; 
-        }
-        
-        dsCanbgv.forEach(s => { 
-            let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : ""; 
-            lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
-        });
-        
-        let bstt = ddemDong, bnd = "", bhc = "", bltd = "", bgc = "";
-        if (dong) { 
-            bstt = dong[0]; // Có thể là số La Mã (I, II) hoặc số thường
-            bnd = dong[1] || ""; 
-            bhc = dong[2] || ""; 
-            bltd = dong[3] || ""; 
-            bgc = dong[5] || ""; 
-            ddemDong = (parseInt(bstt) || 0) + 1; 
-        } else { 
-            ddemDong++; 
-        }
-        
-        const cv = (bltd === "Cho vượt tiến độ") ? "selected" : "";
-        
-        // Gán oninput kích hoạt gvCapNhatSoThuTuTuDong() để auto format khi gõ *
-        tr.innerHTML = `<td class="oHdong">${btnxoa}</td><td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${bstt}"></td><td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuTuDong()" onfocus="gvCoDan(this)"></textarea></td><td><input type="text" class="form-control text-center oNgayGv" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td><td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td><td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td><td><textarea class="form-control text-center oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)"></textarea></td>`; 
-        
-        tr.querySelector('.oNdGv').value = bnd;
-        tr.querySelector('.oNgayGv').value = bhc;
-        tr.querySelector('.oTdoGv').value = bltd;
-        tr.querySelector('.oGchuGv').value = bgc;
-
-        tb.appendChild(tr);
-    }
-    
-    function gvCoDan(ptu) { 
-        ptu.style.height = 'auto'; 
-        ptu.style.height = (ptu.scrollHeight) + 'px'; 
-    }
-
+    // Định dạng ngày dd/mm/yyyy khi nhập
     function gvDinhDangNgay(ptu, e) {
         if (e && (e.which === 8 || e.which === 46)) return;
         let v = ptu.value.replace(/\D/g, ''); 
@@ -305,94 +210,168 @@
         if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9);
         ptu.value = v;
     }
+
+    // Tự động điều chỉnh chiều cao textarea
+    function gvCoDan(ptu) { 
+        ptu.style.height = 'auto'; 
+        ptu.style.height = (ptu.scrollHeight) + 'px'; 
+    }
+
+    // Vẽ một dòng trên bảng (nhận đúng 13 cột từ server)
+    function gvVeDong(dong = null) {
+        const tb = document.getElementById('gvThanBang');
+        const tr = document.createElement('tr');
+        
+        // Giá trị mặc định cho dòng mới
+        let sttVal = "", ndVal = "", tgGiaoVal = "", loaiTDVal = "", tgHTVal = "", nguoiVal = "", ghichuVal = "";
+        let isDisabled = false; // disabled khi đã có người nhận (dữ liệu cũ)
+        
+        if (dong) {
+            // dong là mảng 13 phần tử từ server
+            sttVal      = dong[0] || "";
+            ndVal       = dong[1] || "";
+            // dong[2] là Điểm tối đa (chỉ đọc, không dùng trong giao diện chính)
+            tgGiaoVal   = dong[3] || "";   // Thời gian giao
+            loaiTDVal   = dong[4] || "";   // Loại tiến độ
+            tgHTVal     = dong[5] || "";   // Thời gian hoàn thành
+            nguoiVal    = dong[6] || "";   // Người thực hiện (có thể là -TOÀN TRƯỜNG- hoặc tên sheet)
+            ghichuVal   = dong[8] || "";
+            // Nếu dữ liệu đã có người nhận (không rỗng) thì khoá select không cho sửa
+            if (nguoiVal && nguoiVal.trim() !== "") isDisabled = true;
+        }
+        
+        // Nút xóa: chỉ xuất hiện khi dòng mới thêm (dong == null)
+        let btnXoa = dong ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>` 
+                         : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
+        
+        // Tạo dropdown người thực hiện
+        let lchon = `<option value="">--Chọn--</option>`;
+        // Thêm tuỳ chọn TOÀN TRƯỜNG nếu dòng chưa bị khoá hoặc là ALL
+        if (!isDisabled || nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') {
+            let selectedAll = (nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') ? "selected" : "";
+            lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${selectedAll}>-TOÀN TRƯỜNG-</option>`;
+        }
+        dsCanbgv.forEach(s => { 
+            let selected = (nguoiVal === s.ttrg || nguoiVal === s.tenn) ? "selected" : "";
+            lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${selected}>${s.tenn}</option>`;
+        });
+        
+        // Loại tiến độ: chỉ có "Cho vượt tiến độ" hoặc rỗng
+        let cv = (loaiTDVal === "Cho vượt tiến độ") ? "selected" : "";
+        
+        tr.innerHTML = `
+            <td class="oHdong">${btnXoa}</td>
+            <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${sttVal}" readonly style="background:#f0f0f0;"></td>
+            <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuTuDong()" onfocus="gvCoDan(this)"></textarea></td>
+            <td><input type="text" class="form-control text-center oTgGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
+            <td><select class="form-select text-center oLoaiTD"><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
+            <td><input type="text" class="form-control text-center oTgHT" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
+            <td><select class="form-select oNguoiTH" ${isDisabled ? 'disabled' : ''}>${lchon}</select></td>
+            <td><textarea class="form-control text-center oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)"></textarea></td>
+        `;
+        
+        // Gán giá trị cho các field
+        tr.querySelector('.oNdGv').value = ndVal;
+        tr.querySelector('.oTgGiao').value = tgGiaoVal;
+        tr.querySelector('.oTgHT').value = tgHTVal;
+        tr.querySelector('.oGchuGv').value = ghichuVal;
+        
+        tb.appendChild(tr);
+    }
     
+    // Thêm dòng mới (trống)
     function gvThemDong() { 
         gvVeDong(null); 
         gvCapNhatSoThuTuTuDong();
     }
     
+    // Xóa dòng (chỉ cho dòng mới thêm)
     function gvXoaDong(btn) { 
         btn.closest('tr').remove(); 
-        gvCapNhatSoThuTuTuDong(); // Cập nhật lại số thứ tự sau khi xóa
+        gvCapNhatSoThuTuTuDong();
     }
-
-    function gvDoiNgn(ptu) {
-        const dong = ptu.closest('tr'); 
+    
+    // Khi chọn người thực hiện (gửi dữ liệu lên server cho dòng đơn)
+    function gvDoiNgn(selectEl) {
+        const dong = selectEl.closest('tr'); 
         const ndg = dong.querySelector('.oNdGv').value.trim();
-        
         if (!ndg) { 
             gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); 
-            ptu.value = ""; 
+            selectEl.value = ""; 
             return; 
         }
-        
-        const gt = ptu.value; 
+        const gt = selectEl.value; 
         if (!gt) return; 
         
         const gth = gt.toUpperCase();
         const nm = document.getElementById('gvLocNam').value; 
+        const thang = document.getElementById('gvLocThang').value;
         
-        let tngn = ""; 
-        if (gth !== 'DELETE' && gth !== 'ALL') { 
-            tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); 
+        let tenNguoiNhan = "";
+        if (gth !== 'ALL') {
+            tenNguoiNhan = selectEl.options[selectEl.selectedIndex]?.getAttribute('data-name') || "";
+        } else {
+            tenNguoiNhan = "TOÀN TRƯỜNG";
         }
         
-        const stt_index_dong = Array.from(dong.parentNode.children).indexOf(dong) + 1; // Chỉ số vật lý để server xác định
+        // Lấy các giá trị từ dòng
+        const sttVal = dong.querySelector('.oSttGv').value;
+        const tgGiao = dong.querySelector('.oTgGiao').value;
+        const loaiTD = dong.querySelector('.oLoaiTD').value;
+        const tgHT = dong.querySelector('.oTgHT').value;
+        const ghichu = dong.querySelector('.oGchuGv').value;
+        
         const nvx = { 
-            stt_index: stt_index_dong,
-            stt: dong.querySelector('.oSttGv').value, // Giữ chuỗi số La Mã hoặc số thường
-            ndung: ndg, 
-            hchot: dong.querySelector('.oNgayGv').value, 
-            tdo: dong.querySelector('.oTdoGv').value, 
-            gchu: dong.querySelector('.oGchuGv').value, 
-            ngnhan: gt, 
-            trangngnhan: gt, 
-            tenngnhan: tngn 
+            stt: sttVal,
+            ndung: ndg,
+            tggiao: tgGiao,
+            tdo: loaiTD,
+            tght: tgHT,
+            gchu: ghichu,
+            ngnhan: gt,
+            trangngnhan: gt,
+            tenngnhan: tenNguoiNhan,
+            // Các trường J-M mặc định để trống (server sẽ kế thừa nếu cần)
+            colJ: "", colK: "", colL: "", colM: ""
         };
         
-        const th_htai = document.getElementById('gvLocThang').value;
-        let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
-        gvDatTai(true, tbht); 
-        gvGoiMayChu(nm, th_htai, nvx, ptu, gth);
+        gvDatTai(true, (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tenNguoiNhan + "...");
+        gvGoiMayChu(nm, thang, nvx, selectEl, null);
     }
-
+    
+    // Cập nhật toàn bộ nhiệm vụ (nút "Cập nhật nhiệm vụ chung")
     function gvCapNhatNhiemVuChung() {
         const nm = document.getElementById('gvLocNam').value;
-        const th_htai = document.getElementById('gvLocThang').value;
+        const thang = document.getElementById('gvLocThang').value;
         let dsNviec = [];
-        
-        const sds = document.querySelectorAll('#gvThanBang tr');
-        sds.forEach(dong => {
+        const rows = document.querySelectorAll('#gvThanBang tr');
+        for (let dong of rows) {
             const ndg = dong.querySelector('.oNdGv').value.trim();
-            if (ndg !== "") {
-                let selectNgn = dong.querySelector('.oNnghanGv');
-                let tenNguoiNhan = "";
-                if (selectNgn && selectNgn.selectedIndex >= 0 && selectNgn.options[selectNgn.selectedIndex]) {
-                    tenNguoiNhan = selectNgn.options[selectNgn.selectedIndex].getAttribute('data-name') || "";
-                }
-
-                dsNviec.push({
-                    stt_index: Array.from(dong.parentNode.children).indexOf(dong) + 1,
-                    stt: dong.querySelector('.oSttGv').value, // Giữ chuỗi La Mã/Số 
-                    ndung: ndg,
-                    hchot: dong.querySelector('.oNgayGv').value.trim(),
-                    tdo: dong.querySelector('.oTdoGv').value,
-                    gchu: dong.querySelector('.oGchuGv').value.trim(),
-                    ngnhan: selectNgn.value,
-                    trangngnhan: selectNgn.value,
-                    tenngnhan: tenNguoiNhan
-                });
+            if (ndg === "") continue;
+            const selectNgn = dong.querySelector('.oNguoiTH');
+            let tenNguoiNhan = "";
+            if (selectNgn && selectNgn.selectedIndex >= 0) {
+                tenNguoiNhan = selectNgn.options[selectNgn.selectedIndex]?.getAttribute('data-name') || "";
             }
-        });
-        
+            dsNviec.push({
+                stt: dong.querySelector('.oSttGv').value,
+                ndung: ndg,
+                tggiao: dong.querySelector('.oTgGiao').value,
+                tdo: dong.querySelector('.oLoaiTD').value,
+                tght: dong.querySelector('.oTgHT').value,
+                gchu: dong.querySelector('.oGchuGv').value,
+                ngnhan: selectNgn.value,
+                trangngnhan: selectNgn.value,
+                tenngnhan: tenNguoiNhan,
+                colJ: "", colK: "", colL: "", colM: ""
+            });
+        }
         if (dsNviec.length === 0) {
             gvTbaoNhanh('cbh', "Không có nhiệm vụ nào để cập nhật!");
             return;
         }
-
         gvDatTai(true, "⏳ Đang cập nhật toàn bộ nhiệm vụ...");
-        
-        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) {
+        khachApi.gvXulyNviec({ nam: nm, thang: thang, nviec: { batch: true, ds: dsNviec } }, function(kq) {
             gvDatTai(false);
             if (kq && kq.ttai === 'tcong') {
                 gvTbaoNhanh('tcong', kq.tbao);
@@ -405,83 +384,135 @@
             gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message);
         });
     }
-
+    
+    // Xử lý chuyển tháng: gửi lệnh DELETE lên server
     function gvXlmChth(btn) {
         const nm = document.getElementById('gvLocNam').value;
         const oThang = document.getElementById('gvLocThang');
         const vtThang = oThang.selectedIndex;
-        
         const thangCu = oThang.value;
         if (vtThang < oThang.options.length - 1) {
             oThang.selectedIndex = vtThang + 1;
         } else {
-            oThang.selectedIndex = 0; 
+            oThang.selectedIndex = 0;
         }
         const thangMoi = oThang.value;
-
-        const nvx = { 
-            stt: "0", 
-            ndung: "Chuyển tháng", 
-            hchot: "", 
-            tdo: "", 
-            gchu: "", 
-            ngnhan: "DELETE", 
-            trangngnhan: "DELETE", 
-            tenngnhan: "DELETE" 
-        };
-
-        tdtaiXoaCho = { nam: nm, thang: thangMoi, nviec: nvx, thangCu: thangCu }; 
-        ptuChoXoa = btn; 
-        const hmc = new bootstrap.Modal(document.getElementById('gvHopThoaiXoa')); 
-        hmc.show(); 
+        const nvx = { ngnhan: "DELETE" };
+        tdtaiXoaCho = { nam: nm, thang: thangMoi, nviec: nvx, thangCu: thangCu };
+        ptuChoXoa = btn;
+        const hmc = new bootstrap.Modal(document.getElementById('gvHopThoaiXoa'));
+        hmc.show();
     }
-
-    function gvXndongXoa() { 
-        const hmc = document.getElementById('gvHopThoaiXoa');
-        const modal = bootstrap.Modal.getInstance(hmc); 
-        modal.hide(); 
-        
-        if (tdtaiXoaCho && ptuChoXoa) { 
-            const { nam, thang, nviec } = tdtaiXoaCho; 
-            gvDatTai(true, `🧹 Đang làm sạch dữ liệu và cập nhật sang ${thang}`); 
-            gvGoiMayChu(nam, thang, nviec, ptuChoXoa, 'DELETE'); 
-        } 
+    
+    function gvXndongXoa() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('gvHopThoaiXoa'));
+        modal.hide();
+        if (tdtaiXoaCho && ptuChoXoa) {
+            const { nam, thang, nviec } = tdtaiXoaCho;
+            gvDatTai(true, `🧹 Đang làm sạch dữ liệu và cập nhật sang ${thang}`);
+            gvGoiMayChu(nam, thang, nviec, ptuChoXoa, 'DELETE');
+        }
     }
-
-    function gvHuyXoa() { 
-        if (ptuChoXoa && ptuChoXoa.tagName !== 'BUTTON') { 
-            ptuChoXoa.value = ""; 
-        } 
+    
+    function gvHuyXoa() {
+        if (ptuChoXoa && ptuChoXoa.tagName !== 'BUTTON') {
+            ptuChoXoa.value = "";
+        }
         if (tdtaiXoaCho && tdtaiXoaCho.thangCu) {
             document.getElementById('gvLocThang').value = tdtaiXoaCho.thangCu;
         }
-        tdtaiXoaCho = null; 
-        ptuChoXoa = null; 
+        tdtaiXoaCho = null;
+        ptuChoXoa = null;
     }
-
-    function gvGoiMayChu(n, t, nv, ptu, hth) {
+    
+    // Hàm gọi API chung
+    function gvGoiMayChu(n, t, nv, ptu, action) {
         khachApi.gvXulyNviec(
-            { nam: n, thang: t, nviec: nv }, 
+            { nam: n, thang: t, nviec: nv },
             function(kq) {
                 gvDatTai(false);
-                if (kq && kq.ttai === 'tcong') { 
-                    ptu.style.backgroundColor = '#d1e7dd'; 
-                    ptu.style.borderColor = '#badbcc'; 
-                    ptu.style.fontWeight = 'bold'; 
-                    if (hth === 'DELETE') { 
-                        tdtaiXoaCho = null; 
-                        ptuChoXoa = null; 
-                        setTimeout(gvLaydlGoc, 1000); 
-                    } 
-                } else { 
-                    gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); 
-                    if (ptu.tagName !== 'BUTTON') ptu.value = ""; 
+                if (kq && kq.ttai === 'tcong') {
+                    if (action === 'DELETE') {
+                        tdtaiXoaCho = null;
+                        ptuChoXoa = null;
+                        setTimeout(gvLaydlGoc, 1000);
+                    } else {
+                        // Đánh dấu thành công
+                        ptu.style.backgroundColor = '#d1e7dd';
+                        ptu.style.borderColor = '#badbcc';
+                        ptu.style.fontWeight = 'bold';
+                        // Tải lại dữ liệu để cập nhật trạng thái khoá
+                        setTimeout(gvLaydlGoc, 800);
+                    }
+                } else {
+                    gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
+                    if (ptu.tagName !== 'BUTTON') ptu.value = "";
                 }
-            }, 
-            function(l) { 
-                gvDatTai(false); 
-                gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); 
+            },
+            function(l) {
+                gvDatTai(false);
+                gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message);
             }
         );
     }
+    
+    // Hàm xử lý khi tải dữ liệu thành công từ server
+    function gvKhiTaiXong(dl) {
+        gvDatTai(false);
+        // Cập nhật năm học và tháng
+        let namValue = dl.nam;
+        const inputNam = document.getElementById('gvLocNam');
+        if (namValue && namValue.trim() !== "") {
+            inputNam.value = namValue;
+        } else {
+            inputNam.value = "";
+            gvTbaoNhanh('cbh', "Ô C7 sheet GIAOVIEC chưa có dữ liệu năm học.");
+        }
+        if (dl.thang) document.getElementById('gvLocThang').value = dl.thang;
+        
+        const bns = dl.dlbang; // mảng các dòng, mỗi dòng 13 phần tử
+        const tb = document.getElementById('gvThanBang');
+        tb.innerHTML = "";
+        if (bns && bns.length > 0) {
+            bns.forEach(dong => gvVeDong(dong));
+            setTimeout(() => {
+                document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu));
+                gvCapNhatSoThuTuTuDong();
+                // Nếu ở chế độ chỉ đọc
+                const isReadonlyMode = (window.PGV_GIAO_VIEC_READONLY === true);
+                if (isReadonlyMode) {
+                    document.querySelectorAll('#gvBangNv select.oNguoiTH').forEach(sel => sel.disabled = true);
+                    document.querySelectorAll('#gvBangNv input.oSttGv').forEach(inp => inp.readOnly = true);
+                }
+            }, 300);
+        } else {
+            gvVeDong(); // một dòng trống
+        }
+        
+        // Xử lý hiển thị nút theo quyền
+        let quyen = '';
+        if (typeof canbHientai !== 'undefined' && canbHientai.quyen) {
+            quyen = canbHientai.quyen;
+        } else if (window.PGV_COT_E) {
+            quyen = window.PGV_COT_E;
+        }
+        const btnChung = document.getElementById('btnCapNhatChung');
+        const btnChuyenThang = document.getElementById('gvNutChth');
+        const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
+        if (quyen === 'x') {
+            if (btnChung) btnChung.style.display = 'none';
+            if (btnChuyenThang) btnChuyenThang.style.display = 'none';
+        } else if (quyen === 'xx') {
+            if (btnChung) btnChung.style.display = 'none';
+            if (btnChuyenThang) btnChuyenThang.style.display = 'flex';
+        } else {
+            if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none';
+            if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none';
+        }
+    }
+    
+    // Bắt đầu tải dữ liệu
+    setTimeout(function() { 
+        gvTaiCanb(); 
+    }, 500);
 </script>

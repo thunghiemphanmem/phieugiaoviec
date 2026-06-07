@@ -168,21 +168,44 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-    function gvThemDong() {
+   function gvThemDong() {
     const tbody = $('#gvThanBang');
     const lastRow = tbody.find('tr.dongNv:last');
 
-    // Nếu bảng chưa có dòng nào, tạo dòng mặc định
+    // Nếu bảng chưa có dòng nào, tạo dòng mặc định với STT "I.1"
     if (lastRow.length === 0) {
-        gvVeDong(null);
+        gvVeDong(null, "I.1");
         return;
     }
 
     // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
     var $newRow = lastRow.clone();
 
+    // Tính số thứ tự mới dựa trên dòng cuối
+    let lastStt = lastRow.find('.oSttGv').val();
+    let lastContent = lastRow.find('.oNdGv').val().trim();
+    let isLastHeader = lastContent.startsWith('*');
+    let newStt = "";
+
+    if (isLastHeader) {
+        // Dòng cuối là tiêu đề (cha) -> tạo con đầu tiên: "I.1", "II.1", ...
+        newStt = lastStt + ".1";
+    } else {
+        // Dòng cuối là con -> tăng số con lên 1
+        let parts = lastStt.split('.');
+        if (parts.length === 2) {
+            let roman = parts[0];
+            let currentCon = parseInt(parts[1], 10);
+            let nextCon = currentCon + 1;
+            newStt = roman + "." + nextCon;
+        } else {
+            // Fallback: nếu stt không đúng định dạng, đặt mặc định
+            newStt = lastStt + ".1";
+        }
+    }
+
     // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
-    $newRow.find('.oSttGv').val(''); // Để trống STT theo yêu cầu
+    $newRow.find('.oSttGv').val(newStt); // Gán STT mới tính
     $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
     $newRow.find('.oDmaxGv').val('');
     $newRow.find('.oTGGiao').val('');
@@ -285,4 +308,12 @@
     }
 
     function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }
+function soLaMa(n) {
+    const roman = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"];
+    return roman[n-1] || n.toString();
+}
+function giaiMaSoLaMa(roman) {
+    const map = {I:1, II:2, III:3, IV:4, V:5, VI:6, VII:7, VIII:8, IX:9, X:10};
+    return map[roman] || 0;
+}
 </script>

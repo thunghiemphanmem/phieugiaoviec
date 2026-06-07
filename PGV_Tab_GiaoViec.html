@@ -128,7 +128,6 @@
             lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
         });
         
-        // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG ĐÁNH SỐ THỨ TỰ NỮA
         let bstt = dong ? dong[0] : ""; 
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
@@ -137,7 +136,6 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // KẾT THỪA CẤU HÌNH ẨN TỪ DÒNG TRƯỚC ĐÓ ĐỂ CÓ DROP-DOWN ĐIỂM Ở TRANG CÁ NHÂN
         let vDiemDg = "";
         if (dong) {
             vDiemDg = dong[7] || "";
@@ -168,113 +166,113 @@
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-  function gvThemDong() {
-    const tbody = $('#gvThanBang');
-    const lastRow = tbody.find('tr.dongNv:last');
+  
+    function gvThemDong() {
+        const tbody = $('#gvThanBang');
+        const lastRow = tbody.find('tr:last');
 
-    // Nếu bảng chưa có dòng nào, tạo dòng đầu tiên với STT "I.1"
-    if (lastRow.length === 0) {
-        gvVeDong(null, "I.1");
-        return;
-    }
-
-    // Sao chép dòng cuối cùng để giữ định dạng
-    var $newRow = lastRow.clone();
-
-    // Lấy STT và nội dung dòng cuối để tính STT mới
-    let lastStt = lastRow.find('.oSttGv').val();
-    let lastContent = lastRow.find('.oNdGv').val().trim();
-    let isLastHeader = lastContent.startsWith('*');
-    let newStt = "";
-
-    if (isLastHeader) {
-        // Dòng cuối là tiêu đề (cha) -> tạo con đầu tiên: "I.1", "II.1", ...
-        newStt = lastStt + ".1";
-    } else {
-        // Dòng cuối là con -> tăng số con lên 1
-        let parts = lastStt.split('.');
-        if (parts.length === 2) {
-            let roman = parts[0];
-            let currentCon = parseInt(parts[1], 10);
-            let nextCon = currentCon + 1;
-            newStt = roman + "." + nextCon;
-        } else {
-            // Fallback nếu STT không đúng định dạng
-            newStt = lastStt + ".1";
+        // Khởi tạo dòng đầu tiên nếu bảng rỗng
+        if (lastRow.length === 0) {
+            gvVeDong();
+            $('#gvThanBang tr:last .oSttGv').val("I.1");
+            return;
         }
+
+        var $newRow = lastRow.clone();
+
+        let lastStt = lastRow.find('.oSttGv').val() || "";
+        lastStt = lastStt.trim();
+        let newStt = "";
+
+        if (lastStt === "") {
+            newStt = "I.1";
+        } else {
+            let parts = lastStt.split('.');
+            if (parts.length === 1) {
+                // Định dạng số đơn hoặc La Mã (I, II) tự động thêm .1
+                newStt = lastStt + ".1";
+            } else if (parts.length >= 2) {
+                // Tịnh tiến cấp bậc con phía sau
+                let roman = parts[0];
+                let currentCon = parseInt(parts[1], 10);
+                if (!isNaN(currentCon)) {
+                    newStt = roman + "." + (currentCon + 1);
+                } else {
+                    newStt = lastStt + ".1";
+                }
+            }
+        }
+
+        $newRow.find('.oSttGv').val(newStt);
+        $newRow.find('.oNdGv, .oGchuGv').val('');
+        $newRow.find('.oDmaxGv').val('');
+        $newRow.find('.oTGGiao').val('');
+        $newRow.find('.oTdoGv').val('');
+        $newRow.find('.oNnghanGv').val('');
+        $newRow.find('.oTGHoanThanh').val('');
+        $newRow.find('.oDiemDgGv').val('');
+        $newRow.find('.chonKq').val('');
+        
+        $newRow.find('input, select').css({
+            'background-color': 'transparent',
+            'border-color': 'transparent',
+            'font-weight': 'normal'
+        });
+
+        // Phục hồi lại cột nếu dòng liền trước là tiêu đề gộp
+        var $tdNoiDung = $newRow.find('td').eq(2); 
+        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
+            $tdNoiDung.attr('colspan', '1');
+            $newRow.find('td').show();
+        }
+
+        $newRow.find('.oNdGv').removeClass('fw-bold text-primary text-uppercase');
+
+        tbody.append($newRow);
+        
+        $newRow.find('textarea').each(function() { gvCoDan(this); });
+        if (typeof tinhtTdong === 'function') tinhtTdong();
+        if (typeof mokBcao === 'function') mokBcao();
     }
-
-    // Reset các trường nhập liệu, giữ nguyên cấu trúc
-    $newRow.find('.oSttGv').val(newStt);
-    $newRow.find('.oNdGv, .oGchuGv').val('');
-    $newRow.find('.oDmaxGv').val('');
-    $newRow.find('.oTGGiao').val('');
-    $newRow.find('.oTdoGv').val('');
-    $newRow.find('.oNnghanGv').val('');
-    $newRow.find('.oTGHoanThanh').val('');
-    $newRow.find('.oDiemDgGv').val('');
     
-    $newRow.find('.chonKq').val('');
-    
-    $newRow.find('input, select').css({
-        'background-color': 'transparent',
-        'border-color': 'transparent',
-        'font-weight': 'normal'
-    });
-
-    // Nếu dòng trước là tiêu đề (colspan), khôi phục hiển thị đầy đủ cột
-    var $tdNoiDung = $newRow.find('td:nth-child(2)');
-    if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
-        $tdNoiDung.attr('colspan', '1');
-        $newRow.find('td:nth-child(n+3)').show();
-    }
-
-    tbody.append($newRow);
-    
-    // Tự động điều chỉnh chiều cao textarea
-    $newRow.find('textarea').each(function() { gvCoDan(this); });
-    tinhtTdong();
-    if (typeof mokBcao === 'function') mokBcao();
-}
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {
-    const dong = ptu.closest('tr');
-    const ndg = dong.querySelector('.oNdGv').value.trim();
-    if (!ndg) {
-        gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!");
-        ptu.value = "";
-        return;
+        const dong = ptu.closest('tr');
+        const ndg = dong.querySelector('.oNdGv').value.trim();
+        if (!ndg) {
+            gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!");
+            ptu.value = "";
+            return;
+        }
+        const gt = ptu.value;
+        if (!gt) return;
+        const gth = gt.toUpperCase();
+        const nm = document.getElementById('gvLocNam').value;
+        let tngn = "";
+        if (gth !== 'DELETE' && gth !== 'ALL') {
+            tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name');
+        }
+        
+        const newTask = {
+            stt: "",   
+            ndung: ndg,
+            diemmax: dong.querySelector('.oDmaxGv').value,
+            tggiao: dong.querySelector('.oTGGiao').value,
+            tdo: dong.querySelector('.oTdoGv').value,
+            tght: dong.querySelector('.oTGHoanThanh').value,
+            diemdg: dong.querySelector('.oDiemDgGv').value,
+            gchu: dong.querySelector('.oGchuGv').value,
+            ngnhan: gt,
+            trangngnhan: gt,
+            tenngnhan: tngn
+        };
+        
+        const th_htai = document.getElementById('gvLocThang').value;
+        let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
+        gvDatTai(true, tbht);
+        gvGoiMayChu(nm, th_htai, newTask, ptu, gth);
     }
-    const gt = ptu.value;
-    if (!gt) return;
-    const gth = gt.toUpperCase();
-    const nm = document.getElementById('gvLocNam').value;
-    let tngn = "";
-    if (gth !== 'DELETE' && gth !== 'ALL') {
-        tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name');
-    }
-    
-    // Lấy dữ liệu từ dòng hiện tại để tạo nhiệm vụ mới
-    const newTask = {
-        stt: "",   // QUAN TRỌNG: để rỗng -> backend tạo mới
-        ndung: ndg,
-        diemmax: dong.querySelector('.oDmaxGv').value,
-        tggiao: dong.querySelector('.oTGGiao').value,
-        tdo: dong.querySelector('.oTdoGv').value,
-        tght: dong.querySelector('.oTGHoanThanh').value,
-        diemdg: dong.querySelector('.oDiemDgGv').value,
-        gchu: dong.querySelector('.oGchuGv').value,
-        ngnhan: gt,
-        trangngnhan: gt,
-        tenngnhan: tngn
-    };
-    
-    const th_htai = document.getElementById('gvLocThang').value;
-    let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
-    gvDatTai(true, tbht);
-    gvGoiMayChu(nm, th_htai, newTask, ptu, gth);
-}
 
     function gvCapNhatNhiemVuChung() {
         const nm = document.getElementById('gvLocNam').value; const th_htai = document.getElementById('gvLocThang').value;
@@ -305,12 +303,13 @@
     }
 
     function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }
-function soLaMa(n) {
-    const roman = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"];
-    return roman[n-1] || n.toString();
-}
-function giaiMaSoLaMa(roman) {
-    const map = {I:1, II:2, III:3, IV:4, V:5, VI:6, VII:7, VIII:8, IX:9, X:10};
-    return map[roman] || 0;
-}
+    
+    function soLaMa(n) {
+        const roman = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"];
+        return roman[n-1] || n.toString();
+    }
+    function giaiMaSoLaMa(roman) {
+        const map = {I:1, II:2, III:3, IV:4, V:5, VI:6, VII:7, VIII:8, IX:9, X:10};
+        return map[roman] || 0;
+    }
 </script>

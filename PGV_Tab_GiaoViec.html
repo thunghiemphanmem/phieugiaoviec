@@ -62,7 +62,7 @@
 </div>
 
 <script>
-    let dsCanbgv = []; let tdtaiXoaCho = null; let ptuChoXoa = null;
+    let dsCanbgv = []; let ddemDong = 1; let tdtaiXoaCho = null; let ptuChoXoa = null;
     setTimeout(function() { gvTaiCanb(); }, 500);
 
     function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
@@ -84,9 +84,10 @@
         if (namValue && namValue.trim() !== "") { inputNam.value = namValue; } else { inputNam.value = ""; }
         inputNam.disabled = true; if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
-        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; 
+        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; ddemDong = 1; 
         if (bns && bns.length > 0) { 
             bns.forEach(dong => { gvVeDong(dong); }); 
+            const dcstt = parseInt(bns[bns.length - 1][0]); if (!isNaN(dcstt)) { ddemDong = dcstt + 1; } 
             setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
         } else { gvVeDong(); }
 
@@ -114,7 +115,10 @@
     }
 
     function gvVeDong(dong = null) {
-        const tb = document.getElementById('gvThanBang'); const tr = document.createElement('tr');
+        const tb = document.getElementById('gvThanBang'); 
+        const tr = document.createElement('tr');
+        tr.className = 'dongNv'; // Phân định rõ class để hỗ trợ tìm kiếm và clone
+        
         let ngnth = (dong && dong[6]) ? dong[6] : ""; let ngnthH = ngnth.toUpperCase(); let dcb = (dong && ngnth !== "") ? "disabled" : "";
         let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
         
@@ -128,7 +132,6 @@
             lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
         });
         
-        // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG ĐÁNH SỐ THỨ TỰ NỮA
         let bstt = dong ? dong[0] : ""; 
         const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
         
@@ -137,31 +140,25 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        // Lấy giá trị cột H và các cột ẩn J, K, L, M
-        let vDiemDg = "";
-        let vColJ = "", vColK = "", vColL = "", vColM = "";
+        // =========================================================================
+        // MỞ RỘNG KẾ THỪA: Đọc cả Điểm đánh giá (H) và Điều kiện (J, K, L, M) từ dòng liền trước
+        // =========================================================================
+        let vDiemDg = "", vColJ = "", vColK = "", vColL = "", vColM = "";
         if (dong) {
-            // Dữ liệu từ server: dong[7] là cột H, dong[9..12] là J..M
             vDiemDg = dong[7] || "";
             vColJ = dong[9] || "";
             vColK = dong[10] || "";
             vColL = dong[11] || "";
             vColM = dong[12] || "";
         } else {
-            // Khi thêm dòng mới, lấy từ dòng cuối cùng hiện có
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
-                const dongCuoi = cacDong[cacDong.length - 1];
-                const inpJ = dongCuoi.querySelector('.oColJ');
-                if (inpJ) vColJ = inpJ.value;
-                const inpK = dongCuoi.querySelector('.oColK');
-                if (inpK) vColK = inpK.value;
-                const inpL = dongCuoi.querySelector('.oColL');
-                if (inpL) vColL = inpL.value;
-                const inpM = dongCuoi.querySelector('.oColM');
-                if (inpM) vColM = inpM.value;
-                const inpDiem = dongCuoi.querySelector('.oDiemDgGv');
-                if (inpDiem) vDiemDg = inpDiem.value;
+                const inpCuoi = cacDong[cacDong.length - 1];
+                let dgEl = inpCuoi.querySelector('.oDiemDgGv'); if (dgEl) vDiemDg = dgEl.value;
+                let cJ = inpCuoi.querySelector('.oColJ'); if (cJ) vColJ = cJ.value;
+                let cK = inpCuoi.querySelector('.oColK'); if (cK) vColK = cK.value;
+                let cL = inpCuoi.querySelector('.oColL'); if (cL) vColL = cL.value;
+                let cM = inpCuoi.querySelector('.oColM'); if (cM) vColM = cM.value;
             }
         }
         
@@ -175,11 +172,11 @@
         <td>
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
-            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
             <input type="hidden" class="oColJ" value="${vColJ}">
             <input type="hidden" class="oColK" value="${vColK}">
             <input type="hidden" class="oColL" value="${vColL}">
             <input type="hidden" class="oColM" value="${vColM}">
+            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
         </td>`;
         
         tb.appendChild(tr);
@@ -191,7 +188,7 @@
     
     function gvThemDong() {
         const tbody = $('#gvThanBang');
-        const lastRow = tbody.find('tr:last');
+        const lastRow = tbody.find('tr.dongNv:last'); 
 
         if (lastRow.length === 0) {
             gvVeDong(null);
@@ -200,76 +197,36 @@
 
         var $newRow = lastRow.clone();
 
-        // Reset các trường nhập liệu hiển thị
-        $newRow.find('.oSttGv').val('');
-        $newRow.find('.oNdGv, .oGchuGv').val('');
+        // 1. Reset các giá trị nhập liệu
+        $newRow.find('.oSttGv').val(''); // STT trống
+        $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung và ghi chú
         $newRow.find('.oDmaxGv').val('');
         $newRow.find('.oTGGiao').val('');
         $newRow.find('.oTdoGv').val('');
         $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
         
-        // Reset cột H (điểm đánh giá) - giữ nguyên cấu trúc select nếu có
-        var $chonKq = $newRow.find('.chonKq');
-        if ($chonKq.length) $chonKq.val('');
+        // Chú ý: oDiemDgGv, oColJ, oColK, oColL, oColM không bị reset vì được sao chép toàn vẹn từ dòng trên!
         
-        // QUAN TRỌNG: Lấy giá trị các cột J, K, L, M từ dòng cuối và gán lại cho dòng mới
-        const lastJ = lastRow.find('.oColJ').val() || "";
-        const lastK = lastRow.find('.oColK').val() || "";
-        const lastL = lastRow.find('.oColL').val() || "";
-        const lastM = lastRow.find('.oColM').val() || "";
-        
-        $newRow.find('.oColJ').val(lastJ);
-        $newRow.find('.oColK').val(lastK);
-        $newRow.find('.oColL').val(lastL);
-        $newRow.find('.oColM').val(lastM);
-        
-        // Reset style
         $newRow.find('input, select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
             'font-weight': 'normal'
         });
 
-        // Xóa hiệu ứng colspan nếu có (trường hợp dòng trước là tiêu đề)
-        var $tdNoiDung = $newRow.find('td:nth-child(2)');
+        // 2. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
+        var $tdNoiDung = $newRow.find('td:nth-child(3)');
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
-            $newRow.find('td:nth-child(n+3)').show();
+            $newRow.find('td:nth-child(n+4)').show();
         }
 
         tbody.append($newRow);
         
-        // Tự động điều chỉnh chiều cao textarea mới
         $newRow.find('textarea').each(function() { gvCoDan(this); });
     }
-    
-    function gvXoaDong(btn) { 
-        if (confirm("Xác nhận xóa dòng này?")) {
-            $(btn).closest('tr').remove(); 
-        }
-    }
 
-    // Hàm lấy dữ liệu từ một dòng (bao gồm J..M)
-    function gvLayDuLieuDong(dong) {
-        return {
-            stt: dong.querySelector('.oSttGv').value,
-            ndung: dong.querySelector('.oNdGv').value.trim(),
-            diemmax: dong.querySelector('.oDmaxGv').value,
-            tggiao: dong.querySelector('.oTGGiao').value,
-            tdo: dong.querySelector('.oTdoGv').value,
-            tght: dong.querySelector('.oTGHoanThanh').value,
-            diemdg: dong.querySelector('.oDiemDgGv').value,
-            gchu: dong.querySelector('.oGchuGv').value,
-            ngnhan: dong.querySelector('.oNnghanGv').value,
-            trangngnhan: dong.querySelector('.oNnghanGv').value,
-            tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "",
-            colJ: dong.querySelector('.oColJ')?.value || "",
-            colK: dong.querySelector('.oColK')?.value || "",
-            colL: dong.querySelector('.oColL')?.value || "",
-            colM: dong.querySelector('.oColM')?.value || ""
-        };
-    }
+    function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {
         const dong = ptu.closest('tr'); const ndg = dong.querySelector('.oNdGv').value.trim();
@@ -278,24 +235,23 @@
         let tngn = ""; if (gth !== 'DELETE' && gth !== 'ALL') { tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name'); }
         
         const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-        const data = gvLayDuLieuDong(dong);
+        
+        // CẬP NHẬT GÓI GỬI: Gom toàn bộ các giá trị ẩn (H, J, K, L, M) gửi lên máy chủ
         const nvx = { 
             row_idx: row_idx,
-            stt: data.stt,
-            ndung: data.ndung,
-            diemmax: data.diemmax,
-            tggiao: data.tggiao,
-            tdo: data.tdo,
-            tght: data.tght,
-            diemdg: data.diemdg,
-            gchu: data.gchu,
-            ngnhan: gt,
-            trangngnhan: gt,
-            tenngnhan: tngn,
-            colJ: data.colJ,
-            colK: data.colK,
-            colL: data.colL,
-            colM: data.colM
+            stt: dong.querySelector('.oSttGv').value, 
+            ndung: ndg, 
+            diemmax: dong.querySelector('.oDmaxGv').value, 
+            tggiao: dong.querySelector('.oTGGiao').value, 
+            tdo: dong.querySelector('.oTdoGv').value, 
+            tght: dong.querySelector('.oTGHoanThanh').value, 
+            diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
+            colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
+            colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
+            colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
+            colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : "",
+            gchu: dong.querySelector('.oGchuGv').value, 
+            ngnhan: gt, trangngnhan: gt, tenngnhan: tngn 
         };
         const th_htai = document.getElementById('gvLocThang').value;
         let tbht = (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tngn + "...";
@@ -308,25 +264,25 @@
         document.querySelectorAll('#gvThanBang tr').forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
-                const data = gvLayDuLieuDong(dong);
                 const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
+                // CẬP NHẬT GÓI GỬI CHUNG
                 dsNviec.push({ 
                     row_idx: row_idx,
-                    stt: data.stt,
-                    ndung: data.ndung,
-                    diemmax: data.diemmax,
-                    tggiao: data.tggiao,
-                    tdo: data.tdo,
-                    tght: data.tght,
-                    diemdg: data.diemdg,
-                    gchu: data.gchu,
-                    ngnhan: data.ngnhan,
-                    trangngnhan: data.trangngnhan,
-                    tenngnhan: data.tenngnhan,
-                    colJ: data.colJ,
-                    colK: data.colK,
-                    colL: data.colL,
-                    colM: data.colM
+                    stt: dong.querySelector('.oSttGv').value, 
+                    ndung: ndg, 
+                    diemmax: dong.querySelector('.oDmaxGv').value, 
+                    tggiao: dong.querySelector('.oTGGiao').value, 
+                    tdo: dong.querySelector('.oTdoGv').value, 
+                    tght: dong.querySelector('.oTGHoanThanh').value, 
+                    diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
+                    colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
+                    colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
+                    colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
+                    colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : "",
+                    gchu: dong.querySelector('.oGchuGv').value.trim(), 
+                    ngnhan: dong.querySelector('.oNnghanGv').value, 
+                    trangngnhan: dong.querySelector('.oNnghanGv').value, 
+                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "" 
                 });
             }
         });

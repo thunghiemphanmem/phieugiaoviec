@@ -92,13 +92,45 @@
             setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
         } else { gvVeDong(); }
 
-        let quyen = ''; if (typeof canbHientai !== 'undefined' && canbHientai.quyen) { quyen = canbHientai.quyen; }
+     // ========== ĐIỀU KHIỂN NÚT DỰA TRÊN QUYỀN ==========
+        let quyen = '';
+        
+        // Bước 1: Lấy và chuẩn hóa dữ liệu quyền (chống lỗi nhập liệu chữ hoa/thường hoặc dư khoảng trắng)
+        if (typeof canbHientai !== 'undefined' && canbHientai.quyen) {
+            quyen = String(canbHientai.quyen).trim().toLowerCase();
+        } else if (typeof window.PGV_COT_E !== 'undefined' && window.PGV_COT_E) {
+            // Dự phòng trường hợp lấy từ biến toàn cục khác
+            quyen = String(window.PGV_COT_E).trim().toLowerCase();
+        }
+
+        // Bước 2: Xác định quyền Quản trị viên
         const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
-        const btnChung = document.getElementById('btnCapNhatChung'); const btnChuyenThang = document.getElementById('gvNutChth');
-        if (quyen === 'x') { if (btnChung) btnChung.style.display = 'none'; if (btnChuyenThang) btnChuyenThang.style.display = 'none'; } 
-        else if (quyen === 'xx') { if (btnChung) btnChung.style.display = 'none'; if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; }
-        else { if (btnChung) btnChung.style.display = isAdmin ? 'inline-block' : 'none'; if (btnChuyenThang) btnChuyenThang.style.display = isAdmin ? 'flex' : 'none'; }
-    }
+        
+        // Bước 3: Ánh xạ phần tử giao diện
+        const btnChung = document.getElementById('btnCapNhatChung'); 
+        const btnChuyenThang = document.getElementById('gvNutChth');
+
+        // Bước 4: Kiểm tra logic và áp dụng trạng thái hiển thị
+        if (quyen === 'x') { 
+            // Quyền x: Không hiển thị cả hai nút
+            if (btnChung) btnChung.style.display = 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'none'; 
+        } 
+        else if (quyen === 'xx') { 
+            // Quyền xx: Ẩn cập nhật chung, cho phép chuyển tháng
+            if (btnChung) btnChung.style.display = 'none'; 
+            if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; 
+        } 
+        else { 
+            // Các trường hợp còn lại: Hiển thị phụ thuộc vào cờ Quản trị (isAdmin)
+            if (btnChung) {
+                btnChung.style.display = isAdmin ? 'inline-block' : 'none';
+            }
+            if (btnChuyenThang) {
+                btnChuyenThang.style.display = isAdmin ? 'flex' : 'none';
+            }
+        }
+        // ====================================================
 
     function gvKiemTraTieuDe(ptu) {
         let isHeader = ptu.value.trim().startsWith('*');

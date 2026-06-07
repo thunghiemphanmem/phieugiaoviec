@@ -37,7 +37,6 @@
   .diemKhong, .diemKhong:disabled { background-color: #28a745 !important; color: black !important; font-weight: bold; opacity: 1 !important; -webkit-text-fill-color: black !important; }
   button:disabled { cursor: not-allowed !important; opacity: 0.5 !important; filter: grayscale(100%) !important; pointer-events: none !important; box-shadow: none !important; }
   
-  /* Khung giới hạn cho dropdown cột Điểm đánh giá */
   #bangNviec select.form-select.chonKq,
   #bangNviec input.chonKq {
       border: 1px solid #adb5bd !important;
@@ -78,7 +77,6 @@
          <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
          <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
       </div>
-      <!-- Đã xóa hoàn toàn ô Kết quả -->
     </div>
   </div>
 
@@ -118,13 +116,11 @@
   <div class="p-2 text-start bg-light border-top"><button class="btn btn-sm btn-outline-primary fw-bold" onclick="addNv()"><i class="bi bi-plus-circle"></i> Thêm nhiệm vụ</button></div>
 </div>
 
-<!-- Thẻ span ẩn để giữ kết quả cho các hàm JS, không hiển thị trên giao diện -->
 <div style="display: none;">
   <span id="chuKqHthi" class="fw-bold text-danger">Chưa đánh giá</span>
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ DI CHUYỂN SPAN KẾT QUẢ) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -351,8 +347,17 @@ function veBangNviec(db) {
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
-        let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
-        let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
+        let ndc = dong[1] || ""; let dMax = dong[2] || ""; 
+        
+        let tGiao = (dong[3] !== undefined && dong[3] !== null) ? String(dong[3]) : "";
+        let tHt   = (dong[5] !== undefined && dong[5] !== null) ? String(dong[5]) : "";
+        
+        // CHÚ Ý CHỈ SỐ: Điểm đánh giá (có thể đang ở dong[6] hoặc dong[7] trên thực tế)
+        // Hiện tại chuẩn mã đang lấy là dong[7]. 
+        let lTdo = dong[4] || ""; 
+        let nTH = dong[6] || ""; 
+        let rawH = dong[7] || ""; 
+        let gc = dong[8] || "";
         
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
@@ -360,17 +365,21 @@ function veBangNviec(db) {
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
         else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
         
+        // Cập nhật bảo vệ thẻ HTML khỏi lỗi nháy kép (") có thể phát sinh trong chuỗi
+        let safeConfig = valConfig.replace(/"/g, '&quot;');
+
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
         let colSp = isTitle ? 'colspan="7"' : '';
 
-        let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
-        let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
+        let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
+        let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
             let optsArray = [];
@@ -399,7 +408,8 @@ function veBangNviec(db) {
                 
                 if(txt !== "") {
                     let isSel = (val === valChon) ? "selected" : "";
-                    htmlDiem += `<option value="${val}" ${isSel} title="${txt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
+                    let safeTxt = txt.replace(/"/g, '&quot;');
+                    htmlDiem += `<option value="${val}" ${isSel} title="${safeTxt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
                 }
             });
             htmlDiem += `</select>`;
@@ -416,14 +426,15 @@ function veBangNviec(db) {
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-          </td>
+           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        <tr>`; bg.append(dg);
+         </tr>`;
+        bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }
@@ -448,6 +459,7 @@ function addNv() {
     const lastRow = tbody.find('tr.dongNv:last');
     
     if (lastRow.length === 0) {
+        // Đã sửa lại lỗi đóng thẻ </table> thành </tr> tại đây
         let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold"></td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
@@ -461,7 +473,7 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
             <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </table>`;
+        </tr>`;
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();

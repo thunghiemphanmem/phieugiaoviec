@@ -147,14 +147,15 @@
         gvDatTai(false); 
         
         let namValue = dl.nam;
+        
         const inputNam = document.getElementById('gvLocNam');
-        if (namValue && namValue.trim() !== "") {
-            inputNam.value = namValue;
-        } else {
-            inputNam.value = "";
-            gvTbaoNhanh('cbh', "Ô C7 sheet GIAOVIEC chưa có dữ liệu năm học. Vui lòng nhập năm học (ví dụ: 2025-2026) vào ô đó.");
-        }
-        inputNam.disabled = true;
+          if (namValue && namValue.trim() !== "") {
+              inputNam.value = namValue;
+          } else {
+              inputNam.value = "";
+              gvTbaoNhanh('cbh', "Ô C7 sheet GIAOVIEC chưa có dữ liệu năm học. Vui lòng nhập năm học (ví dụ: 2025-2026) vào ô đó.");
+          }
+          inputNam.disabled = true;
         
         if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
@@ -336,6 +337,7 @@
         sds.forEach(dong => {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
+                // Sửa lỗi Optional Chaining (?.) gây gián đoạn trình duyệt di động
                 let selectNgn = dong.querySelector('.oNnghanGv');
                 let tenNguoiNhan = "";
                 if (selectNgn && selectNgn.selectedIndex >= 0 && selectNgn.options[selectNgn.selectedIndex]) {

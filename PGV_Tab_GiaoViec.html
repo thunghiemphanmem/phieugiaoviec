@@ -310,50 +310,55 @@
         gvCapNhatSoThuTuVaMauChu();
     }
     
-    function gvDoiNgn(selectEl) {
-        const dong = selectEl.closest('tr'); 
-        const ndg = dong.querySelector('.oNdGv').value.trim();
-        if (!ndg) { 
-            gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); 
-            selectEl.value = ""; 
-            return; 
-        }
-        const gt = selectEl.value; 
-        if (!gt) return; 
-        
-        const gth = gt.toUpperCase();
-        const nm = document.getElementById('gvLocNam').value; 
-        const thang = document.getElementById('gvLocThang').value;
-        
-        let tenNguoiNhan = "";
-        if (gth !== 'ALL') {
-            tenNguoiNhan = selectEl.options[selectEl.selectedIndex]?.getAttribute('data-name') || "";
-        } else {
-            tenNguoiNhan = "TOÀN TRƯỜNG";
-        }
-        
-        const sttVal = dong.querySelector('.oSttGv').value;
-        const tgGiao = dong.querySelector('.oTgGiao')?.value || "";
-        const loaiTD = dong.querySelector('.oLoaiTD')?.value || "";
-        const tgHT = dong.querySelector('.oTgHT')?.value || "";
-        const ghichu = dong.querySelector('.oGchuGv')?.value || "";
-        
-        const nvx = { 
-            stt: sttVal,
-            ndung: ndg,
-            tggiao: tgGiao,
-            tdo: loaiTD,
-            tght: tgHT,
-            gchu: ghichu,
-            ngnhan: gt,
-            trangngnhan: gt,
-            tenngnhan: tenNguoiNhan,
-            colJ: "", colK: "", colL: "", colM: ""
-        };
-        
-        gvDatTai(true, (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tenNguoiNhan + "...");
-        gvGoiMayChu(nm, thang, nvx, selectEl, null);
+   function gvDoiNgn(selectEl) {
+    const dong = selectEl.closest('tr'); 
+    const ndg = dong.querySelector('.oNdGv').value.trim();
+    if (!ndg) { 
+        gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!"); 
+        selectEl.value = ""; 
+        return; 
     }
+    const gt = selectEl.value; 
+    if (!gt) return; 
+    
+    const gth = gt.toUpperCase();
+    const nm = document.getElementById('gvLocNam').value; 
+    const thang = document.getElementById('gvLocThang').value;
+    
+    let tenNguoiNhan = "";
+    if (gth !== 'ALL') {
+        tenNguoiNhan = selectEl.options[selectEl.selectedIndex]?.getAttribute('data-name') || "";
+    } else {
+        tenNguoiNhan = "TOÀN TRƯỜNG";
+    }
+    
+    // Lấy đầy đủ các giá trị từ dòng
+    const sttVal = dong.querySelector('.oSttGv').value;
+    const diemMax = dong.querySelector('.oDiemMax')?.value || "";
+    const tgGiao = dong.querySelector('.oTgGiao').value;
+    const loaiTD = dong.querySelector('.oLoaiTD').value;
+    const tgHT = dong.querySelector('.oTgHT').value;
+    const ghichu = dong.querySelector('.oGchuGv').value;
+    const diemDG = dong.querySelector('.oDiemDG')?.value || "";  // <-- thêm ô điểm đánh giá nếu có
+    
+    const nvx = { 
+        stt: sttVal,
+        ndung: ndg,
+        diemmax: diemMax,      // <-- bổ sung
+        tggiao: tgGiao,
+        tdo: loaiTD,
+        tght: tgHT,
+        diemdg: diemDG,        // <-- bổ sung
+        gchu: ghichu,
+        ngnhan: gt,
+        trangngnhan: gt,
+        tenngnhan: tenNguoiNhan,
+        colJ: "", colK: "", colL: "", colM: ""
+    };
+    
+    gvDatTai(true, (gth === 'ALL') ? "🚀 Đang giao cho TOÀN TRƯỜNG 🚀" : "⏳ Đang gửi cho " + tenNguoiNhan + "...");
+    gvGoiMayChu(nm, thang, nvx, selectEl, null);
+}
     
     function gvCapNhatNhiemVuChung() {
         const nm = document.getElementById('gvLocNam').value;

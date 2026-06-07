@@ -62,7 +62,7 @@
 </div>
 
 <script>
-    let dsCanbgv = []; let ddemDong = 1; let tdtaiXoaCho = null; let ptuChoXoa = null;
+    let dsCanbgv = []; let tdtaiXoaCho = null; let ptuChoXoa = null;
     setTimeout(function() { gvTaiCanb(); }, 500);
 
     function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
@@ -84,10 +84,9 @@
         if (namValue && namValue.trim() !== "") { inputNam.value = namValue; } else { inputNam.value = ""; }
         inputNam.disabled = true; if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
-        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; ddemDong = 1; 
+        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; 
         if (bns && bns.length > 0) { 
             bns.forEach(dong => { gvVeDong(dong); }); 
-            const dcstt = parseInt(bns[bns.length - 1][0]); if (!isNaN(dcstt)) { ddemDong = dcstt + 1; } 
             setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
         } else { gvVeDong(); }
 
@@ -115,128 +114,108 @@
     }
 
     function gvVeDong(dong = null) {
-    const tb = document.getElementById('gvThanBang'); 
-    const tr = document.createElement('tr');
-    tr.className = 'dongNv';
-
-    // ---- ÉP KIỂU AN TOÀN CHO TẤT CẢ CÁC TRƯỜNG ----
-    let ngnth = (dong && dong[6] !== undefined) ? String(dong[6]) : "";
-    let ngnthH = ngnth.toUpperCase();
-    let dcb = (dong && ngnth !== "") ? "disabled" : "";
-    
-    let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
-    
-    let lchon = `<option value="">--Chọn--</option>`;
-    if (!dcb || ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') { 
-        let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : ""; 
-        lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`; 
-    }
-    dsCanbgv.forEach(s => { 
-        let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : ""; 
-        lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
-    });
-    
-    let bstt = dong ? String(dong[0] || "") : ""; 
-    const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
-    
-    // Ép kiểu chuỗi cho ngày tháng
-    let vTgGiao = dong ? (dong[3] !== undefined ? String(dong[3]) : "") : "";
-    let vTgHt   = dong ? (dong[5] !== undefined ? String(dong[5]) : "") : "";
-    if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
-    if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
-
-    // Các trường mở rộng
-    let vDiemDg = "", vColJ = "", vColK = "", vColL = "", vColM = "";
-    if (dong) {
-        vDiemDg = dong[7] !== undefined ? String(dong[7]) : "";
-        vColJ   = dong[9] !== undefined ? String(dong[9]) : "";
-        vColK   = dong[10] !== undefined ? String(dong[10]) : "";
-        vColL   = dong[11] !== undefined ? String(dong[11]) : "";
-        vColM   = dong[12] !== undefined ? String(dong[12]) : "";
-    } else {
-        const cacDong = document.querySelectorAll('#gvThanBang tr');
-        if (cacDong.length > 0) {
-            const inpCuoi = cacDong[cacDong.length - 1];
-            let dgEl = inpCuoi.querySelector('.oDiemDgGv'); if (dgEl) vDiemDg = dgEl.value;
-            let cJ = inpCuoi.querySelector('.oColJ'); if (cJ) vColJ = cJ.value;
-            let cK = inpCuoi.querySelector('.oColK'); if (cK) vColK = cK.value;
-            let cL = inpCuoi.querySelector('.oColL'); if (cL) vColL = cL.value;
-            let cM = inpCuoi.querySelector('.oColM'); if (cM) vColM = cM.value;
+        const tb = document.getElementById('gvThanBang'); const tr = document.createElement('tr');
+        let ngnth = (dong && dong[6]) ? dong[6] : ""; let ngnthH = ngnth.toUpperCase(); let dcb = (dong && ngnth !== "") ? "disabled" : "";
+        let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
+        
+        let lchon = `<option value="">--Chọn--</option>`;
+        if (!dcb || ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') { 
+            let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : ""; 
+            lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`; 
         }
+        dsCanbgv.forEach(s => { 
+            let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : ""; 
+            lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
+        });
+        
+        // TUYỆT ĐỐI KHÔNG TỰ ĐỘNG ĐÁNH SỐ THỨ TỰ NỮA
+        let bstt = dong ? dong[0] : ""; 
+        const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
+        
+        let vTgGiao = dong ? dong[3] || "" : "";
+        let vTgHt = dong ? dong[5] || "" : "";
+        if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
+        if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
+
+        // KẾT THỪA CẤU HÌNH ẨN TỪ DÒNG TRƯỚC ĐÓ ĐỂ CÓ DROP-DOWN ĐIỂM Ở TRANG CÁ NHÂN
+        let vDiemDg = "";
+        if (dong) {
+            vDiemDg = dong[7] || "";
+        } else {
+            const cacDong = document.querySelectorAll('#gvThanBang tr');
+            if (cacDong.length > 0) {
+                const inpCuoi = cacDong[cacDong.length - 1].querySelector('.oDiemDgGv');
+                if (inpCuoi) vDiemDg = inpCuoi.value;
+            }
+        }
+        
+        tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
+        <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
+        <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
+        <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
+        <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
+        <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
+        <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
+        <td>
+            <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
+            <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
+            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+        </td>`;
+        
+        tb.appendChild(tr);
+        gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
     }
-    
-    tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
-    <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
-    <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?String(dong[1]||""):""}</textarea></td>
-    <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?String(dong[2]||""):""}"></td>
-    <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
-    <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-    <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
-    <td>
-        <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?String(dong[8]||""):""}</textarea>
-        <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
-        <input type="hidden" class="oColJ" value="${vColJ}">
-        <input type="hidden" class="oColK" value="${vColK}">
-        <input type="hidden" class="oColL" value="${vColL}">
-        <input type="hidden" class="oColM" value="${vColM}">
-        <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
-    </td>`;
-    
-    tb.appendChild(tr);
-    gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
-}
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
-    
     function gvThemDong() {
     const tbody = $('#gvThanBang');
     const lastRow = tbody.find('tr.dongNv:last');
-    
+
+    // Nếu bảng chưa có dòng nào, tạo dòng mặc định
     if (lastRow.length === 0) {
         gvVeDong(null);
         return;
     }
 
+    // Sao chép nguyên bản dòng cuối cùng để giữ định dạng (select, data-config, class)
     var $newRow = lastRow.clone();
 
-    // 1. Thay thế nút xoá ở cột đầu tiên (luôn là nút X hoạt động)
-    $newRow.find('td:first').html(`
-        <button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>
-    `);
-
-    // 2. Xoá thuộc tính disabled trên các thẻ select (Tiến độ & Người thực hiện)
-    $newRow.find('.oTdoGv, .oNnghanGv').removeAttr('disabled');
-
-    // 3. Reset các trường nhập liệu
-    $newRow.find('.oSttGv').val('');
-    $newRow.find('.oNdGv, .oGchuGv').val('');
+    // 1. Reset các giá trị nhập liệu, giữ nguyên thuộc tính và kiểu ô (input/select)
+    $newRow.find('.oSttGv').val(''); // Để trống STT theo yêu cầu
+    $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung text
     $newRow.find('.oDmaxGv').val('');
     $newRow.find('.oTGGiao').val('');
-    $newRow.find('.oTdoGv').val('');
-    $newRow.find('.oNnghanGv').val('');
+    $newRow.find('.oTdoGv').val(''); // Reset select tiến độ
+    $newRow.find('.oNnghanGv').val(''); // Reset select người thực hiện
     $newRow.find('.oTGHoanThanh').val('');
+    $newRow.find('.oDiemDgGv').val(''); // Xóa giá trị điểm đánh giá
+    
+    // 2. Reset ô Đánh giá (cột H) - Phải giữ nguyên cấu trúc select nếu dòng trên là select
+    var $chonKq = $newRow.find('.chonKq');
+    $chonKq.val(''); // Đưa về giá trị rỗng (đúng với option --Trống--)
 
-    // 4. Reset màu nền, viền, font (giữ nguyên style mặc định)
-    $newRow.find('input, select, textarea').css({
+    // 3. Reset trạng thái ô (bỏ hiệu ứng input-success/d1e7dd nếu có)
+    $newRow.find('input, select').css({
         'background-color': 'transparent',
         'border-color': 'transparent',
         'font-weight': 'normal'
     });
 
-    // 5. Nếu dòng trước là tiêu đề (có colspan), khôi phục hiển thị đầy đủ các cột
-    var $tdNoiDung = $newRow.find('td:nth-child(3)');
+    // 4. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
+    var $tdNoiDung = $newRow.find('td:nth-child(2)');
     if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
         $tdNoiDung.attr('colspan', '1');
-        $newRow.find('td:nth-child(n+4)').show();
+        $newRow.find('td:nth-child(n+3)').show();
     }
 
     tbody.append($newRow);
-
-    // 6. Điều chỉnh chiều cao textarea
+    
+    // Tự động điều chỉnh chiều cao textarea mới
     $newRow.find('textarea').each(function() { gvCoDan(this); });
+    tinhtTdong();
+    if (typeof mokBcao === 'function') mokBcao();
 }
-
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 
     function gvDoiNgn(ptu) {
@@ -247,7 +226,6 @@
         
         const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
         
-        // CẬP NHẬT GÓI GỬI: Gom toàn bộ các giá trị ẩn (H, J, K, L, M) gửi lên máy chủ
         const nvx = { 
             row_idx: row_idx,
             stt: dong.querySelector('.oSttGv').value, 
@@ -256,11 +234,7 @@
             tggiao: dong.querySelector('.oTGGiao').value, 
             tdo: dong.querySelector('.oTdoGv').value, 
             tght: dong.querySelector('.oTGHoanThanh').value, 
-            diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
-            colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
-            colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
-            colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
-            colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : "",
+            diemdg: dong.querySelector('.oDiemDgGv').value, 
             gchu: dong.querySelector('.oGchuGv').value, 
             ngnhan: gt, trangngnhan: gt, tenngnhan: tngn 
         };
@@ -276,7 +250,6 @@
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg !== "") {
                 const row_idx = Array.from(dong.parentNode.children).indexOf(dong) + 1;
-                // CẬP NHẬT GÓI GỬI CHUNG
                 dsNviec.push({ 
                     row_idx: row_idx,
                     stt: dong.querySelector('.oSttGv').value, 
@@ -285,11 +258,7 @@
                     tggiao: dong.querySelector('.oTGGiao').value, 
                     tdo: dong.querySelector('.oTdoGv').value, 
                     tght: dong.querySelector('.oTGHoanThanh').value, 
-                    diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
-                    colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
-                    colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
-                    colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
-                    colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : "",
+                    diemdg: dong.querySelector('.oDiemDgGv').value, 
                     gchu: dong.querySelector('.oGchuGv').value.trim(), 
                     ngnhan: dong.querySelector('.oNnghanGv').value, 
                     trangngnhan: dong.querySelector('.oNnghanGv').value, 

@@ -351,9 +351,13 @@ function veBangNviec(db) {
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
     db.forEach((dong, chs) => {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
-        let ndc = dong[1] || ""; let dMax = dong[2] || ""; let tGiao = dong[3] || ""; let lTdo = dong[4] || ""; let tHt = dong[5] || "";
-        let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
+        let ndc = dong[1] || ""; let dMax = dong[2] || ""; 
         
+        // ---- ÉP KIỂU CHUỖI CHO NGÀY THÁNG ----
+        let tGiao = (dong[3] !== undefined && dong[3] !== null) ? String(dong[3]) : "";
+        let tHt   = (dong[5] !== undefined && dong[5] !== null) ? String(dong[5]) : "";
+        
+        let lTdo = dong[4] || ""; let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
         let valChon = ""; let valConfig = rawH;
@@ -365,8 +369,8 @@ function veBangNviec(db) {
         let fw = isTitle ? 'fw-bold text-primary text-uppercase' : '';
         let colSp = isTitle ? 'colspan="7"' : '';
 
-        let vTgGiao = tGiao.toLowerCase() === "dd/mm/yyyy" ? "" : tGiao;
-        let vTgHt = tHt.toLowerCase() === "dd/mm/yyyy" ? "" : tHt;
+        let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
+        let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
         let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         if (valConfig.includes("|")) {
@@ -416,14 +420,15 @@ function veBangNviec(db) {
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-          </td>
+           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        <tr>`; bg.append(dg);
+         </tr>`;
+        bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
 }

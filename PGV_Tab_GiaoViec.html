@@ -79,50 +79,77 @@
         khachApi.gvLaydlBdau(gvKhiTaiXong, function(l) { gvTbaoNhanh('loi', "Lỗi tải dữ liệu: " + l.message); gvDatTai(false); }); 
     }
 
-    function gvKhiTaiXong(dl) {
+   function gvKhiTaiXong(dl) {
         gvDatTai(false); 
-        let namValue = dl.nam; const inputNam = document.getElementById('gvLocNam');
-        if (namValue && namValue.trim() !== "") { inputNam.value = namValue; } else { inputNam.value = ""; }
-        inputNam.disabled = true; if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
-        const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; ddemDong = 1; 
+        // Xử lý năm học: chỉ lấy từ backend (GIAOVIEC!C7)
+        let namValue = dl.nam;
+        console.log("[DEBUG] Năm học từ backend (C7):", namValue);
+        
+        const inputNam = document.getElementById('gvLocNam');
+        if (namValue && namValue.trim() !== "") {
+            inputNam.value = namValue;
+        } else {
+            inputNam.value = "";
+            console.warn("⚠️ Ô C7 sheet GIAOVIEC đang trống! Vui lòng nhập năm học vào ô C7.");
+            gvTbaoNhanh('cbh', "Ô C7 sheet GIAOVIEC chưa có dữ liệu năm học. Vui lòng nhập năm học (ví dụ: 2025-2026) vào ô đó.");
+        }
+        inputNam.disabled = true;
+        
+        if(dl.thang) document.getElementById('gvLocThang').value = dl.thang;
+        
+        const bns = dl.dlbang;
+        const tb = document.getElementById('gvThanBang'); 
+        tb.innerHTML = ""; 
+        ddemDong = 1; 
+        
         if (bns && bns.length > 0) { 
-            bns.forEach(dong => { gvVeDong(dong); }); 
-            const dcstt = parseInt(bns[bns.length - 1][0]); if (!isNaN(dcstt)) { ddemDong = dcstt + 1; } 
-            setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
-        } else { gvVeDong(); }
+            bns.forEach(dong => { 
+                gvVeDong(dong); 
+            }); 
+            const dcstt = parseInt(bns[bns.length - 1][0]); 
+            if (!isNaN(dcstt)) { 
+                ddemDong = dcstt + 1; 
+            } 
+            setTimeout(() => { 
+                document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); 
+                const isReadonlyMode = (window.PGV_GIAO_VIEC_READONLY === true);
+                if (isReadonlyMode) {
+                    document.querySelectorAll('#gvBangNv input.oNgayGv').forEach(inp => inp.readOnly = true);
+                    document.querySelectorAll('#gvBangNv select.oNnghanGv').forEach(sel => sel.disabled = true);
+                }
+            }, 300); 
+        } else { 
+            gvVeDong(); 
+        }
 
-     // ========== ĐIỀU KHIỂN NÚT DỰA TRÊN QUYỀN ==========
+        // ========== ĐIỀU KHIỂN NÚT DỰA TRÊN QUYỀN ==========
         let quyen = '';
         
-        // Bước 1: Lấy và chuẩn hóa dữ liệu quyền (chống lỗi nhập liệu chữ hoa/thường hoặc dư khoảng trắng)
+        // Bước 1: Lấy và chuẩn hóa dữ liệu quyền (chống lỗi nhập liệu)
         if (typeof canbHientai !== 'undefined' && canbHientai.quyen) {
             quyen = String(canbHientai.quyen).trim().toLowerCase();
         } else if (typeof window.PGV_COT_E !== 'undefined' && window.PGV_COT_E) {
-            // Dự phòng trường hợp lấy từ biến toàn cục khác
             quyen = String(window.PGV_COT_E).trim().toLowerCase();
         }
-
+        
         // Bước 2: Xác định quyền Quản trị viên
         const isAdmin = (typeof canbHientai !== 'undefined' && canbHientai.qchon === true);
         
         // Bước 3: Ánh xạ phần tử giao diện
-        const btnChung = document.getElementById('btnCapNhatChung'); 
+        const btnChung = document.getElementById('btnCapNhatChung');
         const btnChuyenThang = document.getElementById('gvNutChth');
 
         // Bước 4: Kiểm tra logic và áp dụng trạng thái hiển thị
-        if (quyen === 'x') { 
-            // Quyền x: Không hiển thị cả hai nút
-            if (btnChung) btnChung.style.display = 'none'; 
-            if (btnChuyenThang) btnChuyenThang.style.display = 'none'; 
+        if (quyen === 'x') {
+            if (btnChung) btnChung.style.display = 'none';
+            if (btnChuyenThang) btnChuyenThang.style.display = 'none';
         } 
-        else if (quyen === 'xx') { 
-            // Quyền xx: Ẩn cập nhật chung, cho phép chuyển tháng
-            if (btnChung) btnChung.style.display = 'none'; 
-            if (btnChuyenThang) btnChuyenThang.style.display = 'flex'; 
-        } 
-        else { 
-            // Các trường hợp còn lại: Hiển thị phụ thuộc vào cờ Quản trị (isAdmin)
+        else if (quyen === 'xx') {
+            if (btnChung) btnChung.style.display = 'none';
+            if (btnChuyenThang) btnChuyenThang.style.display = 'flex';
+        }
+        else {
             if (btnChung) {
                 btnChung.style.display = isAdmin ? 'inline-block' : 'none';
             }
@@ -130,6 +157,8 @@
                 btnChuyenThang.style.display = isAdmin ? 'flex' : 'none';
             }
         }
+        console.log("[GiaoViec] quyen =", quyen, "| isAdmin =", isAdmin);
+    }
         // ====================================================
 
     function gvKiemTraTieuDe(ptu) {

@@ -5,7 +5,7 @@
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
+  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 80vh; overflow-y: auto; overflow-x: auto; }
   #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh th:last-child { border-right: none; }
@@ -57,8 +57,9 @@
         </thead>
         <tbody id="gvThanBang"></tbody>
       </table>
-      <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
     </div>
+    <!-- Nút thêm dòng nằm ngoài vùng cuộn, luôn hiển thị -->
+    <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
 </div>
 
 <script>

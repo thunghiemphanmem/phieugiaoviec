@@ -187,44 +187,52 @@
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }
     
     function gvThemDong() {
-        const tbody = $('#gvThanBang');
-        const lastRow = tbody.find('tr.dongNv:last'); 
-
-        if (lastRow.length === 0) {
-            gvVeDong(null);
-            return;
-        }
-
-        var $newRow = lastRow.clone();
-
-        // 1. Reset các giá trị nhập liệu
-        $newRow.find('.oSttGv').val(''); // STT trống
-        $newRow.find('.oNdGv, .oGchuGv').val(''); // Xóa nội dung và ghi chú
-        $newRow.find('.oDmaxGv').val('');
-        $newRow.find('.oTGGiao').val('');
-        $newRow.find('.oTdoGv').val('');
-        $newRow.find('.oNnghanGv').val('');
-        $newRow.find('.oTGHoanThanh').val('');
-        
-        // Chú ý: oDiemDgGv, oColJ, oColK, oColL, oColM không bị reset vì được sao chép toàn vẹn từ dòng trên!
-        
-        $newRow.find('input, select').css({
-            'background-color': 'transparent',
-            'border-color': 'transparent',
-            'font-weight': 'normal'
-        });
-
-        // 2. Nếu dòng trước là Tiêu đề (colspan), reset lại để hiển thị đầy đủ các cột
-        var $tdNoiDung = $newRow.find('td:nth-child(3)');
-        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
-            $tdNoiDung.attr('colspan', '1');
-            $newRow.find('td:nth-child(n+4)').show();
-        }
-
-        tbody.append($newRow);
-        
-        $newRow.find('textarea').each(function() { gvCoDan(this); });
+    const tbody = $('#gvThanBang');
+    const lastRow = tbody.find('tr.dongNv:last');
+    
+    if (lastRow.length === 0) {
+        gvVeDong(null);
+        return;
     }
+
+    var $newRow = lastRow.clone();
+
+    // 1. Thay thế nút xoá ở cột đầu tiên (luôn là nút X hoạt động)
+    $newRow.find('td:first').html(`
+        <button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>
+    `);
+
+    // 2. Xoá thuộc tính disabled trên các thẻ select (Tiến độ & Người thực hiện)
+    $newRow.find('.oTdoGv, .oNnghanGv').removeAttr('disabled');
+
+    // 3. Reset các trường nhập liệu
+    $newRow.find('.oSttGv').val('');
+    $newRow.find('.oNdGv, .oGchuGv').val('');
+    $newRow.find('.oDmaxGv').val('');
+    $newRow.find('.oTGGiao').val('');
+    $newRow.find('.oTdoGv').val('');
+    $newRow.find('.oNnghanGv').val('');
+    $newRow.find('.oTGHoanThanh').val('');
+
+    // 4. Reset màu nền, viền, font (giữ nguyên style mặc định)
+    $newRow.find('input, select, textarea').css({
+        'background-color': 'transparent',
+        'border-color': 'transparent',
+        'font-weight': 'normal'
+    });
+
+    // 5. Nếu dòng trước là tiêu đề (có colspan), khôi phục hiển thị đầy đủ các cột
+    var $tdNoiDung = $newRow.find('td:nth-child(3)');
+    if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
+        $tdNoiDung.attr('colspan', '1');
+        $newRow.find('td:nth-child(n+4)').show();
+    }
+
+    tbody.append($newRow);
+
+    // 6. Điều chỉnh chiều cao textarea
+    $newRow.find('textarea').each(function() { gvCoDan(this); });
+}
 
     function gvXoaDong(btn) { btn.closest('tr').remove(); }
 

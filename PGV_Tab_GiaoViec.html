@@ -4,9 +4,16 @@
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; overflow-x: auto; }
+  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; }
+  /* Bọc bảng trong div có thanh cuộn dọc */
+  #khuGvChinh .gv-table-wrapper {
+    overflow-y: auto;
+    max-height: 60vh;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
   #khuGvChinh table { width: 100%; border-collapse: collapse; table-layout: auto; min-width: 1200px; }
-  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: 1px solid #dee2e6; vertical-align: middle; font-size: 13px; }
+  #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: 1px solid #dee2e6; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh td { border: 1px solid #999; padding: 0 !important; vertical-align: middle; }
   
   #gvBangNv textarea.form-control, #gvBangNv input.form-control, #gvBangNv select.form-select {
@@ -32,7 +39,7 @@
     padding: 4px;
   }
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: #f8f9fa; }
-  #khuGvChinh .nutThem { margin-top: 5px; font-size: 13px; font-weight: bold; }
+  #khuGvChinh .nutThem { margin-top: 10px; font-size: 13px; font-weight: bold; display: inline-block; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: gradientMove 3s ease infinite, pulseText 1.5s infinite ease-in-out; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -58,24 +65,27 @@
     </div>
 
     <div class="hopBang">
-      <table id="gvBangNv">
-        <thead>
-          <tr>
-            <th style="width: 40px;">Xóa</th>
-            <th style="width: 50px;">TT</th>
-            <th style="width: 25%;">Nội dung công việc</th>
-            <th style="width: 100px;">Thời gian giao</th>
-            <th style="width: 120px;">Loại tiến độ</th>
-            <th style="width: 100px;">Thời gian HT</th>
-            <th style="width: 15%;">Người thực hiện</th>
-            <th style="width: 20%;">Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody id="gvThanBang"></tbody>
-      </table>
+      <div class="gv-table-wrapper">
+        <table id="gvBangNv">
+          <thead>
+            <tr>
+              <th style="width: 40px;">Xóa</th>
+              <th style="width: 50px;">TT</th>
+              <th style="width: 25%;">Nội dung công việc</th>
+              <th style="width: 100px;">Thời gian giao</th>
+              <th style="width: 120px;">Loại tiến độ</th>
+              <th style="width: 100px;">Thời gian HT</th>
+              <th style="width: 15%;">Người thực hiện</th>
+              <th style="width: 20%;">Ghi chú</th>
+             </>
+          </thead>
+          <tbody id="gvThanBang"></tbody>
+        </table>
+      </div>
       <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
     </div>
 
+    <!-- Các modal giữ nguyên -->
     <div class="modal fade" id="gvHopThoaiXoa" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
       <div class="modal-dialog modal-dialog-centered"><div class="modal-content border-danger"><div class="modal-header bg-danger text-white"><h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO</h5><button type="button" class="btn-close" data-bs-dismiss="modal" onclick="gvHuyXoa()"></button></div><div class="modal-body text-center p-4"><p class="fs-6 mb-3">Bạn đang chọn <strong>XÓA TOÀN BỘ DỮ LIỆU CŨ</strong>.</p><p class="text-danger fw-bold">Hành động này sẽ xóa sạch dữ liệu hiện tại.</p></div><div class="modal-footer justify-content-center"><button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" onclick="gvHuyXoa()">Hủy bỏ</button><button type="button" class="btn btn-danger px-4 fw-bold" onclick="gvXndongXoa()">Đồng ý Xóa</button></div></div></div>
     </div>
@@ -90,7 +100,6 @@
     let tdtaiXoaCho = null; 
     let ptuChoXoa = null;
 
-    // Helper: chuyển số thành số La Mã (tối đa 3999)
     function toRoman(num) {
         const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
         let roman = '';
@@ -103,13 +112,13 @@
         return roman;
     }
 
-    // Tự động đánh số thứ tự và tô màu xanh đậm cho dòng có dấu *
     function gvCapNhatSoThuTuVaMauChu() {
         const rows = document.querySelectorAll('#gvThanBang tr');
         let laMaCount = 0;
         let arabicCount = 0;
         rows.forEach(dong => {
             const ndungElem = dong.querySelector('.oNdGv');
+            if (!ndungElem) return;
             const ndung = ndungElem.value.trim();
             const sttInput = dong.querySelector('.oSttGv');
             const isTieuDe = ndung.startsWith('*');
@@ -120,7 +129,6 @@
                 sttInput.value = toRoman(laMaCount);
                 sttInput.style.fontWeight = 'bold';
                 sttInput.style.color = '#0d6efd';
-                // Màu xanh đậm cho nội dung công việc
                 ndungElem.style.color = '#0000cc';
                 ndungElem.style.fontWeight = 'bold';
             } else {
@@ -132,7 +140,6 @@
                 }
                 sttInput.style.fontWeight = 'normal';
                 sttInput.style.color = '#000';
-                // Trả về màu mặc định
                 ndungElem.style.color = '';
                 ndungElem.style.fontWeight = '';
             }
@@ -244,50 +251,58 @@
             if (nguoiVal && nguoiVal.trim() !== "") isDisabled = true;
         }
         
-        let btnXoa = dong ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>` 
-                         : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
+        const isTieuDe = ndVal.trim().startsWith('*');
         
-        let lchon = `<option value="">--Chọn--</option>`;
-        if (!isDisabled || nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') {
-            let selectedAll = (nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') ? "selected" : "";
-            lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${selectedAll}>-TOÀN TRƯỜNG-</option>`;
-        }
-        dsCanbgv.forEach(s => { 
-            let selected = (nguoiVal === s.ttrg || nguoiVal === s.tenn) ? "selected" : "";
-            lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${selected}>${s.tenn}</option>`;
-        });
+        let btnXoa = (dong && !isTieuDe) ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>` 
+                      : (dong && isTieuDe) ? `<i class="bi bi-lock-fill text-secondary" title="Nhiệm vụ chung, không thể xoá"></i>`
+                      : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
         
-        let cv = (loaiTDVal === "Cho vượt tiến độ") ? "selected" : "";
-        
-        tr.innerHTML = `
-            <td class="oHdong">${btnXoa}</td>
-            <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${sttVal}" readonly style="background:#f0f0f0;"></td>
-            <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuVaMauChu()" onfocus="gvCoDan(this)"></textarea></td>
-            <td><input type="text" class="form-control text-center oTgGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
-            <td><select class="form-select text-center oLoaiTD"><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-            <td><input type="text" class="form-control text-center oTgHT" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
-            <td><select class="form-select oNguoiTH" ${isDisabled ? 'disabled' : ''}>${lchon}</select></td>
-            <td><textarea class="form-control text-center oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)"></textarea></td>
-        `;
-        
-        tr.querySelector('.oNdGv').value = ndVal;
-        tr.querySelector('.oTgGiao').value = tgGiaoVal;
-        tr.querySelector('.oTgHT').value = tgHTVal;
-        tr.querySelector('.oGchuGv').value = ghichuVal;
-        
-        tb.appendChild(tr);
-        
-        // Áp dụng màu nếu nội dung bắt đầu bằng *
-        if (ndVal.trim().startsWith('*')) {
+        if (isTieuDe) {
+            tr.innerHTML = `
+                <td class="oHdong">${btnXoa}</td>
+                <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${sttVal}" readonly style="background:#f0f0f0;"></td>
+                <td colspan="6"><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuVaMauChu()" onfocus="gvCoDan(this)"></textarea></td>
+            `;
+            tr.querySelector('.oNdGv').value = ndVal;
             const ndElem = tr.querySelector('.oNdGv');
             ndElem.style.color = '#0000cc';
             ndElem.style.fontWeight = 'bold';
+        } else {
+            let lchon = `<option value="">--Chọn--</option>`;
+            if (!isDisabled || nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') {
+                let selectedAll = (nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') ? "selected" : "";
+                lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${selectedAll}>-TOÀN TRƯỜNG-</option>`;
+            }
+            dsCanbgv.forEach(s => { 
+                let selected = (nguoiVal === s.ttrg || nguoiVal === s.tenn) ? "selected" : "";
+                lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${selected}>${s.tenn}</option>`;
+            });
+            let cv = (loaiTDVal === "Cho vượt tiến độ") ? "selected" : "";
+            tr.innerHTML = `
+                <td class="oHdong">${btnXoa}</td>
+                <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${sttVal}" readonly style="background:#f0f0f0;"></td>
+                <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuVaMauChu()" onfocus="gvCoDan(this)"></textarea></td>
+                <td><input type="text" class="form-control text-center oTgGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
+                <td><select class="form-select text-center oLoaiTD"><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
+                <td><input type="text" class="form-control text-center oTgHT" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
+                <td><select class="form-select oNguoiTH" ${isDisabled ? 'disabled' : ''}>${lchon}</select></td>
+                <td><textarea class="form-control text-center oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)"></textarea></td>
+            `;
+            tr.querySelector('.oNdGv').value = ndVal;
+            tr.querySelector('.oTgGiao').value = tgGiaoVal;
+            tr.querySelector('.oTgHT').value = tgHTVal;
+            tr.querySelector('.oGchuGv').value = ghichuVal;
         }
+        
+        tb.appendChild(tr);
     }
     
     function gvThemDong() { 
         gvVeDong(null); 
         gvCapNhatSoThuTuVaMauChu();
+        // Cuộn xuống dòng mới
+        const wrapper = document.querySelector('.gv-table-wrapper');
+        if (wrapper) wrapper.scrollTop = wrapper.scrollHeight;
     }
     
     function gvXoaDong(btn) { 
@@ -318,10 +333,10 @@
         }
         
         const sttVal = dong.querySelector('.oSttGv').value;
-        const tgGiao = dong.querySelector('.oTgGiao').value;
-        const loaiTD = dong.querySelector('.oLoaiTD').value;
-        const tgHT = dong.querySelector('.oTgHT').value;
-        const ghichu = dong.querySelector('.oGchuGv').value;
+        const tgGiao = dong.querySelector('.oTgGiao')?.value || "";
+        const loaiTD = dong.querySelector('.oLoaiTD')?.value || "";
+        const tgHT = dong.querySelector('.oTgHT')?.value || "";
+        const ghichu = dong.querySelector('.oGchuGv')?.value || "";
         
         const nvx = { 
             stt: sttVal,
@@ -348,21 +363,22 @@
         for (let dong of rows) {
             const ndg = dong.querySelector('.oNdGv').value.trim();
             if (ndg === "") continue;
-            const selectNgn = dong.querySelector('.oNguoiTH');
+            const isTieuDe = ndg.startsWith('*');
+            let selectNgn = dong.querySelector('.oNguoiTH');
             let tenNguoiNhan = "";
-            if (selectNgn && selectNgn.selectedIndex >= 0) {
+            if (!isTieuDe && selectNgn && selectNgn.selectedIndex >= 0) {
                 tenNguoiNhan = selectNgn.options[selectNgn.selectedIndex]?.getAttribute('data-name') || "";
             }
             dsNviec.push({
                 stt: dong.querySelector('.oSttGv').value,
                 ndung: ndg,
-                tggiao: dong.querySelector('.oTgGiao').value,
-                tdo: dong.querySelector('.oLoaiTD').value,
-                tght: dong.querySelector('.oTgHT').value,
-                gchu: dong.querySelector('.oGchuGv').value,
-                ngnhan: selectNgn.value,
-                trangngnhan: selectNgn.value,
-                tenngnhan: tenNguoiNhan,
+                tggiao: isTieuDe ? "" : (dong.querySelector('.oTgGiao')?.value || ""),
+                tdo: isTieuDe ? "" : (dong.querySelector('.oLoaiTD')?.value || ""),
+                tght: isTieuDe ? "" : (dong.querySelector('.oTgHT')?.value || ""),
+                gchu: isTieuDe ? "" : (dong.querySelector('.oGchuGv')?.value || ""),
+                ngnhan: isTieuDe ? "" : (selectNgn ? selectNgn.value : ""),
+                trangngnhan: isTieuDe ? "" : (selectNgn ? selectNgn.value : ""),
+                tenngnhan: isTieuDe ? "" : tenNguoiNhan,
                 colJ: "", colK: "", colL: "", colM: ""
             });
         }
@@ -472,6 +488,10 @@
             setTimeout(() => {
                 document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu));
                 gvCapNhatSoThuTuVaMauChu();
+                document.querySelectorAll('.oNguoiTH').forEach(sel => {
+                    sel.removeEventListener('change', gvDoiNgn);
+                    sel.addEventListener('change', function() { gvDoiNgn(this); });
+                });
                 const isReadonlyMode = (window.PGV_GIAO_VIEC_READONLY === true);
                 if (isReadonlyMode) {
                     document.querySelectorAll('#gvBangNv select.oNguoiTH').forEach(sel => sel.disabled = true);

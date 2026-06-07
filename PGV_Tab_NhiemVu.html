@@ -344,6 +344,37 @@ function ktraAnHienTieuDe(ptu) {
     tinhtTdong();
 }
 
+// Hàm tạo dropdown từ chuỗi cấu hình (dạng text|value, phân cách bằng dấu phẩy, chấm phẩy hoặc xuống dòng)
+function taoDropdownTuConfig(configStr, currentVal) {
+    if (!configStr || !configStr.includes('|')) return null;
+    var options = [];
+    // Tách các option: ưu tiên dấu ; hoặc xuống dòng
+    if (configStr.includes(';')) {
+        options = configStr.split(';');
+    } else if (configStr.includes(',')) {
+        options = configStr.split(',');
+    } else if (configStr.includes('\n')) {
+        options = configStr.split('\n');
+    } else {
+        options = [configStr];
+    }
+    var html = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${configStr.replace(/"/g, '&quot;')}" style="color:red; max-width: 100%;" onchange="tinhtTdong()">`;
+    html += `<option value="" style="text-align: left;">-- Trống --</option>`;
+    for (var i = 0; i < options.length; i++) {
+        var opt = options[i].trim();
+        if (opt === "") continue;
+        var kv = opt.split('|');
+        var displayText = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+        var val = kv.length > 1 ? kv[1].trim() : displayText;
+        if (displayText !== "") {
+            var selected = (val === currentVal) ? 'selected' : '';
+            html += `<option value="${val}" ${selected} title="${displayText}" style="text-align: left; white-space: normal;">${displayText}</option>`;
+        }
+    }
+    html += `</select>`;
+    return html;
+}
+
 // Hàm vẽ bảng - ĐÃ SỬA ĐỂ NHẬN DIỆN DẤU | VÀ TẠO DROPDOWN CHÍNH XÁC
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
@@ -361,21 +392,28 @@ function veBangNviec(db) {
         let lTdo = dong[4] || ""; let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
-        let valChon = ""; let valConfig = rawH;
-        // Xử lý chuỗi có dấu @@@ (lưu trữ từ lần trước)
-        if(rawH.includes("@@@")) { 
-            let p = rawH.split("@@@"); 
-            valChon = p[0]; 
-            valConfig = p[1]; 
+        // Xử lý giá trị đã chọn và cấu hình
+        let valChon = "";
+        let valConfig = rawH;
+        // Nếu có @@@ (dữ liệu đã lưu trước đó)
+        if (rawH.includes("@@@")) {
+            let parts = rawH.split("@@@");
+            valChon = parts[0];
+            valConfig = parts[1];
         } 
-        // Nếu không có @@@ và rawH không rỗng, coi toàn bộ là cấu hình (có thể có |)
-        else if(rawH !== "") { 
-            valChon = "";   // Chưa có giá trị chọn
-            valConfig = rawH; 
+        // Nếu rawH có dấu | nhưng không có @@@, coi toàn bộ là cấu hình (chưa có giá trị chọn)
+        else if (rawH.includes("|")) {
+            valChon = "";
+            valConfig = rawH;
+        }
+        else if (rawH !== "") {
+            // Trường hợp chỉ là giá trị đơn (không có |) và không có @@@
+            valChon = rawH;
+            valConfig = rawH; // không có | nên sẽ không tạo dropdown
         }
         
-        // **QUAN TRỌNG**: Đảm bảo nếu valConfig bị rỗng nhưng rawH có dấu | thì dùng rawH
-        if ((valConfig === "" || !valConfig.includes("|")) && rawH.includes("|")) {
+        // Đảm bảo nếu valConfig không có | nhưng rawH có | (phòng trường hợp tách sai)
+        if (!valConfig.includes("|") && rawH.includes("|")) {
             valConfig = rawH;
         }
         
@@ -387,43 +425,17 @@ function veBangNviec(db) {
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
-        // Tạo dropdown nếu valConfig có chứa dấu | (ngăn cách text và giá trị)
+        let htmlDiem = '';
+        // Kiểm tra xem valConfig có chứa dấu | hay không để quyết định tạo dropdown
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
-            htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
-            
-            let optsArray = [];
-            // Tách các option: ưu tiên dấu ; hoặc xuống dòng
-            if (valConfig.includes(";")) {
-                optsArray = valConfig.split(";");
-            } else if (valConfig.includes("\n")) {
-                let lines = valConfig.split("\n");
-                let currentOpt = "";
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (line === "") continue; 
-                    currentOpt = currentOpt === "" ? line : currentOpt + " " + line;
-                    if (line.includes("|") || i === lines.length - 1) {
-                        optsArray.push(currentOpt);
-                        currentOpt = "";
-                    }
-                }
+            let dropdownHtml = taoDropdownTuConfig(valConfig, valChon);
+            if (dropdownHtml) {
+                htmlDiem = dropdownHtml;
             } else {
-                optsArray = valConfig.split(",");
+                htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
             }
-
-            optsArray.forEach(opt => {
-                let kv = opt.split("|"); 
-                let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
-                let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
-                
-                if(txt !== "") {
-                    let isSel = (val === valChon) ? "selected" : "";
-                    htmlDiem += `<option value="${val}" ${isSel} title="${txt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
-                }
-            });
-            htmlDiem += `</select>`;
+        } else {
+            htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         }
 
         let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
@@ -444,7 +456,7 @@ function veBangNviec(db) {
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </table>`;
+        </tr>`;
         bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);

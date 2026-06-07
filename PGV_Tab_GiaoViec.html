@@ -31,12 +31,17 @@
     height: 100%;
     padding: 4px;
   }
+  /* Màu xanh đậm cho nội dung dòng có dấu * */
+  .text-nghiem-thu {
+    color: #0000cc !important;
+    font-weight: bold;
+  }
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: #f8f9fa; }
   #khuGvChinh .nutThem { margin-top: 5px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: gradientMove 3s ease infinite, pulseText 1.5s infinite ease-in-out; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-  #khuGvChinh input:disabled, #khuGvChinh select:disabled { background-color: #ffffff !important; cursor: not-allowed; color: #333; font-weight: normal; }
+  #khuGvChinh input:disabled, #khuGvChinh select:disabled { background-color: #f0f0f0 !important; cursor: not-allowed; color: #333; font-weight: normal; }
 </style>
 
 <div id="khuGvChinh">
@@ -103,29 +108,83 @@
         return roman;
     }
 
-    // Tự động đánh số thứ tự La Mã cho mục chính (*), số thường cho mục con
-    function gvCapNhatSoThuTuTuDong() {
+    // Cập nhật số thứ tự (La Mã cho dòng có *, số thường cho dòng không *)
+    // Đồng thời cập nhật trạng thái disabled của các ô trong dòng dựa trên nội dung *
+    function gvCapNhatSoThuTuVaKhoaDong() {
         const rows = document.querySelectorAll('#gvThanBang tr');
         let laMaCount = 0;
         let arabicCount = 0;
         rows.forEach(dong => {
-            const ndung = dong.querySelector('.oNdGv').value.trim();
+            const ndungElem = dong.querySelector('.oNdGv');
+            const ndung = ndungElem.value.trim();
             const sttInput = dong.querySelector('.oSttGv');
-            if (ndung.startsWith('*')) {
+            const isTieuDe = ndung.startsWith('*');
+            
+            if (isTieuDe) {
                 laMaCount++;
                 arabicCount = 0;
                 sttInput.value = toRoman(laMaCount);
                 sttInput.style.fontWeight = 'bold';
                 sttInput.style.color = '#0d6efd';
-            } else if (ndung !== "") {
-                arabicCount++;
-                sttInput.value = arabicCount;
+                // Màu xanh đậm cho nội dung
+                ndungElem.classList.add('text-nghiem-thu');
+                // Khóa các ô còn lại trong dòng
+                gvKhoaCacCotKhac(dong, true);
+            } else {
+                if (ndung !== "") {
+                    arabicCount++;
+                    sttInput.value = arabicCount;
+                } else {
+                    sttInput.value = "";
+                }
                 sttInput.style.fontWeight = 'normal';
                 sttInput.style.color = '#000';
-            } else {
-                sttInput.value = "";
+                ndungElem.classList.remove('text-nghiem-thu');
+                // Mở khóa các ô (trừ khi dòng đã có người nhận từ server)
+                const nguoiSelect = dong.querySelector('.oNguoiTH');
+                const isDisabledByData = nguoiSelect && nguoiSelect.hasAttribute('data-disabled-by-data');
+                if (!isDisabledByData) {
+                    gvKhoaCacCotKhac(dong, false);
+                }
             }
         });
+    }
+    
+    // Hàm khóa/mở khóa các cột (trừ cột TT và cột Xóa)
+    function gvKhoaCacCotKhac(dong, khoa) {
+        const inputs = dong.querySelectorAll('.oTgGiao, .oLoaiTD, .oTgHT, .oNguoiTH, .oGchuGv');
+        inputs.forEach(inp => {
+            if (khoa) {
+                inp.disabled = true;
+            } else {
+                // Chỉ mở khóa nếu không bị disabled bởi dữ liệu có người nhận
+                if (!inp.hasAttribute('data-disabled-by-data')) {
+                    inp.disabled = false;
+                }
+            }
+        });
+        // Xóa nút xóa nếu là dòng tiêu đề (chỉ hiển thị icon khóa)
+        const xoaCell = dong.querySelector('.oHdong');
+        if (xoaCell) {
+            if (khoa) {
+                xoaCell.innerHTML = '<i class="bi bi-lock-fill text-secondary" title="Nhiệm vụ chung, không thể xoá"></i>';
+            } else {
+                // Chỉ hiển thị nút xóa nếu dòng chưa có người nhận (dòng mới)
+                const nguoiSelect = dong.querySelector('.oNguoiTH');
+                const isDisabledByData = nguoiSelect && nguoiSelect.hasAttribute('data-disabled-by-data');
+                if (!isDisabledByData && !khoa) {
+                    xoaCell.innerHTML = '<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>';
+                } else {
+                    xoaCell.innerHTML = '<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>';
+                }
+            }
+        }
+    }
+    
+    // Hàm gọi khi nội dung textarea thay đổi -> tự động cập nhật số thứ tự và trạng thái khóa
+    function gvOnNoiDungChange(textarea) {
+        gvCoDan(textarea);
+        gvCapNhatSoThuTuVaKhoaDong();
     }
 
     function gvTbaoNhanh(loai, tb) {
@@ -224,30 +283,37 @@
         
         // Giá trị mặc định cho dòng mới
         let sttVal = "", ndVal = "", tgGiaoVal = "", loaiTDVal = "", tgHTVal = "", nguoiVal = "", ghichuVal = "";
-        let isDisabled = false; // disabled khi đã có người nhận (dữ liệu cũ)
+        let isDisabledByData = false; // disabled do đã có người nhận từ server
         
         if (dong) {
             // dong là mảng 13 phần tử từ server
             sttVal      = dong[0] || "";
             ndVal       = dong[1] || "";
-            // dong[2] là Điểm tối đa (chỉ đọc, không dùng trong giao diện chính)
-            tgGiaoVal   = dong[3] || "";   // Thời gian giao
-            loaiTDVal   = dong[4] || "";   // Loại tiến độ
-            tgHTVal     = dong[5] || "";   // Thời gian hoàn thành
-            nguoiVal    = dong[6] || "";   // Người thực hiện (có thể là -TOÀN TRƯỜNG- hoặc tên sheet)
+            // dong[2] là Điểm tối đa (không dùng)
+            tgGiaoVal   = dong[3] || "";
+            loaiTDVal   = dong[4] || "";
+            tgHTVal     = dong[5] || "";
+            nguoiVal    = dong[6] || "";
             ghichuVal   = dong[8] || "";
-            // Nếu dữ liệu đã có người nhận (không rỗng) thì khoá select không cho sửa
-            if (nguoiVal && nguoiVal.trim() !== "") isDisabled = true;
+            if (nguoiVal && nguoiVal.trim() !== "") isDisabledByData = true;
         }
         
-        // Nút xóa: chỉ xuất hiện khi dòng mới thêm (dong == null)
-        let btnXoa = dong ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>` 
-                         : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
+        const isTieuDe = ndVal.trim().startsWith('*');
+        const khoaHoanToan = isTieuDe || isDisabledByData;
+        
+        // Nút xóa: chỉ xuất hiện khi dòng mới thêm (dong == null) và không phải tiêu đề
+        let btnXoa = '';
+        if (dong && khoaHoanToan) {
+            btnXoa = `<i class="bi bi-lock-fill text-secondary" title="${isTieuDe ? 'Nhiệm vụ chung, không thể xoá' : 'Đã lưu, không thể xoá'}"></i>`;
+        } else if (!dong) {
+            btnXoa = `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
+        } else {
+            btnXoa = `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>`;
+        }
         
         // Tạo dropdown người thực hiện
         let lchon = `<option value="">--Chọn--</option>`;
-        // Thêm tuỳ chọn TOÀN TRƯỜNG nếu dòng chưa bị khoá hoặc là ALL
-        if (!isDisabled || nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') {
+        if (!khoaHoanToan || nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') {
             let selectedAll = (nguoiVal.toUpperCase() === '-TOÀN TRƯỜNG-') ? "selected" : "";
             lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${selectedAll}>-TOÀN TRƯỜNG-</option>`;
         }
@@ -256,39 +322,56 @@
             lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${selected}>${s.tenn}</option>`;
         });
         
-        // Loại tiến độ: chỉ có "Cho vượt tiến độ" hoặc rỗng
         let cv = (loaiTDVal === "Cho vượt tiến độ") ? "selected" : "";
         
         tr.innerHTML = `
             <td class="oHdong">${btnXoa}</td>
             <td class="text-center"><input type="text" class="form-control text-center oSttGv" value="${sttVal}" readonly style="background:#f0f0f0;"></td>
-            <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvCapNhatSoThuTuTuDong()" onfocus="gvCoDan(this)"></textarea></td>
+            <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvOnNoiDungChange(this)" onfocus="gvCoDan(this)"></textarea></td>
             <td><input type="text" class="form-control text-center oTgGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
             <td><select class="form-select text-center oLoaiTD"><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
             <td><input type="text" class="form-control text-center oTgHT" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)"></td>
-            <td><select class="form-select oNguoiTH" ${isDisabled ? 'disabled' : ''}>${lchon}</select></td>
+            <td><select class="form-select oNguoiTH" ${khoaHoanToan ? 'disabled' : ''}>${lchon}</select></td>
             <td><textarea class="form-control text-center oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)"></textarea></td>
         `;
         
         // Gán giá trị cho các field
-        tr.querySelector('.oNdGv').value = ndVal;
+        const ndElem = tr.querySelector('.oNdGv');
+        ndElem.value = ndVal;
         tr.querySelector('.oTgGiao').value = tgGiaoVal;
         tr.querySelector('.oTgHT').value = tgHTVal;
         tr.querySelector('.oGchuGv').value = ghichuVal;
         
+        // Nếu dòng bị khóa bởi dữ liệu (có người nhận), đánh dấu để sau không mở khóa
+        if (isDisabledByData) {
+            const nguoiSelect = tr.querySelector('.oNguoiTH');
+            nguoiSelect.setAttribute('data-disabled-by-data', 'true');
+        }
+        
         tb.appendChild(tr);
+        
+        // Áp dụng màu xanh và khóa nếu là tiêu đề
+        if (isTieuDe) {
+            ndElem.classList.add('text-nghiem-thu');
+            gvKhoaCacCotKhac(tr, true);
+        } else {
+            ndElem.classList.remove('text-nghiem-thu');
+            if (!isDisabledByData) {
+                gvKhoaCacCotKhac(tr, false);
+            }
+        }
     }
     
-    // Thêm dòng mới (trống)
+    // Thêm dòng mới (trống) và cập nhật số thứ tự
     function gvThemDong() { 
         gvVeDong(null); 
-        gvCapNhatSoThuTuTuDong();
+        gvCapNhatSoThuTuVaKhoaDong();
     }
     
     // Xóa dòng (chỉ cho dòng mới thêm)
     function gvXoaDong(btn) { 
         btn.closest('tr').remove(); 
-        gvCapNhatSoThuTuTuDong();
+        gvCapNhatSoThuTuVaKhoaDong();
     }
     
     // Khi chọn người thực hiện (gửi dữ liệu lên server cho dòng đơn)
@@ -314,7 +397,6 @@
             tenNguoiNhan = "TOÀN TRƯỜNG";
         }
         
-        // Lấy các giá trị từ dòng
         const sttVal = dong.querySelector('.oSttGv').value;
         const tgGiao = dong.querySelector('.oTgGiao').value;
         const loaiTD = dong.querySelector('.oLoaiTD').value;
@@ -331,7 +413,6 @@
             ngnhan: gt,
             trangngnhan: gt,
             tenngnhan: tenNguoiNhan,
-            // Các trường J-M mặc định để trống (server sẽ kế thừa nếu cần)
             colJ: "", colK: "", colL: "", colM: ""
         };
         
@@ -437,11 +518,9 @@
                         ptuChoXoa = null;
                         setTimeout(gvLaydlGoc, 1000);
                     } else {
-                        // Đánh dấu thành công
                         ptu.style.backgroundColor = '#d1e7dd';
                         ptu.style.borderColor = '#badbcc';
                         ptu.style.fontWeight = 'bold';
-                        // Tải lại dữ liệu để cập nhật trạng thái khoá
                         setTimeout(gvLaydlGoc, 800);
                     }
                 } else {
@@ -459,7 +538,6 @@
     // Hàm xử lý khi tải dữ liệu thành công từ server
     function gvKhiTaiXong(dl) {
         gvDatTai(false);
-        // Cập nhật năm học và tháng
         let namValue = dl.nam;
         const inputNam = document.getElementById('gvLocNam');
         if (namValue && namValue.trim() !== "") {
@@ -470,15 +548,14 @@
         }
         if (dl.thang) document.getElementById('gvLocThang').value = dl.thang;
         
-        const bns = dl.dlbang; // mảng các dòng, mỗi dòng 13 phần tử
+        const bns = dl.dlbang;
         const tb = document.getElementById('gvThanBang');
         tb.innerHTML = "";
         if (bns && bns.length > 0) {
             bns.forEach(dong => gvVeDong(dong));
             setTimeout(() => {
                 document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu));
-                gvCapNhatSoThuTuTuDong();
-                // Nếu ở chế độ chỉ đọc
+                gvCapNhatSoThuTuVaKhoaDong();
                 const isReadonlyMode = (window.PGV_GIAO_VIEC_READONLY === true);
                 if (isReadonlyMode) {
                     document.querySelectorAll('#gvBangNv select.oNguoiTH').forEach(sel => sel.disabled = true);
@@ -486,7 +563,7 @@
                 }
             }, 300);
         } else {
-            gvVeDong(); // một dòng trống
+            gvVeDong();
         }
         
         // Xử lý hiển thị nút theo quyền

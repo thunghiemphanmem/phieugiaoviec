@@ -124,7 +124,7 @@
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ DI CHUYỂN SPAN KẾT QUẢ) ====================
+// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ CẬP NHẬT XỬ LÝ DROPDOWN) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -344,6 +344,7 @@ function ktraAnHienTieuDe(ptu) {
     tinhtTdong();
 }
 
+// Hàm vẽ bảng - ĐÃ SỬA ĐỂ NHẬN DIỆN DẤU | VÀ TẠO DROPDOWN CHÍNH XÁC
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
     if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
@@ -361,8 +362,22 @@ function veBangNviec(db) {
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
         let valChon = ""; let valConfig = rawH;
-        if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
-        else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
+        // Xử lý chuỗi có dấu @@@ (lưu trữ từ lần trước)
+        if(rawH.includes("@@@")) { 
+            let p = rawH.split("@@@"); 
+            valChon = p[0]; 
+            valConfig = p[1]; 
+        } 
+        // Nếu không có @@@ và rawH không rỗng, coi toàn bộ là cấu hình (có thể có |)
+        else if(rawH !== "") { 
+            valChon = "";   // Chưa có giá trị chọn
+            valConfig = rawH; 
+        }
+        
+        // **QUAN TRỌNG**: Đảm bảo nếu valConfig bị rỗng nhưng rawH có dấu | thì dùng rawH
+        if ((valConfig === "" || !valConfig.includes("|")) && rawH.includes("|")) {
+            valConfig = rawH;
+        }
         
         let isTitle = ndc.trim().startsWith('*');
         let dsp = isTitle ? 'display: none;' : '';
@@ -372,12 +387,14 @@ function veBangNviec(db) {
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        // Tạo dropdown nếu valConfig có chứa dấu | (ngăn cách text và giá trị)
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
+            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
             htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
             
             let optsArray = [];
+            // Tách các option: ưu tiên dấu ; hoặc xuống dòng
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
@@ -413,21 +430,21 @@ function veBangNviec(db) {
         let dg = `<tr class="dongNv">
           <td class="text-center align-middle oStt fw-bold">${sn}</td>
           <td ${colSp}>
-              <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc}</textarea>
+              <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc.replace(/</g, '&lt;')}</textarea>
               <input type="hidden" class="anNguoiTH" value="${nTH}">
               <input type="hidden" class="anGhiChu" value="${gc}">
               <input type="hidden" class="oColJ" value="${j_val}">
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-           </td>
+            </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-         </tr>`;
+        </table>`;
         bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
@@ -466,7 +483,7 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
             <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </table>`;
+        </tr>`;
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();

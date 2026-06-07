@@ -124,7 +124,7 @@
 </div>
 
 <script>
-// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ CẬP NHẬT XỬ LÝ DROPDOWN) ====================
+// ==================== TOÀN BỘ LOGIC GIỮ NGUYÊN (CHỈ DI CHUYỂN SPAN KẾT QUẢ) ====================
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -344,44 +344,44 @@ function ktraAnHienTieuDe(ptu) {
     tinhtTdong();
 }
 
-// Hàm tạo dropdown từ chuỗi cấu hình (dạng text|value, phân cách bằng dấu phẩy, chấm phẩy hoặc xuống dòng)
-function taoDropdownTuConfig(configStr, currentVal) {
-    if (!configStr || !configStr.includes('|')) return null;
-    var options = [];
-    // Tách các option: ưu tiên dấu ; hoặc xuống dòng
-    if (configStr.includes(';')) {
-        options = configStr.split(';');
-    } else if (configStr.includes(',')) {
-        options = configStr.split(',');
-    } else if (configStr.includes('\n')) {
-        options = configStr.split('\n');
-    } else {
-        options = [configStr];
-    }
-    var html = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${configStr.replace(/"/g, '&quot;')}" style="color:red; max-width: 100%;" onchange="tinhtTdong()">`;
-    html += `<option value="" style="text-align: left;">-- Trống --</option>`;
-    for (var i = 0; i < options.length; i++) {
-        var opt = options[i].trim();
-        if (opt === "") continue;
-        var kv = opt.split('|');
-        var displayText = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-        var val = kv.length > 1 ? kv[1].trim() : displayText;
-        if (displayText !== "") {
-            var selected = (val === currentVal) ? 'selected' : '';
-            html += `<option value="${val}" ${selected} title="${displayText}" style="text-align: left; white-space: normal;">${displayText}</option>`;
+// ================== HÀM TẠO DROPDOWN CẢI TIẾN ==================
+function taoDropdown(valConfig, valChon) {
+    if (!valConfig || !valConfig.includes("|")) return null;
+    
+    // Chuẩn hóa: thay dấu phẩy, xuống dòng bằng dấu ;
+    let normalized = valConfig.replace(/,/g, ';').replace(/\n/g, ';');
+    let options = normalized.split(';').filter(opt => opt.trim() !== "");
+    
+    let html = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" style="color:red; max-width: 100%;" onchange="tinhtTdong()">`;
+    html += `<option value="" style="text-align: left; white-space: normal;">-- Trống --</option>`;
+    
+    for (let opt of options) {
+        let parts = opt.split('|');
+        if (parts.length >= 2) {
+            let text = parts[0].trim();
+            let value = parts[1].trim();
+            // So sánh giá trị: xử lý cả số và chuỗi
+            let isSelected = false;
+            if (!isNaN(valChon) && !isNaN(value) && Number(valChon) === Number(value)) {
+                isSelected = true;
+            } else if (String(valChon) === String(value)) {
+                isSelected = true;
+            }
+            let selectedAttr = isSelected ? "selected" : "";
+            html += `<option value="${value}" ${selectedAttr} title="${text}" style="text-align: left; white-space: normal; word-wrap: break-word;">${text}</option>`;
         }
     }
     html += `</select>`;
     return html;
 }
 
-// Hàm vẽ bảng - ĐÃ SỬA ĐỂ NHẬN DIỆN DẤU | VÀ TẠO DROPDOWN CHÍNH XÁC
+// ================== HÀM VẼ BẢNG (CẬP NHẬT) ==================
 function veBangNviec(db) {
     khaBcao(); const bg = $('#bangNviec tbody').empty();
     if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
-    db.forEach((dong, chs) => {
+    db.forEach((dong, idx) => {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; 
         
@@ -392,28 +392,19 @@ function veBangNviec(db) {
         let lTdo = dong[4] || ""; let nTH = dong[6] || ""; let rawH = dong[7] || ""; let gc = dong[8] || "";
         let j_val = dong[9] || ""; let k_val = dong[10] || ""; let l_val = dong[11] || ""; let m_val = dong[12] || "";
         
-        // Xử lý giá trị đã chọn và cấu hình
-        let valChon = "";
-        let valConfig = rawH;
-        // Nếu có @@@ (dữ liệu đã lưu trước đó)
-        if (rawH.includes("@@@")) {
-            let parts = rawH.split("@@@");
-            valChon = parts[0];
-            valConfig = parts[1];
+        let valChon = ""; let valConfig = rawH;
+        if(rawH.includes("@@@")) { 
+            let p = rawH.split("@@@"); 
+            valChon = p[0]; 
+            valConfig = p[1]; 
         } 
-        // Nếu rawH có dấu | nhưng không có @@@, coi toàn bộ là cấu hình (chưa có giá trị chọn)
-        else if (rawH.includes("|")) {
-            valChon = "";
-            valConfig = rawH;
-        }
-        else if (rawH !== "") {
-            // Trường hợp chỉ là giá trị đơn (không có |) và không có @@@
-            valChon = rawH;
-            valConfig = rawH; // không có | nên sẽ không tạo dropdown
+        else if(rawH !== "" && !rawH.includes("|")) { 
+            valChon = rawH; 
+            valConfig = rawH; 
         }
         
-        // Đảm bảo nếu valConfig không có | nhưng rawH có | (phòng trường hợp tách sai)
-        if (!valConfig.includes("|") && rawH.includes("|")) {
+        // Đảm bảo nếu valConfig rỗng nhưng rawH có "|" thì dùng rawH
+        if ((valConfig === "" || !valConfig.includes("|")) && rawH.includes("|")) {
             valConfig = rawH;
         }
         
@@ -425,15 +416,10 @@ function veBangNviec(db) {
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
-        let htmlDiem = '';
-        // Kiểm tra xem valConfig có chứa dấu | hay không để quyết định tạo dropdown
+        let htmlDiem = "";
         if (valConfig.includes("|")) {
-            let dropdownHtml = taoDropdownTuConfig(valConfig, valChon);
-            if (dropdownHtml) {
-                htmlDiem = dropdownHtml;
-            } else {
-                htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
-            }
+            let dropdown = taoDropdown(valConfig, valChon);
+            htmlDiem = dropdown !== null ? dropdown : `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         } else {
             htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${valConfig.replace(/"/g, '&quot;')}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
         }
@@ -449,7 +435,7 @@ function veBangNviec(db) {
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-            </td>
+           </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>

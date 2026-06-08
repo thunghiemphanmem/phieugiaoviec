@@ -1,16 +1,21 @@
 <style>
-  /* Cấu trúc Flexbox cho toàn bộ khu vực chính để chiếm hết chiều cao */
-  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; display: flex; flex-direction: column; height: 92vh; } 
-  #khuGvChinh .hopDau { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
-  
+  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; }
+  #khuGvChinh .hopDau { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  /* Bảng tự động giãn theo không gian còn lại */
-  #khuGvChinh .hopBang { flex-grow: 1; background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; overflow-y: auto; overflow-x: auto; position: relative; }
+  /* Cấu trúc mới: Vùng chứa tổng thể */
+  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; display: flex; flex-direction: column; border: 1px solid #dee2e6; }
   
-  #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
+  /* Cấu trúc mới: Phân lập vùng cuộn dành riêng cho bảng */
+  #khuGvChinh .bangCuon { max-height: 60vh; overflow-y: auto; overflow-x: auto; width: 100%; }
+  
+  /* Cấu trúc mới: Vùng nút luôn ghim cố định ở đáy */
+  #khuGvChinh .vungNutThem { padding: 10px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; border-radius: 0 0 5px 5px; box-shadow: 0 -2px 5px rgba(0,0,0,0.03); z-index: 11; position: relative; }
+  #khuGvChinh .nutThem { font-size: 13px; font-weight: bold; margin: 0; }
+  
+  #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; margin: 0; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh th:last-child { border-right: none; }
   #khuGvChinh td { border: none; border-bottom: 1px dashed #dee2e6; border-right: 1px solid #dee2e6; padding: 2px !important; vertical-align: middle; }
@@ -22,7 +27,6 @@
   #gvBangNv input::placeholder { color: #adb5bd; font-style: italic; }
 
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
-  #khuGvChinh .nutThem { margin: 10px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
@@ -46,22 +50,26 @@
     </div>
 
     <div class="hopBang">
-      <table id="gvBangNv" class="table-hover">
-        <thead>
-          <tr>
-            <th style="width: 40px;">Xóa</th>
-            <th style="width: 50px;">TT</th>
-            <th style="width: 30%;">Nội dung công việc</th>
-            <th style="width: 80px;">Điểm T.Đa</th>
-            <th style="width: 110px;">TG Giao</th>
-            <th style="width: 15%;">Tiến độ</th>
-            <th style="width: 15%;">Người thực hiện</th>
-            <th style="width: 20%;">Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody id="gvThanBang"></tbody>
-      </table>
-      <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
+      <div class="bangCuon">
+        <table id="gvBangNv" class="table-hover">
+          <thead>
+            <tr>
+              <th style="width: 40px;">Xóa</th>
+              <th style="width: 50px;">TT</th>
+              <th style="width: 30%;">Nội dung công việc</th>
+              <th style="width: 80px;">Điểm T.Đa</th>
+              <th style="width: 110px;">TG Giao</th>
+              <th style="width: 15%;">Tiến độ</th>
+              <th style="width: 15%;">Người thực hiện</th>
+              <th style="width: 20%;">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="gvThanBang"></tbody>
+        </table>
+      </div>
+      <div class="vungNutThem">
+        <button class="btn btn-success nutThem" onclick="gvThemDong()">+ Thêm dòng mới</button>
+      </div>
     </div>
 </div>
 
@@ -239,8 +247,14 @@
         
         $newRow.find('textarea').each(function() { gvCoDan(this); });
         
-        // AUTO FOCUS VÀO Ô NỘI DUNG MỚI
-        setTimeout(function() { $newRow.find('.oNdGv').focus(); }, 100);
+        // AUTO FOCUS VÀO Ô NỘI DUNG MỚI VÀ CUỘN BẢNG XUỐNG DƯỚI CÙNG
+        setTimeout(function() { 
+            $newRow.find('.oNdGv').focus(); 
+            let bangCuon = document.querySelector('#khuGvChinh .bangCuon');
+            if (bangCuon) {
+                bangCuon.scrollTop = bangCuon.scrollHeight;
+            }
+        }, 100);
         
         if (typeof tinhtTdong === 'function') tinhtTdong();
         if (typeof mokBcao === 'function') mokBcao();

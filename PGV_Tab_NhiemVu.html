@@ -704,23 +704,29 @@ function xulyTaiBcao(ptu) {
     }
 }
 function guiTepLenMayChu(mngTep) {
-    // Hàm xử lý phản hồi khi máy chủ trả về kết quả
     const xuLyThanhCong = function(kqTho) {
         anTaiDl();
-        console.log("Dữ liệu nhận từ server:", kqTho); // In ra để debug nếu còn lỗi
         
-        // Ép kiểu dữ liệu an toàn
+        // 1. Chuyển đổi dữ liệu trả về thành đối tượng
         let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
         
-        // Kiểm tra điều kiện thành công: Hoặc có cờ ttai='tcong', hoặc nhận được danh sách tệp dliu
-        if (kq && (kq.ttai === 'tcong' || (kq.dliu && kq.dliu.length > 0))) {
-            let duLieuTep = kq.dliu || kq; // Hỗ trợ cả trường hợp server trả về trực tiếp mảng
+        // 2. LOGIC KIỂM TRA MỚI: 
+        // Cho phép thành công nếu:
+        // - Có cờ ttai: 'tcong' 
+        // - HOẶC dữ liệu trả về là một mảng (trường hợp server trả về danh sách tệp trực tiếp)
+        let laThanhCong = (kq.ttai === 'tcong') || Array.isArray(kq);
+        
+        if (laThanhCong) {
+            // Lấy danh sách tệp: Nếu server trả về {dliu: [...]}, nếu không lấy thẳng kq (nếu là mảng)
+            let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
+            
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
             if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
         } else {
-            let msg = kq ? (kq.tbao || JSON.stringify(kq)) : "Lỗi không xác định";
+            // Chỉ báo lỗi nếu không phải là tcong và không phải mảng
+            let msg = kq.tbao || JSON.stringify(kq);
             if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + msg);
         }
     };

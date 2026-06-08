@@ -808,4 +808,136 @@ function giaiMaBcao(chuoiBcao) {
     }
     veUiTepDinhKem(); // Vẽ lại giao diện sau khi giải mã xong
 }
+
+  // ==========================================================================
+// KHỐI "VÁ" LỖI HIỂN THỊ VÀ XỬ LÝ TỆP ĐÍNH KÈM
+// ==========================================================================
+
+// 1. Tự động sửa lỗi hienThongb (Interceptor)
+if (typeof hienThongb === 'function') {
+    const hienThongbGoc = hienThongb;
+    hienThongb = function(loai, msg) {
+        if (typeof msg === 'string') {
+            hienThongbGoc(loai, { chu: msg });
+        } else {
+            hienThongbGoc(loai, msg);
+        }
+    };
+}
+
+// 2. Hàm giải mã tệp đính kèm
+window.tepdinhkBcao = window.tepdinhkBcao || [];
+
+function giaiMaBcao(chuoiBcao) {
+    window.tepdinhkBcao = []; // Reset danh sách tệp cũ
+    if (!chuoiBcao) return;
+    
+    // Tìm tất cả các đoạn có dạng [FILE:tên|link]
+    const regex = /\[FILE:(.*?)\|(.*?)\]/g;
+    let match;
+    while ((match = regex.exec(chuoiBcao)) !== null) {
+        window.tepdinhkBcao.push({
+            tentep: match[1],
+            duongd: match[2]
+        });
+    }
+    veUiTepDinhKem(); // Vẽ lại giao diện sau khi giải mã xong
+}
+
+// 3. Hàm xử lý tải tệp
+function xulyTaiBcao(ptu) {
+    const files = ptu.files;
+    if (!files || files.length === 0) return;
+    hienTaiDl("⏳ Đang tải tệp lên...");
+    
+    let tepXuLy = 0;
+    let mngTep = [];
+    
+    for (let i = 0; i < files.length; i++) {
+        let f = files[i];
+        if (f.size > 5 * 1024 * 1024) {
+            anTaiDl();
+            alert("Tệp '" + f.name + "' quá lớn (>5MB).");
+            ptu.value = ''; return;
+        }
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let dlBase64 = e.target.result.split(',')[1];
+            mngTep.push({ tentep: f.name, kieu: f.type, dliu: dlBase64 });
+            tepXuLy++;
+            if (tepXuLy === files.length) {
+                guiTepLenMayChu(mngTep);
+                ptu.value = '';
+            }
+        };
+        reader.readAsDataURL(f);
+    }
+}
+
+// 4. Hàm gửi tệp lên máy chủ
+function guiTepLenMayChu(mngTep) {
+    const xuLyThanhCong = function(kqTho) {
+        anTaiDl();
+        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        if (kq && (kq.ttai === 'tcong' || Array.isArray(kq))) {
+            let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
+            window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
+            veUiTepDinhKem();
+            if (typeof mokBcao === 'function') mokBcao();
+            hienThongb('tcong', "Tải tệp thành công!");
+        } else {
+            hienThongb('loi', "Lỗi tải tệp: " + (kq ? (kq.tbao || JSON.stringify(kq)) : "Không xác định"));
+        }
+    };
+    
+    const xuLyLoi = function(loi) {
+        anTaiDl();
+        hienThongb('loi', "Lỗi kết nối Server: " + (loi.message || loi));
+    };
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(xuLyThanhCong).withFailureHandler(xuLyLoi).pgv_tai_tepbcao({ teps: mngTep });
+    } else if (typeof khachApi !== 'undefined' && khachApi.taiTepBcao) {
+        khachApi.taiTepBcao({ teps: mngTep }, xuLyThanhCong, xuLyLoi);
+    }
+}
+
+// 5. Hàm vẽ lại danh sách tệp
+function veUiTepDinhKem() {
+    const vung = document.getElementById('vungDinhkBcao');
+    if (!vung) return;
+    vung.innerHTML = '';
+    window.tepdinhkBcao.forEach((t, i) => {
+        let theTep = document.createElement('span');
+        theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
+        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}">${t.tentep}</a>
+                            <i class="bi bi-x-circle-fill ms-1 text-danger" style="cursor:pointer; font-size:14px;" onclick="xoaTepDinhKem(${i})"></i>`;
+        vung.appendChild(theTep);
+    });
+}
+
+// 6. Hàm xử lý xóa tệp
+function xoaTepDinhKem(idx) {
+    if(!confirm("Xác nhận xóa tệp?")) return;
+    hienTaiDl("🗑️ Đang xóa...");
+    let tepXoa = window.tepdinhkBcao[idx];
+    
+    const xuLyXoaXong = function(kqTho) {
+        anTaiDl();
+        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        if(kq && kq.ttai === 'tcong') {
+            window.tepdinhkBcao.splice(idx, 1);
+            veUiTepDinhKem();
+            if (typeof mokBcao === 'function') mokBcao();
+            hienThongb('tcong', "Đã xóa tệp!");
+        } else {
+            hienThongb('loi', "Lỗi xóa tệp!");
+        }
+    };
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(xuLyXoaXong).pgv_xoa_tepbcao({ duongd: tepXoa.duongd });
+    }
+}
 </script>

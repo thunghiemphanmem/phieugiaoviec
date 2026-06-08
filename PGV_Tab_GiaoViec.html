@@ -102,7 +102,17 @@
         const bns = dl.dlbang; const tb = document.getElementById('gvThanBang'); tb.innerHTML = ""; 
         if (bns && bns.length > 0) { 
             bns.forEach(dong => { gvVeDong(dong); }); 
-            setTimeout(() => { document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 300); 
+            // 🟢 Tự động điều chỉnh chiều cao của tất cả textarea sau khi load dữ liệu
+            setTimeout(() => { 
+                document.querySelectorAll('#khuGvChinh textarea.form-control').forEach(ptu => { 
+                    gvCoDan(ptu);
+                    // Đảm bảo textarea có thể hiển thị toàn bộ nội dung
+                    if (ptu.value && ptu.value.length > 0) {
+                        ptu.style.height = 'auto';
+                        ptu.style.height = ptu.scrollHeight + 'px';
+                    }
+                }); 
+            }, 100); 
         } else { gvVeDong(); }
 
         let quyen = ''; if (typeof canbHientai !== 'undefined' && canbHientai.quyen) { quyen = canbHientai.quyen; }
@@ -196,6 +206,18 @@
     
     tb.appendChild(tr);
     gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
+    // 🟢 Tự động điều chỉnh chiều cao textarea cho từng dòng khi vẽ
+    const txts = tr.querySelectorAll('textarea');
+    if (txts.length) {
+        setTimeout(() => {
+            txts.forEach(txt => {
+                if (txt.value && txt.value.length > 0) {
+                    txt.style.height = 'auto';
+                    txt.style.height = txt.scrollHeight + 'px';
+                }
+            });
+        }, 50);
+    }
 }
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }

@@ -98,7 +98,7 @@
     <div class="col-md-6">
       <div style="position: relative;">
         <textarea id="nhapBcao" class="form-control border-danger" placeholder="* Báo cáo tóm tắt quá trình thực hiện..." style="height: 45px; min-height: 45px; overflow-y: hidden; resize: none; font-size: 13px; border: 1px dashed #dc3545; padding: 3px 30px 3px 3px; border-radius: 4px;" oninput="gdang(this)" onfocus="gdang(this)" onblur="cgon(this, '45px')"></textarea>
-        <button class="btn btn-sm text-primary" onclick="document.getElementById('tepBcao').click()" style="position: absolute; top: 2px; right: 4px; padding: 0; background: transparent; border: none; z-index: 10;" title="Đính kèm báo cáo"><i class="bi bi-paperclip" style="font-size: 18px;"></i></button>
+        <button class="btn btn-sm text-primary" type="button" onclick="document.getElementById('tepBcao').click()" style="position: absolute; top: 2px; right: 4px; padding: 0; background: transparent; border: none; z-index: 10;" title="Đính kèm báo cáo"><i class="bi bi-paperclip" style="font-size: 18px;"></i></button>
         <input type="file" id="tepBcao" multiple style="display:none;" onchange="xulyTaiBcao(this)">
       </div>
       <div id="vungDinhkBcao" class="mt-1 d-flex gap-1 flex-wrap justify-content-end"></div>
@@ -109,7 +109,8 @@
 <div class="card shadow-sm p-0 border-0">
   <div class="table-responsive" style="max-height: 65vh; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 5px;">
     <table class="table table-hover mb-0" id="bangNviec">
-      <thead><tr><th style="width: 3%;">TT</th><th style="width: 32%;">Nội dung công việc</th><th style="width: 8%;">Điểm Max</th><th style="width: 12%;">TG Giao</th><th style="width: 10%;">Tiến độ</th><th style="width: 12%;">TG Hoàn thành</th><th style="width: 20%;">Điểm đánh giá</th><th style="width: 3%;">Xoá</th></tr></thead>
+      <thead><tr><th style="width: 3%;">TT</th><th style="width: 32%;">Nội dung công việc</th><th style="width: 8%;">Điểm Max</th><th style="width: 12%;">TG Giao</th><th style="width: 10%;">Tiến độ</th><th style="width: 12%;">TG Hoàn thành</th><th style="width: 20%;">Điểm đánh giá</th><th style="width: 3%;">Xoá</th></tr>
+      </thead>
       <tbody></tbody>
     </table>
   </div>
@@ -121,6 +122,9 @@
 </div>
 
 <script>
+// Biến lưu danh sách file đính kèm
+window.tepdinhkBcao = window.tepdinhkBcao || [];
+
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
 function kiemTraLaBGH() {
@@ -184,6 +188,73 @@ function cdang(ptu) {
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
 function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
+
+// ==================== HÀM XỬ LÝ ĐÍNH KÈM FILE ====================
+function xulyTaiBcao(input) {
+    if (!input.files || input.files.length === 0) return;
+    
+    var vungDinhk = document.getElementById('vungDinhkBcao');
+    if (!vungDinhk) return;
+    
+    for (var i = 0; i < input.files.length; i++) {
+        (function(file) {
+            var fileName = file.name;
+            
+            // Kiểm tra trùng tên file
+            if (window.tepdinhkBcao.some(function(f) { return f.tentep === fileName; })) {
+                if (typeof hienThongb === 'function') {
+                    hienThongb('cbh', 'File "' + fileName + '" đã được đính kèm trước đó!');
+                } else {
+                    alert('File "' + fileName + '" đã được đính kèm trước đó!');
+                }
+                return;
+            }
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var fileData = {
+                    tentep: fileName,
+                    duongd: e.target.result,
+                    loai: file.type,
+                    kichthuoc: file.size
+                };
+                window.tepdinhkBcao.push(fileData);
+                hienThiFileDinhKem(fileData, vungDinhk);
+            };
+            reader.onerror = function() {
+                if (typeof hienThongb === 'function') {
+                    hienThongb('loi', 'Lỗi đọc file "' + fileName + '"');
+                } else {
+                    alert('Lỗi đọc file "' + fileName + '"');
+                }
+            };
+            reader.readAsDataURL(file);
+        })(input.files[i]);
+    }
+    
+    input.value = '';
+}
+
+function hienThiFileDinhKem(fileData, container) {
+    var badge = document.createElement('span');
+    badge.className = 'badge bg-light text-dark border p-2 d-inline-flex align-items-center gap-1';
+    badge.style.fontSize = '12px';
+    badge.setAttribute('data-filename', fileData.tentep);
+    badge.innerHTML = '<i class="bi bi-file-earmark-text"></i>' +
+        '<span class="text-truncate" style="max-width: 200px;">' + fileData.tentep + '</span>' +
+        '<button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 10px;" onclick="xoaFileDinhKem(this)" aria-label="Xóa"></button>';
+    container.appendChild(badge);
+}
+
+function xoaFileDinhKem(btn) {
+    var badge = btn.closest('.badge');
+    if (badge) {
+        var fileName = badge.getAttribute('data-filename');
+        window.tepdinhkBcao = window.tepdinhkBcao.filter(function(f) { return f.tentep !== fileName; });
+        badge.remove();
+    }
+}
+// ==================== KẾT THÚC HÀM ĐÍNH KÈM ====================
 
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
@@ -352,8 +423,6 @@ function veBangNviec(db) {
         let tGiao = (dong[3] !== undefined && dong[3] !== null) ? String(dong[3]) : "";
         let tHt   = (dong[5] !== undefined && dong[5] !== null) ? String(dong[5]) : "";
         
-        // CHÚ Ý CHỈ SỐ: Điểm đánh giá (có thể đang ở dong[6] hoặc dong[7] trên thực tế)
-        // Hiện tại chuẩn mã đang lấy là dong[7]. 
         let lTdo = dong[4] || ""; 
         let nTH = dong[6] || ""; 
         let rawH = dong[7] || ""; 
@@ -365,7 +434,6 @@ function veBangNviec(db) {
         if(rawH.includes("@@@")) { let p = rawH.split("@@@"); valChon = p[0]; valConfig = p[1]; } 
         else if(!rawH.includes("|") && rawH !== "") { valChon = rawH; valConfig = rawH; }
         
-        // Cập nhật bảo vệ thẻ HTML khỏi lỗi nháy kép (") có thể phát sinh trong chuỗi
         let safeConfig = valConfig.replace(/"/g, '&quot;');
 
         let isTitle = ndc.trim().startsWith('*');
@@ -426,14 +494,14 @@ function veBangNviec(db) {
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-           </td>
+            </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-         </tr>`;
+        </tr>`;
         bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
@@ -459,7 +527,6 @@ function addNv() {
     const lastRow = tbody.find('tr.dongNv:last');
     
     if (lastRow.length === 0) {
-        // Đã sửa lại lỗi đóng thẻ </table> thành </tr> tại đây
         let defaultRow = `<tr class="dongNv">
             <td class="text-center align-middle oStt fw-bold"></td>
             <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>

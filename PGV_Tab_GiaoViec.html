@@ -215,6 +215,10 @@
         $newRow.find('.oColL').val(lastRow.find('.oColL').val());
         $newRow.find('.oColM').val(lastRow.find('.oColM').val());
         
+        // MỞ KHÓA VÀ KHÔI PHỤC TRẠNG THÁI NÚT XÓA CHO DÒNG MỚI
+        $newRow.find('select').removeAttr('disabled'); 
+        $newRow.find('.oHdong').html('<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>');
+        
         $newRow.find('input:not([type="hidden"]), select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',

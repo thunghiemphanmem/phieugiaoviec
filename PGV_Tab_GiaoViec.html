@@ -208,7 +208,7 @@
         $newRow.find('.oTGHoanThanh').val('');
         if ($newRow.find('.chonKq').length > 0) { $newRow.find('.chonKq').val(''); }
 
-        // BẮT BUỘC KẾ THỪA CÁC GIÁ TRỊ ẨN TỪ DÒNG TRƯỚC VÀO DÒNG NHÂN BẢN
+        // KẾ THỪA GIÁ TRỊ ẨN
         $newRow.find('.oDiemDgGv').val(lastRow.find('.oDiemDgGv').val());
         $newRow.find('.oColJ').val(lastRow.find('.oColJ').val());
         $newRow.find('.oColK').val(lastRow.find('.oColK').val());
@@ -316,4 +316,36 @@
     }
 
     function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }
+
+    // HÀM XỬ LÝ CHUYỂN THÁNG MỚI
+    function gvXlmChth(btn) {
+        if (!confirm("Bạn có chắc chắn muốn chuyển sang tháng tiếp theo và làm mới toàn bộ dữ liệu giao việc?")) return;
+        
+        let selectThang = document.getElementById('gvLocThang');
+        let val = selectThang.value;
+        let match = val.match(/\d+/);
+        let thangHienTai = match ? parseInt(match[0]) : 1;
+        let thangMoi = thangHienTai + 1;
+        if (thangMoi > 12) thangMoi = 1; // Quay vòng lại Tháng 1 nếu vượt quá 12
+        
+        selectThang.value = "Tháng " + thangMoi;
+        const nm = document.getElementById('gvLocNam').value;
+        const th_htai = selectThang.value;
+        
+        const newTask = { ngnhan: "DELETE" };
+        
+        gvDatTai(true, "🧹 Đang dọn dẹp và thiết lập tháng mới...");
+        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: newTask }, function(kq) {
+            gvDatTai(false);
+            if (kq && kq.ttai === 'tcong') {
+                gvTbaoNhanh('tc', "Đã chuyển tháng thành công!");
+                setTimeout(gvLaydlGoc, 1000); // Tải lại giao diện sau khi dọn dẹp
+            } else {
+                gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
+            }
+        }, function(l) {
+            gvDatTai(false);
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message);
+        });
+    }
 </script>

@@ -759,6 +759,7 @@ function veUiTepDinhKem() {
     });
 }
 
+// Hàm xử lý xóa tệp đã đính kèm
 function xoaTepDinhKem(idx) {
     if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
     
@@ -767,20 +768,34 @@ function xoaTepDinhKem(idx) {
     
     const xuLyXoaXong = function(kqTho) {
         anTaiDl();
-        let kq = epKieuKq(kqTho); 
-        if(kq && kq.ttai === 'tcong') {
+        // Ép kiểu an toàn
+        let kq = epKieuKq(kqTho);
+        
+        if (kq && kq.ttai === 'tcong') {
             window.tepdinhkBcao.splice(idx, 1);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
+            if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xóa tệp thành công!");
         } else {
-            let msg = kq ? (kq.tbao || JSON.stringify(kq)) : "Lỗi không xác định";
-            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi xóa tệp: " + msg);
+            // Xử lý an toàn: Đảm bảo msg luôn là chuỗi, tránh lỗi "undefined"
+            let msg = (kq && kq.tbao) ? kq.tbao : (kq ? JSON.stringify(kq) : "Máy chủ không phản hồi dữ liệu");
+            
+            if (typeof hienThongb === 'function') {
+                hienThongb('loi', "Lỗi xóa tệp: " + msg);
+            } else {
+                alert("Lỗi xóa tệp: " + msg);
+            }
         }
     };
     
     const xuLyLoiXoa = function(loi) {
         anTaiDl();
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối Server: " + (loi.message || loi));
+        let msgLoi = (loi && loi.message) ? loi.message : "Mất kết nối tới máy chủ";
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', "Lỗi kết nối: " + msgLoi);
+        } else {
+            alert("Lỗi kết nối: " + msgLoi);
+        }
     };
 
     if (typeof google !== 'undefined' && google.script && google.script.run) {

@@ -655,4 +655,41 @@ function khoiTaoTheoQuyen() {
     }
 }
 $(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
+
+  function guiTepLenMayChu(mngTep) {
+    // Hàm xử lý phản hồi khi máy chủ trả về kết quả
+    const xuLyThanhCong = function(kqTho) {
+        anTaiDl();
+        console.log("Dữ liệu nhận từ server:", kqTho); // In ra để debug nếu còn lỗi
+        
+        // Ép kiểu dữ liệu an toàn
+        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        
+        // Kiểm tra điều kiện thành công: Hoặc có cờ ttai='tcong', hoặc nhận được danh sách tệp dliu
+        if (kq && (kq.ttai === 'tcong' || (kq.dliu && kq.dliu.length > 0))) {
+            let duLieuTep = kq.dliu || kq; // Hỗ trợ cả trường hợp server trả về trực tiếp mảng
+            window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
+            veUiTepDinhKem();
+            if (typeof mokBcao === 'function') mokBcao();
+            if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
+        } else {
+            let msg = kq ? (kq.tbao || JSON.stringify(kq)) : "Lỗi không xác định";
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + msg);
+        }
+    };
+
+    const xuLyLoi = function(loi) {
+        anTaiDl();
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối Server: " + (loi.message || loi));
+    };
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(xuLyThanhCong).withFailureHandler(xuLyLoi).pgv_tai_tepbcao({ teps: mngTep });
+    } else if (typeof khachApi !== 'undefined' && khachApi.taiTepBcao) {
+        khachApi.taiTepBcao({ teps: mngTep }, xuLyThanhCong, xuLyLoi);
+    } else {
+        anTaiDl();
+        alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
+    }
+}
 </script>

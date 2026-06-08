@@ -775,7 +775,7 @@ function xoaTepDinhKem(idx) {
             window.tepdinhkBcao.splice(idx, 1);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
-            if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xóa tệp thành công!");
+           thongBaoAnToan('tcong', "Đã xóa tệp thành công!");
         } else {
             // Xử lý an toàn: Đảm bảo msg luôn là chuỗi, tránh lỗi "undefined"
             let msg = (kq && kq.tbao) ? kq.tbao : (kq ? JSON.stringify(kq) : "Máy chủ không phản hồi dữ liệu");

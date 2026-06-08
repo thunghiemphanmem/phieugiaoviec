@@ -656,7 +656,7 @@ function khoiTaoTheoQuyen() {
 }
 $(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
 
-  // ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
+// ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
 // Khởi tạo mảng lưu trữ tệp đính kèm toàn cục
 window.tepdinhkBcao = window.tepdinhkBcao || [];
 
@@ -668,43 +668,93 @@ function xulyTaiBcao(ptu) {
     
     let tepXuLy = 0;
     let mngTep = [];
+    let hasError = false;
     
-    // Đọc và mã hóa từng tệp sang định dạng Base64
+    // Đọc và mã hóa từng tệp sang định dạng Base64 an toàn
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
+        
+        // CƠ CHẾ BẢO VỆ 1: Chặn tệp quá 5MB để tránh treo trình duyệt hoặc lỗi mạng
+        if (f.size > 5 * 1024 * 1024) {
+            anTaiDl();
+            alert("Tệp '" + f.name + "' quá lớn (vượt quá 5MB). Vui lòng nén lại hoặc chọn tệp nhỏ hơn.");
+            ptu.value = '';
+            return;
+        }
+
         let reader = new FileReader();
         reader.onload = function(e) {
-            // Tách lấy mã dữ liệu Base64
-            let dlBase64 = e.target.result.split(',')[1];
-            mngTep.push({ tentep: f.name, kieu: f.type, dliu: dlBase64 });
-            tepXuLy++;
-            
-            // Khi đã đọc xong tất cả các tệp thì gửi lệnh gọi máy chủ
-            if (tepXuLy === files.length) {
-                if (typeof khachApi !== 'undefined' && khachApi.taiTepBcao) {
-                    khachApi.taiTepBcao({ teps: mngTep }, function(kq) {
-                        anTaiDl();
-                        if (kq && kq.ttai === 'tcong') {
-                            window.tepdinhkBcao = window.tepdinhkBcao.concat(kq.dliu);
-                            veUiTepDinhKem(); // Cập nhật giao diện hiển thị tệp
-                            if (typeof mokBcao === 'function') mokBcao(); // Mở khóa nút lưu/nộp
-                            if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
-                        } else {
-                            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + (kq ? kq.tbao : "Không xác định"));
-                        }
-                    }, function(loi) {
-                        anTaiDl();
-                        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message);
-                    });
-                } else {
-                    anTaiDl();
-                    alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
+            if (hasError) return;
+            try {
+                let result = e.target.result;
+                if (!result || !result.includes(',')) throw new Error("Dữ liệu tệp không hợp lệ");
+                
+                let dlBase64 = result.split(',')[1];
+                mngTep.push({ tentep: f.name, kieu: f.type, dliu: dlBase64 });
+                tepXuLy++;
+                
+                // CƠ CHẾ BẢO VỆ 2: Khi đã đọc xong tất cả các tệp thì mới gửi lệnh gọi máy chủ
+                if (tepXuLy === files.length) {
+                    guiTepLenMayChu(mngTep);
+                    ptu.value = ''; // CƠ CHẾ BẢO VỆ 3: Xóa value sau khi đọc xong để không ngắt FileReader giữa chừng
                 }
+            } catch (err) {
+                hasError = true;
+                anTaiDl();
+                alert("Lỗi đọc tệp: " + err.message);
+                ptu.value = '';
             }
+        };
+        reader.onerror = function() {
+            hasError = true;
+            anTaiDl();
+            alert("Không thể đọc tệp: " + f.name);
+            ptu.value = '';
         };
         reader.readAsDataURL(f);
     }
-    ptu.value = ''; // Đặt lại thẻ input để có thể chọn lại cùng 1 tệp nếu cần
+}
+
+// Hàm kết nối an toàn với máy chủ
+function guiTepLenMayChu(mngTep) {
+    if (typeof khachApi !== 'undefined' && khachApi.taiTepBcao) {
+        khachApi.taiTepBcao({ teps: mngTep }, function(kq) {
+            anTaiDl();
+            if (kq && kq.ttai === 'tcong') {
+                window.tepdinhkBcao = window.tepdinhkBcao.concat(kq.dliu);
+                veUiTepDinhKem();
+                if (typeof mokBcao === 'function') mokBcao();
+                if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + (kq ? kq.tbao : "Không xác định"));
+            }
+        }, function(loi) {
+            anTaiDl();
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message);
+        });
+    } else if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // CƠ CHẾ BẢO VỆ 4: Dự phòng gọi thẳng API backend nếu API trung gian thiếu hàm
+        google.script.run
+            .withSuccessHandler(function(kq) {
+                anTaiDl();
+                if (kq && kq.ttai === 'tcong') {
+                    window.tepdinhkBcao = window.tepdinhkBcao.concat(kq.dliu);
+                    veUiTepDinhKem();
+                    if (typeof mokBcao === 'function') mokBcao();
+                    if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
+                } else {
+                    if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + (kq ? kq.tbao : "Không xác định"));
+                }
+            })
+            .withFailureHandler(function(loi) {
+                anTaiDl();
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message);
+            })
+            .pgv_tai_tepbcao({ teps: mngTep });
+    } else {
+        anTaiDl();
+        alert("Lỗi hệ thống: Không tìm thấy phương thức kết nối với máy chủ (API).");
+    }
 }
 
 // Hàm vẽ lại danh sách các tệp đã tải lên thành công trên giao diện
@@ -723,25 +773,47 @@ function veUiTepDinhKem() {
 
 // Hàm xử lý xóa tệp đã đính kèm
 function xoaTepDinhKem(idx) {
-    if(confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) {
-        let tepXoa = window.tepdinhkBcao[idx];
-        hienTaiDl("🗑️ Đang xóa tệp...");
-        if (typeof khachApi !== 'undefined' && khachApi.xoaTepBcao) {
-            khachApi.xoaTepBcao({ duongd: tepXoa.duongd }, function(kq) {
+    if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
+    
+    let tepXoa = window.tepdinhkBcao[idx];
+    hienTaiDl("🗑️ Đang xóa tệp...");
+    
+    if (typeof khachApi !== 'undefined' && khachApi.xoaTepBcao) {
+        khachApi.xoaTepBcao({ duongd: tepXoa.duongd }, function(kq) {
+            anTaiDl();
+            if(kq && kq.ttai === 'tcong') {
+                window.tepdinhkBcao.splice(idx, 1);
+                veUiTepDinhKem();
+                if (typeof mokBcao === 'function') mokBcao();
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi xóa tệp: " + (kq ? kq.tbao : ""));
+            }
+        }, function(loi) { 
+            anTaiDl(); 
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message); 
+        });
+    } else if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // CƠ CHẾ BẢO VỆ 5: Dự phòng gọi thẳng API backend khi xóa
+        google.script.run
+            .withSuccessHandler(function(kq) {
                 anTaiDl();
                 if(kq && kq.ttai === 'tcong') {
                     window.tepdinhkBcao.splice(idx, 1);
-                    veUiTepDinhKem(); // Cập nhật lại giao diện
-                    if (typeof mokBcao === 'function') mokBcao(); // Báo cho hệ thống biết có sự thay đổi
+                    veUiTepDinhKem();
+                    if (typeof mokBcao === 'function') mokBcao();
                 } else {
                     if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi xóa tệp: " + (kq ? kq.tbao : ""));
                 }
-            }, function(loi) { 
+            })
+            .withFailureHandler(function(loi) {
                 anTaiDl(); 
-                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message); 
-            });
-        }
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); 
+            })
+            .pgv_xoa_tepbcao({ duongd: tepXoa.duongd });
+    } else {
+        anTaiDl();
+        alert("Lỗi hệ thống: Không tìm thấy API xóa tệp.");
     }
 }
-
+// ==================== KẾT THÚC KHỐI XỬ LÝ TỆP ĐÍNH KÈM ====================
 </script>

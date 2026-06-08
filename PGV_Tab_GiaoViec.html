@@ -35,58 +35,96 @@
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
   #khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: transparent !important; cursor: not-allowed; color: #333; font-weight: normal;}
 
-  /* CSS cho toast thông báo */
-  .gv-toast-notify {
+  /* Modal thông báo UI */
+  .gv-modal-overlay {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 10000;
-    min-width: 280px;
-    max-width: 400px;
-    padding: 14px 20px;
-    border-radius: 8px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    backdrop-filter: blur(3px);
+  }
+  .gv-modal {
+    background: white;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: gvModalIn 0.3s ease-out;
+    overflow: hidden;
+  }
+  @keyframes gvModalIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .gv-modal-header {
+    padding: 20px 24px 12px;
+    text-align: center;
+  }
+  .gv-modal-icon {
+    font-size: 64px;
+    margin-bottom: 12px;
+  }
+  .gv-modal-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .gv-modal-body {
+    padding: 0 24px 20px;
+    text-align: center;
+    color: #555;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .gv-modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .gv-modal-btn {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    animation: gvSlideInRight 0.3s ease-out;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  .gv-toast-success {
-    background-color: #28a745;
+  .gv-modal-btn-primary {
+    background: #0d6efd;
     color: white;
-    border-left: 4px solid #155724;
   }
-  .gv-toast-error {
-    background-color: #dc3545;
+  .gv-modal-btn-primary:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+  }
+  .gv-modal-btn-success {
+    background: #28a745;
     color: white;
-    border-left: 4px solid #721c24;
   }
-  .gv-toast-warning {
-    background-color: #ffc107;
-    color: #856404;
-    border-left: 4px solid #856404;
+  .gv-modal-btn-success:hover {
+    background: #218838;
+    transform: translateY(-1px);
   }
-  .gv-toast-info {
-    background-color: #17a2b8;
+  .gv-modal-btn-danger {
+    background: #dc3545;
     color: white;
-    border-left: 4px solid #0c5460;
   }
-  .gv-toast-icon {
-    font-size: 20px;
+  .gv-modal-btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
   }
-  @keyframes gvSlideInRight {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  .gv-toast-fade-out {
-    animation: gvFadeOut 0.3s ease-out forwards;
-  }
-  @keyframes gvFadeOut {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(100%); }
-  }
+  .gv-modal-icon-success { color: #28a745; }
+  .gv-modal-icon-error { color: #dc3545; }
+  .gv-modal-icon-warning { color: #ffc107; }
+  .gv-modal-icon-info { color: #17a2b8; }
 </style>
 
 <div id="khuGvChinh">
@@ -118,7 +156,7 @@
               <th style="width: 15%;">Tiến độ</th>
               <th style="width: 15%;">Người thực hiện</th>
               <th style="width: 20%;">Ghi chú</th>
-            </tr>
+            </table>
           </thead>
           <tbody id="gvThanBang"></tbody>
         </table>
@@ -135,46 +173,70 @@
 
     function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
     
-    // Hàm thông báo với màu sắc phù hợp
-    function gvTbaoNhanh(loai, tb) {
+    // Hàm hiển thị Modal UI thay vì toast
+    function gvTbaoNhanh(loai, tb, callback = null) {
         let icon = '';
-        let bgClass = '';
+        let iconClass = '';
+        let title = '';
+        let btnText = 'Đóng';
+        let btnClass = 'gv-modal-btn-primary';
+        
         switch(loai) {
             case 'tc': // thành công
-            case 'success':
                 icon = '✓';
-                bgClass = 'gv-toast-success';
+                iconClass = 'gv-modal-icon-success';
+                title = 'THÀNH CÔNG';
+                btnClass = 'gv-modal-btn-success';
                 break;
             case 'loi': // lỗi
-            case 'error':
                 icon = '✗';
-                bgClass = 'gv-toast-error';
+                iconClass = 'gv-modal-icon-error';
+                title = 'LỖI';
+                btnClass = 'gv-modal-btn-danger';
                 break;
             case 'cbh': // cảnh báo
-            case 'warning':
                 icon = '⚠';
-                bgClass = 'gv-toast-warning';
+                iconClass = 'gv-modal-icon-warning';
+                title = 'CẢNH BÁO';
+                btnClass = 'gv-modal-btn-warning';
                 break;
             default:
                 icon = 'ℹ';
-                bgClass = 'gv-toast-info';
+                iconClass = 'gv-modal-icon-info';
+                title = 'THÔNG BÁO';
         }
         
-        // Xóa toast cũ nếu có
-        const oldToast = document.querySelector('.gv-toast-notify');
-        if (oldToast) oldToast.remove();
+        // Xóa modal cũ nếu có
+        const oldModal = document.querySelector('.gv-modal-overlay');
+        if (oldModal) oldModal.remove();
         
-        // Tạo toast mới
-        const toast = document.createElement('div');
-        toast.className = `gv-toast-notify ${bgClass}`;
-        toast.innerHTML = `<span class="gv-toast-icon">${icon}</span><span>${tb}</span>`;
-        document.body.appendChild(toast);
+        // Tạo modal mới
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'gv-modal-overlay';
+        modalOverlay.innerHTML = `
+            <div class="gv-modal">
+                <div class="gv-modal-header">
+                    <div class="gv-modal-icon ${iconClass}">${icon}</div>
+                    <div class="gv-modal-title">${title}</div>
+                </div>
+                <div class="gv-modal-body">
+                    ${tb}
+                </div>
+                <div class="gv-modal-footer">
+                    <button class="gv-modal-btn ${btnClass}" onclick="this.closest('.gv-modal-overlay').remove(); ${callback ? 'callback()' : ''}">${btnText}</button>
+                </div>
+            </div>
+        `;
         
-        // Tự động ẩn sau 3 giây
-        setTimeout(() => {
-            toast.classList.add('gv-toast-fade-out');
-            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
-        }, 3000);
+        document.body.appendChild(modalOverlay);
+        
+        // Click outside để đóng
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                modalOverlay.remove();
+                if (callback) callback();
+            }
+        });
     }
 
     function gvTaiCanb() { 
@@ -466,8 +528,9 @@
         khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { 
             gvDatTai(false); 
             if (kq && kq.ttai === 'tcong') {
-                gvTbaoNhanh('tc', "✓ Cập nhật nhiệm vụ thành công!");
-                setTimeout(gvLaydlGoc, 1000);
+                gvTbaoNhanh('tc', "✓ Cập nhật nhiệm vụ thành công!", function() {
+                    setTimeout(gvLaydlGoc, 500);
+                });
             } else {
                 gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); 
             }
@@ -515,8 +578,9 @@
         khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: newTask }, function(kq) {
             gvDatTai(false);
             if (kq && kq.ttai === 'tcong') {
-                gvTbaoNhanh('tc', "✓ Đã chuyển tháng thành công!");  // 👈 ĐÃ SỬA: màu xanh, icon ✓
-                setTimeout(gvLaydlGoc, 1000);
+                gvTbaoNhanh('tc', "✓ Đã chuyển tháng thành công!", function() {
+                    setTimeout(gvLaydlGoc, 500);
+                });
             } else {
                 gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
             }

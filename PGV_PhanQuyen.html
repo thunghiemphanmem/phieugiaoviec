@@ -201,246 +201,70 @@
 
 <script>
 (function() {
-    // ==================== CẤU HÌNH BẢO MẬT ====================
-    // Sử dụng HTTPS bắt buộc
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        console.warn('⚠️ Không dùng HTTPS - rủi ro bảo mật cao!');
-    }
-    
-    // Khởi tạo audit log
-    let auditLog = [];
-    
-    function addToAuditLog(action, details) {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            action: action,
-            details: details,
-            userId: getCurrentUserId()
-        };
-        auditLog.push(logEntry);
-        
-        // Giữ log trong 1000 entry gần nhất
-        if (auditLog.length > 1000) auditLog.shift();
-        
-        // Log ra console (production nên gửi lên server)
-        console.log('[AUDIT]', logEntry);
-        
-        // Nếu có API log, gửi lên server (tùy chọn)
-        // sendAuditToServer(logEntry);
-    }
-    
-    function getCurrentUserId() {
-        try {
-            // Lấy từ token hoặc session
-            const token = getToken();
-            if (token) {
-                // Giải mã token cơ bản (chỉ demo, nên dùng JWT thực tế)
-                const payload = token.split('.')[1];
-                if (payload) {
-                    const decoded = JSON.parse(atob(payload));
-                    return decoded.userId || decoded.sub || 'unknown';
-                }
-            }
-        } catch(e) {}
-        return 'anonymous';
-    }
-    
-    // Lấy token an toàn hơn - từ HttpOnly cookie hoặc secure storage
+    // ==================== CẤU HÌNH CƠ BẢN ====================
     var API_URL = null;
     var getToken = function() { 
         try {
-            // Ưu tiên lấy từ sessionStorage (thay vì global variable)
-            const token = sessionStorage.getItem('PGV_TOKEN_SECURE') || 
-                          localStorage.getItem('PGV_TOKEN_SECURE');
+            // Thử lấy từ sessionStorage trước
+            var token = sessionStorage.getItem('PGV_TOKEN_SECURE');
             if (token) return token;
             
-            // Fallback cho code cũ (sẽ bị loại bỏ sau)
+            // Fallback sang cách cũ
             if (window.parent && window.parent.PGV_TOKEN) {
-                return window.parent.PGV_TOKEN;
+                token = window.parent.PGV_TOKEN;
+                // Lưu lại vào sessionStorage cho lần sau
+                if (token) sessionStorage.setItem('PGV_TOKEN_SECURE', token);
+                return token;
+            }
+            if (typeof PGV_TOKEN !== 'undefined') {
+                token = PGV_TOKEN;
+                if (token) sessionStorage.setItem('PGV_TOKEN_SECURE', token);
+                return token;
             }
             return '';
         } catch(e) {
-            console.error('Lỗi lấy token:', e);
             return '';
         }
     };
     
-    // Hàm lưu token an toàn
-    function setSecureToken(token) {
-        if (!token) return;
-        try {
-            // Sử dụng sessionStorage (xóa khi đóng tab)
-            sessionStorage.setItem('PGV_TOKEN_SECURE', token);
-        } catch(e) {
-            console.error('Lỗi lưu token:', e);
-        }
-    }
-    
+    // Lấy API URL
     try {
         if (window.parent && window.parent.ddungApi) {
             API_URL = window.parent.ddungApi;
-            if (window.parent.PGV_TOKEN) setSecureToken(window.parent.PGV_TOKEN);
         }
     } catch(e) {}
     
     if (!API_URL && typeof ddungApi !== 'undefined') {
         API_URL = ddungApi;
-        if (typeof PGV_TOKEN !== 'undefined') setSecureToken(PGV_TOKEN);
     }
     
-    // ==================== API CALL VỚI BẢO MẬT ====================
-    function callApi(action, data, onSuccess, onError, retryCount = 0) {
+    // ==================== HÀM GỌI API (GIỮ NGUYÊN CẤU TRÚC GỐC) ====================
+    function callApi(action, data, onSuccess, onError) {
         if (!API_URL) {
             if (onError) onError(new Error("Không tìm thấy API"));
-            showNotification("Lỗi: Không tìm thấy API configuration", "error");
             return;
         }
-        
-        const token = getToken();
-        if (!token && action !== 'laydlkhai bao') {
-            showNotification("Lỗi: Thiếu xác thực, vui lòng đăng nhập lại", "error");
-            if (onError) onError(new Error("Unauthorized"));
-            return;
-        }
-        
-        // Mã hóa payload trước khi gửi (base64 đơn giản - nên dùng AES thực tế)
-        const payload = { hdong: action, token: token };
+        var payload = { hdong: action, token: getToken() };
         for (var k in data) payload[k] = data[k];
-        
-        // Thêm timestamp và signature đơn giản để chống replay attack
-        payload.timestamp = Date.now();
-        payload.nonce = Math.random().toString(36).substring(2, 15);
         
         fetch(API_URL, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json;charset=utf-8',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-Token': getCsrfToken()
-            },
-            credentials: 'same-origin', // Gửi cookie nếu có
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         })
-        .then(function(res) { 
-            if (!res.ok) {
-                if (res.status === 401 && retryCount < 1) {
-                    // Token hết hạn, thử refresh
-                    return refreshToken().then(() => callApi(action, data, onSuccess, onError, retryCount + 1));
-                }
-                throw new Error('HTTP ' + res.status);
-            }
-            return res.text();
-        })
+        .then(function(res) { return res.ok ? res.text() : Promise.reject('HTTP ' + res.status); })
         .then(function(txt) {
-            try {
-                var json = JSON.parse(txt);
-                if (json.ttai === 'loi') {
-                    throw new Error(json.tbao || 'Lỗi không xác định');
-                }
-                if (onSuccess) onSuccess(json);
-            } catch(e) {
-                throw new Error('Dữ liệu không hợp lệ: ' + e.message);
-            }
+            var json = JSON.parse(txt);
+            if (json.ttai === 'loi') throw new Error(json.tbao);
+            if (onSuccess) onSuccess(json);
         })
         .catch(function(err) { 
             console.error('API Error:', err);
-            // Không hiển thị lỗi chi tiết cho người dùng
-            if (onError) onError(new Error('Có lỗi xảy ra, vui lòng thử lại sau'));
-            showNotification('Có lỗi xảy ra, vui lòng thử lại sau', 'error');
+            if (onError) onError(err); 
         });
     }
     
-    function getCsrfToken() {
-        // Tạo CSRF token đơn giản
-        let token = sessionStorage.getItem('csrf_token');
-        if (!token) {
-            token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-            sessionStorage.setItem('csrf_token', token);
-        }
-        return token;
-    }
-    
-    function refreshToken() {
-        // Giả lập refresh token - thực tế nên gọi API refresh
-        return Promise.resolve();
-    }
-    
-    // ==================== SOFT DELETE ====================
-    // Lưu trữ các item đã xóa (có thể khôi phục)
-    let deletedItems = [];
-    
-    function softDeleteItem(item, idx) {
-        return new Promise(function(resolve, reject) {
-            const deletedItem = {
-                ...item,
-                deletedAt: new Date().toISOString(),
-                deletedBy: getCurrentUserId(),
-                originalIndex: idx
-            };
-            deletedItems.push(deletedItem);
-            
-            // Lưu vào sessionStorage để có thể khôi phục trong phiên
-            try {
-                const deletedJson = JSON.parse(sessionStorage.getItem('deleted_items') || '[]');
-                deletedJson.push(deletedItem);
-                // Chỉ giữ 100 item xóa gần nhất
-                while (deletedJson.length > 100) deletedJson.shift();
-                sessionStorage.setItem('deleted_items', JSON.stringify(deletedJson));
-            } catch(e) {}
-            
-            // Ghi audit log
-            addToAuditLog('SOFT_DELETE', {
-                itemId: item.idSheet,
-                itemEmail: item.email,
-                itemName: item.tenHienThi
-            });
-            
-            // Thực tế gọi API soft delete
-            callApi('softxoasheetcanhan', { 
-                tenSheet: item.idSheet,
-                deletedBy: getCurrentUserId(),
-                deletedAt: new Date().toISOString()
-            }, resolve, reject);
-        });
-    }
-    
-    function restoreDeletedItem(deletedItem) {
-        return new Promise(function(resolve, reject) {
-            addToAuditLog('RESTORE', {
-                itemId: deletedItem.idSheet,
-                itemEmail: deletedItem.email,
-                restoredBy: getCurrentUserId()
-            });
-            
-            callApi('restoresheetcanhan', { 
-                tenSheet: deletedItem.idSheet,
-                restoredBy: getCurrentUserId()
-            }, resolve, reject);
-        });
-    }
-    
-    // ==================== HIỂN THỊ THÔNG BÁO AN TOÀN ====================
-    function showNotification(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = 'toast-notification';
-        toast.style.backgroundColor = type === 'error' ? '#dc3545' : (type === 'success' ? '#28a745' : '#007bff');
-        toast.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span>${type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️')}</span>
-                <span>${escapeHtml(message)}</span>
-            </div>
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // ==================== CÁC HÀM CHÍNH (đã cập nhật bảo mật) ====================
+    // ==================== CÁC HÀM XỬ LÝ DỮ LIỆU ====================
     function layDanhSach() {
         return new Promise(function(resolve, reject) {
             callApi('laydlkhai bao', {}, function(res) {
@@ -450,10 +274,9 @@
                         idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
                         email: (row[1] || '').trim(),
                         tenHienThi: (row[2] || '').trim(),
-                        quyen: (row[3] || '').trim(),
-                        deleted: row[4] === 'deleted' // hỗ trợ soft delete
+                        quyen: (row[3] || '').trim()
                     };
-                }).filter(item => !item.deleted); // Chỉ lấy item chưa xóa
+                });
                 resolve(list);
             }, reject);
         });
@@ -461,38 +284,23 @@
     
     function capNhatDanhSach(list) {
         return new Promise(function(resolve, reject) {
-            // Validate dữ liệu đầu vào
-            for (let item of list) {
-                if (!item.idSheet || item.idSheet.length > 50) {
-                    reject(new Error('ID không hợp lệ'));
-                    return;
-                }
-                if (item.email && !isValidEmail(item.email)) {
-                    reject(new Error('Email không hợp lệ: ' + item.email));
-                    return;
-                }
-            }
-            
             var dataToSave = list.map(function(item) {
                 return [String(item.idSheet), item.email, item.tenHienThi, item.quyen];
             });
-            
-            addToAuditLog('UPDATE_PERMISSIONS', {
-                itemCount: dataToSave.length,
-                timestamp: new Date().toISOString()
-            });
-            
             callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
         });
     }
     
-    function isValidEmail(email) {
-        if (!email) return true; // Cho phép trống
-        const re = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
-        return re.test(email);
+    function xoaSheetCaNhan(tenSheet) {
+        return new Promise(function(resolve, reject) {
+            if (!tenSheet || tenSheet.trim() === '') {
+                resolve({ ttai: 'tcong', tbao: 'Tên sheet rỗng, bỏ qua' });
+                return;
+            }
+            callApi('xoasheetcanhan', { tenSheet: tenSheet }, resolve, reject);
+        });
     }
     
-    // ==================== PHẦN CÒN LẠI GIỮ NGUYÊN NHƯNG ĐÃ BẢO MẬT HƠN ====================
     function layNamHocVaThang() {
         return new Promise(function(resolve, reject) {
             callApi('gvlaydlbdau', {}, function(res) {
@@ -505,16 +313,6 @@
     
     function capNhatNamHoc(namMoi, thangHienTai) {
         return new Promise(function(resolve, reject) {
-            if (!namMoi || namMoi.length > 20) {
-                reject(new Error('Năm học không hợp lệ'));
-                return;
-            }
-            
-            addToAuditLog('UPDATE_SCHOOL_YEAR', {
-                oldYear: currentNamHoc,
-                newYear: namMoi
-            });
-            
             var payload = {
                 nam: namMoi,
                 thang: thangHienTai,
@@ -524,14 +322,25 @@
         });
     }
     
-    // Biến toàn cục
+    // ==================== BIẾN TOÀN CỤC ====================
     var currentList = [];
     var currentThang = '';
-    var currentNamHoc = '';
-    
     var $ = function(sel) { return document.querySelector(sel); };
     var $$ = function(sel) { return document.querySelectorAll(sel); };
     
+    // ==================== HIỂN THỊ THÔNG BÁO ====================
+    function showNotification(message, type) {
+        var toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        if (type === 'error') toast.style.backgroundColor = '#dc3545';
+        else if (type === 'success') toast.style.backgroundColor = '#28a745';
+        else toast.style.backgroundColor = '#007bff';
+        toast.innerHTML = '<span>' + message + '</span>';
+        document.body.appendChild(toast);
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 3000);
+    }
+    
+    // ==================== HIỂN THỊ LỖI TẠM THỜI ====================
     function showTempError(input, message) {
         input.classList.add('input-error');
         var oldMsg = input.parentNode.querySelector('.error-message');
@@ -546,10 +355,12 @@
         }, 2500);
     }
     
+    // ==================== RENDER BẢNG (QUAN TRỌNG NHẤT) ====================
     function renderTable() {
         var tbody = $('#quyenTableBodyPQ');
         if (!tbody) return;
         tbody.innerHTML = '';
+        
         if (currentList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
             return;
@@ -561,7 +372,7 @@
             var tr = document.createElement('tr');
             tr.setAttribute('data-idx', i);
             
-            // Xóa (đã cập nhật soft delete)
+            // Cột Xóa
             var tdXoa = document.createElement('td');
             tdXoa.className = 'text-center';
             var btnXoa = document.createElement('button');
@@ -575,39 +386,31 @@
                         showNotification('Không thể xóa: ID trống', 'error');
                         return;
                     }
-                    
-                    // Xác nhận 2 bước
-                    if (!confirm('Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\nDữ liệu sẽ được lưu trữ và có thể khôi phục trong 30 ngày!')) {
-                        return;
-                    }
-                    
-                    const confirmAgain = confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng này?');
-                    if (!confirmAgain) return;
-                    
-                    btnXoa.disabled = true;
-                    btnXoa.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-                    
-                    try {
-                        await softDeleteItem(item, idx);
-                        currentList.splice(idx, 1);
-                        renderTable();
-                        await capNhatDanhSach(currentList);
-                        showNotification('✅ Đã xóa cán bộ thành công (có thể khôi phục trong 30 ngày)', 'success');
-                    } catch (err) {
-                        showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
-                        btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
-                        btnXoa.disabled = false;
+                    if (confirm('Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n⚠️ Dữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) {
+                        btnXoa.disabled = true;
+                        btnXoa.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                        try {
+                            await xoaSheetCaNhan(idSheet);
+                            currentList.splice(idx, 1);
+                            renderTable();  // GỌI LẠI RENDER SAU KHI XÓA
+                            await capNhatDanhSach(currentList);
+                            showNotification('✅ Đã xóa cán bộ thành công', 'success');
+                        } catch (err) {
+                            showNotification('❌ Lỗi khi xóa: ' + err.message, 'error');
+                            btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
+                            btnXoa.disabled = false;
+                        }
                     }
                 };
             })(i);
             tdXoa.appendChild(btnXoa);
             
-            // STT
+            // Cột STT
             var tdStt = document.createElement('td');
             tdStt.className = 'stt-cell';
             tdStt.innerText = stt;
             
-            // ID sheet (có validation)
+            // Cột ID Sheet
             var tdId = document.createElement('td');
             var inpId = document.createElement('input');
             inpId.type = 'text';
@@ -616,10 +419,9 @@
             inpId.setAttribute('data-field', 'idSheet');
             inpId.setAttribute('data-idx', i);
             inpId.placeholder = 'VD: GV01';
-            inpId.maxLength = 50; // Giới hạn độ dài
             tdId.appendChild(inpId);
             
-            // Email (có validation)
+            // Cột Email
             var tdEmail = document.createElement('td');
             var inpEmail = document.createElement('input');
             inpEmail.type = 'email';
@@ -627,10 +429,9 @@
             inpEmail.value = item.email;
             inpEmail.setAttribute('data-field', 'email');
             inpEmail.setAttribute('data-idx', i);
-            inpEmail.maxLength = 100;
             tdEmail.appendChild(inpEmail);
             
-            // Tên hiển thị
+            // Cột Tên hiển thị
             var tdName = document.createElement('td');
             var inpName = document.createElement('input');
             inpName.type = 'text';
@@ -638,10 +439,9 @@
             inpName.value = item.tenHienThi;
             inpName.setAttribute('data-field', 'tenHienThi');
             inpName.setAttribute('data-idx', i);
-            inpName.maxLength = 200;
             tdName.appendChild(inpName);
             
-            // Quyền
+            // Cột Quyền
             var tdQuyen = document.createElement('td');
             var sel = document.createElement('select');
             sel.className = 'quyen-select';
@@ -667,16 +467,11 @@
             tbody.appendChild(tr);
         }
         
-        // Gắn sự kiện với validation chặt chẽ hơn
+        // Gắn sự kiện cho các input
         $$('.id-sheet-input').forEach(function(inp) {
             inp.onchange = function(e) {
                 var idx = parseInt(this.getAttribute('data-idx'));
                 var newVal = this.value.trim();
-                if (newVal.length > 50) {
-                    showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
-                    this.value = currentList[idx].idSheet;
-                    return;
-                }
                 var lowerNew = newVal.toLowerCase();
                 var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
                 if (duplicate) {
@@ -689,11 +484,6 @@
             inp.onblur = function(e) {
                 var idx = parseInt(this.getAttribute('data-idx'));
                 var newVal = this.value.trim();
-                if (newVal.length > 50) {
-                    showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
-                    this.value = currentList[idx].idSheet;
-                    return;
-                }
                 var lowerNew = newVal.toLowerCase();
                 var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
                 if (duplicate) {
@@ -708,26 +498,14 @@
         $$('.email-input').forEach(function(inp) {
             inp.onchange = function() {
                 var idx = parseInt(this.getAttribute('data-idx'));
-                var email = this.value.trim();
-                if (email && !isValidEmail(email)) {
-                    showTempError(this, 'Email không hợp lệ');
-                    this.value = currentList[idx].email;
-                    return;
-                }
-                currentList[idx].email = email;
+                currentList[idx].email = this.value.trim();
             };
         });
         
         $$('.name-input').forEach(function(inp) {
             inp.onchange = function() {
                 var idx = parseInt(this.getAttribute('data-idx'));
-                var name = this.value.trim();
-                if (name.length > 200) {
-                    showTempError(this, 'Tên quá dài (tối đa 200 ký tự)');
-                    this.value = currentList[idx].tenHienThi;
-                    return;
-                }
-                currentList[idx].tenHienThi = name;
+                currentList[idx].tenHienThi = this.value.trim();
             };
         });
         
@@ -739,8 +517,8 @@
         });
     }
     
+    // ==================== THÊM DÒNG MỚI ====================
     function themDongMoi() {
-        addToAuditLog('ADD_ROW', {});
         currentList.unshift({ idSheet: '', email: '', tenHienThi: '', quyen: '' });
         renderTable();
         setTimeout(function() {
@@ -749,6 +527,7 @@
         }, 100);
     }
     
+    // ==================== VALIDATE ====================
     function validateList() {
         var map = new Map();
         for (var i = 0; i < currentList.length; i++) {
@@ -757,27 +536,22 @@
                 showNotification('Dòng thứ ' + (i+1) + ' chưa nhập ID.', 'error');
                 return false;
             }
-            if (id.length > 50) {
-                showNotification('ID ở dòng ' + (i+1) + ' quá dài.', 'error');
-                return false;
-            }
             var lower = id.toLowerCase();
             if (map.has(lower)) {
                 showNotification('ID "' + id + '" bị trùng (dòng ' + (map.get(lower)+1) + ' và ' + (i+1) + ').', 'error');
                 return false;
             }
             map.set(lower, i);
-            
-            // Validate email nếu có
-            var email = currentList[i].email.trim();
-            if (email && !isValidEmail(email)) {
-                showNotification('Email ở dòng ' + (i+1) + ' không hợp lệ.', 'error');
-                return false;
-            }
         }
         
         // Kiểm tra có ít nhất 1 admin cấp cao
-        var hasAdmin = currentList.some(function(item) { return item.quyen === 'xxx'; });
+        var hasAdmin = false;
+        for (var j = 0; j < currentList.length; j++) {
+            if (currentList[j].quyen === 'xxx') {
+                hasAdmin = true;
+                break;
+            }
+        }
         if (!hasAdmin && currentList.length > 0) {
             showNotification('⚠️ Danh sách phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
             return false;
@@ -786,6 +560,7 @@
         return true;
     }
     
+    // ==================== LƯU DỮ LIỆU ====================
     async function luuDuLieu() {
         var namInput = $('#namHocInput');
         var namMoi = namInput ? namInput.value.trim() : '';
@@ -805,88 +580,55 @@
             await capNhatNamHoc(namMoi, currentThang);
             await capNhatDanhSach(currentList);
             showNotification('✅ Thành công! Đã cập nhật năm học và dữ liệu quyền.', 'success');
-            await taiLaiDuLieu();
+            await taiLaiDuLieu();  // TẢI LẠI SAU KHI LƯU
         } catch (err) {
-            showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
+            showNotification('❌ Lỗi lưu: ' + err.message, 'error');
         } finally {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
         }
     }
     
+    // ==================== TẢI LẠI DỮ LIỆU (QUAN TRỌNG) ====================
     async function taiLaiDuLieu() {
         try {
             var list = await layDanhSach();
             currentList = list;
-            renderTable();
+            renderTable();  // RENDER LẠI BẢNG
         } catch (err) {
             console.error(err);
-            showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
+            showNotification('Lỗi tải dữ liệu: ' + err.message, 'error');
             currentList = [];
             renderTable();
         }
     }
     
+    // ==================== KHỞI TẠO NĂM HỌC ====================
     async function khoiTaoNamHocVaThang() {
         try {
             var data = await layNamHocVaThang();
             var namInput = $('#namHocInput');
-            if (namInput) {
-                namInput.value = data.nam || '';
-                currentNamHoc = data.nam || '';
-            }
+            if (namInput) namInput.value = data.nam || '';
             currentThang = data.thang || '';
         } catch (err) {
             console.error('Lỗi tải năm học/tháng:', err);
         }
     }
     
-    // ==================== KHỞI TẠO ====================
+    // ==================== KHỞI CHẠY ====================
     if (!API_URL) {
-        $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
-        showNotification('Lỗi cấu hình: Không tìm thấy API', 'error');
+        $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
         return;
     }
     
-    // Hiển thị cảnh báo nếu không dùng HTTPS
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        showNotification('⚠️ Cảnh báo: Trang đang chạy không qua HTTPS, dữ liệu có thể bị đánh cắp!', 'error');
-    }
-    
+    // Tải dữ liệu và hiển thị lên giao diện
     Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
     
+    // Gắn sự kiện cho nút bấm
     var btnThem = $('#btnThemMoiPQ');
     var btnCap = $('#btnCapNhatPQ');
     if (btnThem) btnThem.onclick = themDongMoi;
     if (btnCap) btnCap.onclick = luuDuLieu;
-    
-    // Thêm nút khôi phục dữ liệu (tùy chọn)
-    const restoreBtn = document.createElement('button');
-    restoreBtn.className = 'btn btn-secondary btn-chucnang';
-    restoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Khôi phục';
-    restoreBtn.style.marginLeft = '10px';
-    restoreBtn.onclick = function() {
-        const deleted = JSON.parse(sessionStorage.getItem('deleted_items') || '[]');
-        if (deleted.length === 0) {
-            showNotification('Không có dữ liệu đã xóa để khôi phục', 'info');
-            return;
-        }
-        const msg = `Có ${deleted.length} mục đã xóa. Bạn có muốn khôi phục mới nhất?`;
-        if (confirm(msg)) {
-            const lastDeleted = deleted[deleted.length - 1];
-            if (confirm(`Khôi phục "${lastDeleted.idSheet}"?`)) {
-                restoreDeletedItem(lastDeleted).then(() => {
-                    showNotification('Đã khôi phục thành công', 'success');
-                    taiLaiDuLieu();
-                }).catch(err => {
-                    showNotification('Lỗi khôi phục: ' + err.message, 'error');
-                });
-            }
-        }
-    };
-    
-    const buttonContainer = document.querySelector('.tieu-de-phanquyen > div:last-child > div');
-    if (buttonContainer) buttonContainer.appendChild(restoreBtn);
     
 })();
 </script>

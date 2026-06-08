@@ -723,11 +723,11 @@ function guiTepLenMayChu(mngTep) {
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
-            if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
+            thongBaoAnToan('tcong', "Tải tệp thành công!");
         } else {
             // Chỉ báo lỗi nếu không phải là tcong và không phải mảng
             let msg = kq.tbao || JSON.stringify(kq);
-            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + msg);
+            thongBaoAnToan('loi', "Lỗi tải tệp: " + msg);
         }
     };
 
@@ -823,5 +823,19 @@ function giaiMaBcao(chuoiBcao) {
         });
     }
     veUiTepDinhKem(); // Vẽ lại giao diện sau khi giải mã xong
+}
+
+function thongBaoAnToan(loai, noiDung) {
+    if (typeof hienThongb === 'function') {
+        // Kiểm tra nếu hệ thống yêu cầu object có thuộc tính 'chu'
+        try {
+            hienThongb(loai, { chu: noiDung });
+        } catch (e) {
+            // Nếu hienThongb chỉ nhận string, ta gửi trực tiếp
+            hienThongb(loai, noiDung);
+        }
+    } else {
+        alert(noiDung);
+    }
 }
 </script>

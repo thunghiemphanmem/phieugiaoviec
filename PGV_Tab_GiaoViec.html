@@ -128,67 +128,75 @@
         }
     }
 
-    function gvVeDong(dong = null) {
-        const tb = document.getElementById('gvThanBang'); const tr = document.createElement('tr');
-        let ngnth = (dong && dong[6]) ? dong[6] : ""; let ngnthH = ngnth.toUpperCase(); let dcb = (dong && ngnth !== "") ? "disabled" : "";
-        let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
-        
-        let lchon = `<option value="">--Chọn--</option>`;
-        if (!dcb || ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') { 
-            let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : ""; 
-            lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`; 
+   function gvVeDong(dong = null) {
+    const tb = document.getElementById('gvThanBang');
+    const tr = document.createElement('tr');
+    
+    let ngnth = (dong && dong[6]) ? dong[6] : "";
+    let ngnthH = ngnth.toUpperCase();
+    
+    // LUÔN CHO PHÉP TƯƠNG TÁC - không disable select
+    let dcb = "";
+    
+    let btnxoa = dong ? `<i class="bi bi-lock-fill text-secondary"></i>` : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>`;
+    
+    // LUÔN HIỂN THỊ OPTION TOÀN TRƯỜNG - bỏ điều kiện if
+    let lchon = `<option value="">--Chọn--</option>`;
+    let tchon = (ngnthH === 'ALL' || ngnthH === '-TOÀN TRƯỜNG-') ? "selected" : "";
+    lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`;
+    
+    // Thêm danh sách người dùng cá nhân
+    dsCanbgv.forEach(s => {
+        let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : "";
+        lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`;
+    });
+    
+    let bstt = dong ? dong[0] : "";
+    const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
+    
+    let vTgGiao = dong ? dong[3] || "" : "";
+    let vTgHt = dong ? dong[5] || "" : "";
+    if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
+    if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
+    
+    let vDiemDg = dong ? dong[7] || "" : "";
+    let vColJ = dong ? dong[9] || "" : "";
+    let vColK = dong ? dong[10] || "" : "";
+    let vColL = dong ? dong[11] || "" : "";
+    let vColM = dong ? dong[12] || "" : "";
+    
+    if (!dong) {
+        const cacDong = document.querySelectorAll('#gvThanBang tr');
+        if (cacDong.length > 0) {
+            const dongCuoi = cacDong[cacDong.length - 1];
+            if (dongCuoi.querySelector('.oDiemDgGv')) vDiemDg = dongCuoi.querySelector('.oDiemDgGv').value;
+            if (dongCuoi.querySelector('.oColJ')) vColJ = dongCuoi.querySelector('.oColJ').value;
+            if (dongCuoi.querySelector('.oColK')) vColK = dongCuoi.querySelector('.oColK').value;
+            if (dongCuoi.querySelector('.oColL')) vColL = dongCuoi.querySelector('.oColL').value;
+            if (dongCuoi.querySelector('.oColM')) vColM = dongCuoi.querySelector('.oColM').value;
         }
-        dsCanbgv.forEach(s => { 
-            let chon = (ngnth === s.ttrg || ngnth === s.tenn) ? "selected" : ""; 
-            lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`; 
-        });
-        
-        let bstt = dong ? dong[0] : ""; 
-        const cv = (dong && dong[4] === "Cho vượt tiến độ") ? "selected" : "";
-        
-        let vTgGiao = dong ? dong[3] || "" : "";
-        let vTgHt = dong ? dong[5] || "" : "";
-        if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
-        if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
-
-        let vDiemDg = dong ? dong[7] || "" : "";
-        let vColJ = dong ? dong[9] || "" : "";
-        let vColK = dong ? dong[10] || "" : "";
-        let vColL = dong ? dong[11] || "" : "";
-        let vColM = dong ? dong[12] || "" : "";
-
-        if (!dong) {
-            const cacDong = document.querySelectorAll('#gvThanBang tr');
-            if (cacDong.length > 0) {
-                const dongCuoi = cacDong[cacDong.length - 1];
-                if (dongCuoi.querySelector('.oDiemDgGv')) vDiemDg = dongCuoi.querySelector('.oDiemDgGv').value;
-                if (dongCuoi.querySelector('.oColJ')) vColJ = dongCuoi.querySelector('.oColJ').value;
-                if (dongCuoi.querySelector('.oColK')) vColK = dongCuoi.querySelector('.oColK').value;
-                if (dongCuoi.querySelector('.oColL')) vColL = dongCuoi.querySelector('.oColL').value;
-                if (dongCuoi.querySelector('.oColM')) vColM = dongCuoi.querySelector('.oColM').value;
-            }
-        }
-        
-        tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
-        <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
-        <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
-        <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
-        <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
-        <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
-        <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
-        <td>
-            <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
-            <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
-            <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
-            <input type="hidden" class="oColJ" value="${vColJ}">
-            <input type="hidden" class="oColK" value="${vColK}">
-            <input type="hidden" class="oColL" value="${vColL}">
-            <input type="hidden" class="oColM" value="${vColM}">
-        </td>`;
-        
-        tb.appendChild(tr);
-        gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
     }
+    
+    tr.innerHTML = `<td class="oHdong">${btnxoa}</td>
+    <td class="text-center"><input type="text" class="form-control text-center fw-bold oSttGv" value="${bstt}"></td>
+    <td><textarea class="form-control oNdGv" placeholder="Nhập nội dung..." rows="1" oninput="gvCoDan(this); gvKiemTraTieuDe(this);" onfocus="gvCoDan(this)">${dong?dong[1]||"":""}</textarea></td>
+    <td><input type="text" class="form-control text-center oDmaxGv fw-bold text-danger" placeholder="Điểm Max" value="${dong?dong[2]||"":""}"></td>
+    <td><input type="text" class="form-control text-center oTGGiao" placeholder="dd/mm/yyyy" onkeyup="gvDinhDangNgay(this, event)" value="${vTgGiao}"></td>
+    <td><select class="form-select text-center oTdoGv" ${dcb}><option value="">--Chọn--</option><option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option></select></td>
+    <td><select class="form-select oNnghanGv" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select></td>
+    <td>
+        <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
+        <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
+        <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+        <input type="hidden" class="oColJ" value="${vColJ}">
+        <input type="hidden" class="oColK" value="${vColK}">
+        <input type="hidden" class="oColL" value="${vColL}">
+        <input type="hidden" class="oColM" value="${vColM}">
+    </td>`;
+    
+    tb.appendChild(tr);
+    gvKiemTraTieuDe(tr.querySelector('.oNdGv'));
+}
     
     function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
     function gvDinhDangNgay(ptu, e) { if (e && (e.which === 8 || e.which === 46)) return; let v = ptu.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2); if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9); ptu.value = v; }

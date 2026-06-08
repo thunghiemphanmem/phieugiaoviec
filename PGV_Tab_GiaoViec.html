@@ -1,18 +1,23 @@
 <style>
-  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; }
-  #khuGvChinh .hopDau { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
+  /* Xóa khoảng trắng mặc định của trình duyệt, khóa thanh cuộn ngoài cùng */
+  body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  
+  /* Cấu trúc Flexbox bao trùm toàn bộ 100% chiều cao màn hình (100vh) */
+  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; display: flex; flex-direction: column; height: 100vh; width: 100vw; box-sizing: border-box; background-color: #ffffff; } 
+  
+  #khuGvChinh .hopDau { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0d6efd; padding: 10px 15px; background-color: #f8f9fa; }
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  /* Cấu trúc mới: Vùng chứa tổng thể */
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; display: flex; flex-direction: column; border: 1px solid #dee2e6; }
+  /* Vùng chứa bảng tự động giãn nở chiếm trọn không gian còn lại (flex-grow: 1) */
+  #khuGvChinh .hopBang { flex-grow: 1; display: flex; flex-direction: column; background: white; margin: 5px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #dee2e6; overflow: hidden; }
   
-  /* Cấu trúc mới: Phân lập vùng cuộn dành riêng cho bảng */
-  #khuGvChinh .bangCuon { max-height: 60vh; overflow-y: auto; overflow-x: auto; width: 100%; }
+  /* Vùng cuộn của bảng: Tự động lấp đầy hopBang, không còn bị giới hạn max-height */
+  #khuGvChinh .bangCuon { flex-grow: 1; overflow-y: auto; overflow-x: auto; width: 100%; }
   
-  /* Cấu trúc mới: Vùng nút luôn ghim cố định ở đáy */
-  #khuGvChinh .vungNutThem { padding: 10px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; border-radius: 0 0 5px 5px; box-shadow: 0 -2px 5px rgba(0,0,0,0.03); z-index: 11; position: relative; }
+  /* Vùng nút Thêm dòng: Luôn ghim cố định ở đáy hộp bảng */
+  #khuGvChinh .vungNutThem { flex-shrink: 0; padding: 10px 15px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; z-index: 11; display: flex; align-items: center; }
   #khuGvChinh .nutThem { font-size: 13px; font-weight: bold; margin: 0; }
   
   #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; margin: 0; }
@@ -247,7 +252,7 @@
         
         $newRow.find('textarea').each(function() { gvCoDan(this); });
         
-        // AUTO FOCUS VÀO Ô NỘI DUNG MỚI VÀ CUỘN BẢNG XUỐNG DƯỚI CÙNG
+        // Trỏ chuột vào ô Nhập nội dung và cuộn xuống cuối bảng
         setTimeout(function() { 
             $newRow.find('.oNdGv').focus(); 
             let bangCuon = document.querySelector('#khuGvChinh .bangCuon');

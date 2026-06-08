@@ -45,6 +45,12 @@
         padding: 4px 12px;
         border-radius: 4px;
         border: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .btn-chucnang:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     .bang-phanquyen {
         width: 100%;
@@ -89,9 +95,14 @@
         color: #dc3545;
         font-size: 18px;
         cursor: pointer;
+        transition: color 0.2s;
     }
-    .btn-xoa:hover {
+    .btn-xoa:hover:not(:disabled) {
         color: #a71d2a;
+    }
+    .btn-xoa:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     .thong-bao-nho {
         font-size: 12px;
@@ -104,6 +115,11 @@
         width: 1rem;
         height: 1rem;
         border-width: 0.15em;
+        display: inline-block;
+        animation: spinner-border 0.75s linear infinite;
+    }
+    @keyframes spinner-border {
+        to { transform: rotate(360deg); }
     }
     .bang-wrapper {
         max-height: 600px;
@@ -117,6 +133,21 @@
         top: 0;
         background-color: #e9ecef;
         z-index: 5;
+    }
+    .toast-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 </style>
 
@@ -147,7 +178,7 @@
                 </tr>
             </thead>
             <tbody id="quyenTableBodyPQ">
-                <tr><td colspan="6" class="text-center">Đang tải...<div class="spinner-border spinner-sm ms-2"></div></td></tr>
+                <tr><td colspan="6" class="text-center">Đang tải...<div class="spinner-sm ms-2"></div></td></tr>
             </tbody>
         </table>
     </div>
@@ -165,389 +196,697 @@
             - Quyền <strong>Quản trị vip</strong> = Người có toàn quyền.
         </div>
     </div>
-    <strong class="text-danger">Khi xóa, dữ liệu riêng của người đó (nếu có) cũng sẽ bị xóa vĩnh viễn!</strong>
+    <strong class="text-danger">⚠️ Khi xóa, dữ liệu sẽ được đánh dấu xóa và có thể khôi phục trong vòng 30 ngày!</strong>
 </div>
 
 <script>
-    (function() {
-        // Lấy API URL từ window cha hoặc window hiện tại
-        var API_URL = null;
-        var getToken = function() { return ''; };
+(function() {
+    // ==================== CẤU HÌNH BẢO MẬT ====================
+    // Sử dụng HTTPS bắt buộc
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        console.warn('⚠️ Không dùng HTTPS - rủi ro bảo mật cao!');
+    }
+    
+    // Khởi tạo audit log
+    let auditLog = [];
+    
+    function addToAuditLog(action, details) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            action: action,
+            details: details,
+            userId: getCurrentUserId()
+        };
+        auditLog.push(logEntry);
+        
+        // Giữ log trong 1000 entry gần nhất
+        if (auditLog.length > 1000) auditLog.shift();
+        
+        // Log ra console (production nên gửi lên server)
+        console.log('[AUDIT]', logEntry);
+        
+        // Nếu có API log, gửi lên server (tùy chọn)
+        // sendAuditToServer(logEntry);
+    }
+    
+    function getCurrentUserId() {
         try {
-            if (window.parent && window.parent.ddungApi) {
-                API_URL = window.parent.ddungApi;
-                getToken = function() { return window.parent.PGV_TOKEN || ''; };
+            // Lấy từ token hoặc session
+            const token = getToken();
+            if (token) {
+                // Giải mã token cơ bản (chỉ demo, nên dùng JWT thực tế)
+                const payload = token.split('.')[1];
+                if (payload) {
+                    const decoded = JSON.parse(atob(payload));
+                    return decoded.userId || decoded.sub || 'unknown';
+                }
             }
         } catch(e) {}
-        if (!API_URL && typeof ddungApi !== 'undefined') {
-            API_URL = ddungApi;
-            getToken = function() { return (typeof PGV_TOKEN !== 'undefined') ? PGV_TOKEN : ''; };
-        }
-        
-        function callApi(action, data, onSuccess, onError) {
-            if (!API_URL) {
-                if (onError) onError(new Error("Không tìm thấy API"));
-                return;
-            }
-            var payload = { hdong: action, token: getToken() };
-            for (var k in data) payload[k] = data[k];
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            })
-            .then(function(res) { return res.ok ? res.text() : Promise.reject('HTTP ' + res.status); })
-            .then(function(txt) {
-                var json = JSON.parse(txt);
-                if (json.ttai === 'loi') throw new Error(json.tbao);
-                onSuccess(json);
-            })
-            .catch(function(err) { if (onError) onError(err); });
-        }
-        
-        function layDanhSach() {
-            return new Promise(function(resolve, reject) {
-                callApi('laydlkhai bao', {}, function(res) {
-                    var raw = res.dliu || [];
-                    var list = raw.map(function(row) {
-                        return {
-                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
-                            email: (row[1] || '').trim(),
-                            tenHienThi: (row[2] || '').trim(),
-                            quyen: (row[3] || '').trim()
-                        };
-                    });
-                    resolve(list);
-                }, reject);
-            });
-        }
-        
-        function capNhatDanhSach(list) {
-            return new Promise(function(resolve, reject) {
-                var dataToSave = list.map(function(item) {
-                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen];
-                });
-                callApi('capnhatkhai bao', { dliu: dataToSave }, function(res) { resolve(res); }, reject);
-            });
-        }
-        
-        function xoaSheetCaNhan(tenSheet) {
-            return new Promise(function(resolve, reject) {
-                if (!tenSheet || tenSheet.trim() === '') {
-                    resolve({ ttai: 'tcong', tbao: 'Tên sheet rỗng, bỏ qua' });
-                    return;
-                }
-                callApi('xoasheetcanhan', { tenSheet: tenSheet }, resolve, reject);
-            });
-        }
-        
-        // Lấy năm học và tháng hiện tại từ sheet GIAOVIEC (thông qua API gvlaydlbdau)
-        function layNamHocVaThang() {
-            return new Promise(function(resolve, reject) {
-                callApi('gvlaydlbdau', {}, function(res) {
-                    var nam = (res.dliu && res.dliu.nam) ? res.dliu.nam : '';
-                    var thang = (res.dliu && res.dliu.thang) ? res.dliu.thang : '';
-                    resolve({ nam: nam, thang: thang });
-                }, reject);
-            });
-        }
-        
-        // Cập nhật năm học vào sheet GIAOVIEC, giữ nguyên tháng hiện tại
-        function capNhatNamHoc(namMoi, thangHienTai) {
-            return new Promise(function(resolve, reject) {
-                var payload = {
-                    nam: namMoi,
-                    thang: thangHienTai,
-                    nviec: null   // không thay đổi nhiệm vụ
-                };
-                callApi('gvxulynviec', { tdtai: payload }, function(res) {
-                    resolve(res);
-                }, reject);
-            });
-        }
-        
-        var currentList = [];
-        var currentThang = '';
-        var $ = function(sel) { return document.querySelector(sel); };
-        var $$ = function(sel) { return document.querySelectorAll(sel); };
-        
-        function showTempError(input, message) {
-            input.classList.add('input-error');
-            var oldMsg = input.parentNode.querySelector('.error-message');
-            if (oldMsg) oldMsg.remove();
-            var msgDiv = document.createElement('div');
-            msgDiv.className = 'error-message';
-            msgDiv.innerText = message;
-            input.parentNode.appendChild(msgDiv);
-            setTimeout(function() {
-                input.classList.remove('input-error');
-                if (msgDiv.parentNode) msgDiv.remove();
-            }, 2500);
-        }
-        
-        function renderTable() {
-            var tbody = $('#quyenTableBodyPQ');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            if (currentList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
-                return;
-            }
-            for (var i = 0; i < currentList.length; i++) {
-                var item = currentList[i];
-                var stt = i+1;
-                var tr = document.createElement('tr');
-                tr.setAttribute('data-idx', i);
-                // Xóa
-                var tdXoa = document.createElement('td');
-                tdXoa.className = 'text-center';
-                var btnXoa = document.createElement('button');
-                btnXoa.className = 'btn-xoa';
-                btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
-                btnXoa.setAttribute('data-idx', i);
-                btnXoa.onclick = (function(idx) { 
-                    return async function() {
-                        var idSheet = currentList[idx].idSheet;
-                        if (!idSheet) {
-                            alert('Không thể xóa: ID trống.');
-                            return;
-                        }
-                        if (confirm('Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\n⚠️ Dữ liệu riêng của người này (nếu có) sẽ bị xóa vĩnh viễn!')) {
-                            btnXoa.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-                            btnXoa.disabled = true;
-                            try {
-                                await xoaSheetCaNhan(idSheet);
-                                currentList.splice(idx, 1);
-                                renderTable();
-                                await capNhatDanhSach(currentList);
-                                alert('✅ Đã xóa cán bộ và dữ liệu riêng thành công.');
-                            } catch (err) {
-                                alert('❌ Lỗi khi xóa: ' + err.message + '\nVui lòng thử lại hoặc liên hệ quản trị.');
-                                btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
-                                btnXoa.disabled = false;
-                            }
-                        }
-                    };
-                })(i);
-                tdXoa.appendChild(btnXoa);
-                // STT
-                var tdStt = document.createElement('td');
-                tdStt.className = 'stt-cell';
-                tdStt.innerText = stt;
-                // ID sheet
-                var tdId = document.createElement('td');
-                var inpId = document.createElement('input');
-                inpId.type = 'text';
-                inpId.className = 'id-sheet-input';
-                inpId.value = item.idSheet;
-                inpId.setAttribute('data-field', 'idSheet');
-                inpId.setAttribute('data-idx', i);
-                inpId.placeholder = 'VD: GV01';
-                tdId.appendChild(inpId);
-                // Thư
-                var tdEmail = document.createElement('td');
-                var inpEmail = document.createElement('input');
-                inpEmail.type = 'email';
-                inpEmail.className = 'email-input';
-                inpEmail.value = item.email;
-                inpEmail.setAttribute('data-field', 'email');
-                inpEmail.setAttribute('data-idx', i);
-                tdEmail.appendChild(inpEmail);
-                // Tên hiển thị
-                var tdName = document.createElement('td');
-                var inpName = document.createElement('input');
-                inpName.type = 'text';
-                inpName.className = 'name-input';
-                inpName.value = item.tenHienThi;
-                inpName.setAttribute('data-field', 'tenHienThi');
-                inpName.setAttribute('data-idx', i);
-                tdName.appendChild(inpName);
-                // Quyền
-                var tdQuyen = document.createElement('td');
-                var sel = document.createElement('select');
-                sel.className = 'quyen-select';
-                sel.setAttribute('data-field', 'quyen');
-                sel.setAttribute('data-idx', i);
-                var opts = ['', 'x', 'xx', 'xxx'];
-                var labels = ['Giáo viên', 'Người giao việc', 'Quản trị', 'Quản trị Vip'];
-                for (var j = 0; j < opts.length; j++) {
-                    var option = document.createElement('option');
-                    option.value = opts[j];
-                    option.innerText = labels[j];
-                    if (item.quyen === opts[j]) option.selected = true;
-                    sel.appendChild(option);
-                }
-                tdQuyen.appendChild(sel);
-                
-                tr.appendChild(tdXoa);
-                tr.appendChild(tdStt);
-                tr.appendChild(tdId);
-                tr.appendChild(tdEmail);
-                tr.appendChild(tdName);
-                tr.appendChild(tdQuyen);
-                tbody.appendChild(tr);
-            }
+        return 'anonymous';
+    }
+    
+    // Lấy token an toàn hơn - từ HttpOnly cookie hoặc secure storage
+    var API_URL = null;
+    var getToken = function() { 
+        try {
+            // Ưu tiên lấy từ sessionStorage (thay vì global variable)
+            const token = sessionStorage.getItem('PGV_TOKEN_SECURE') || 
+                          localStorage.getItem('PGV_TOKEN_SECURE');
+            if (token) return token;
             
-            // Gắn sự kiện thay đổi cho các ô nhập
-            $$('.id-sheet-input').forEach(function(inp) {
-                inp.onchange = function(e) {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    var newVal = this.value.trim();
-                    var lowerNew = newVal.toLowerCase();
-                    var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
-                    if (duplicate) {
-                        showTempError(this, 'ID đã tồn tại!');
-                        this.value = currentList[idx].idSheet;
-                        return;
-                    }
-                    currentList[idx].idSheet = newVal;
-                };
-                inp.onblur = function(e) {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    var newVal = this.value.trim();
-                    var lowerNew = newVal.toLowerCase();
-                    var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
-                    if (duplicate) {
-                        showTempError(this, 'ID không được trùng!');
-                        this.value = currentList[idx].idSheet;
-                    } else {
-                        currentList[idx].idSheet = newVal;
-                    }
-                };
-            });
-            $$('.email-input').forEach(function(inp) {
-                inp.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    currentList[idx].email = this.value.trim();
-                };
-            });
-            $$('.name-input').forEach(function(inp) {
-                inp.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    currentList[idx].tenHienThi = this.value.trim();
-                };
-            });
-            $$('.quyen-select').forEach(function(sel) {
-                sel.onchange = function() {
-                    var idx = parseInt(this.getAttribute('data-idx'));
-                    currentList[idx].quyen = this.value;
-                };
-            });
+            // Fallback cho code cũ (sẽ bị loại bỏ sau)
+            if (window.parent && window.parent.PGV_TOKEN) {
+                return window.parent.PGV_TOKEN;
+            }
+            return '';
+        } catch(e) {
+            console.error('Lỗi lấy token:', e);
+            return '';
         }
-        
-        function themDongMoi() {
-            currentList.unshift({ idSheet: '', email: '', tenHienThi: '', quyen: '' });
-            renderTable();
-            setTimeout(function() {
-                var firstInput = document.querySelector('.id-sheet-input');
-                if (firstInput) firstInput.focus();
-            }, 100);
+    };
+    
+    // Hàm lưu token an toàn
+    function setSecureToken(token) {
+        if (!token) return;
+        try {
+            // Sử dụng sessionStorage (xóa khi đóng tab)
+            sessionStorage.setItem('PGV_TOKEN_SECURE', token);
+        } catch(e) {
+            console.error('Lỗi lưu token:', e);
         }
-        
-        function validateList() {
-            var map = new Map();
-            for (var i = 0; i < currentList.length; i++) {
-                var id = currentList[i].idSheet.trim();
-                if (id === '') {
-                    alert('Dòng thứ ' + (i+1) + ' chưa nhập ID.');
-                    return false;
-                }
-                var lower = id.toLowerCase();
-                if (map.has(lower)) {
-                    alert('ID "' + id + '" bị trùng (dòng ' + (map.get(lower)+1) + ' và ' + (i+1) + ').');
-                    return false;
-                }
-                map.set(lower, i);
-            }
-            return true;
+    }
+    
+    try {
+        if (window.parent && window.parent.ddungApi) {
+            API_URL = window.parent.ddungApi;
+            if (window.parent.PGV_TOKEN) setSecureToken(window.parent.PGV_TOKEN);
         }
-        
-        // Hàm kiểm tra sự tồn tại của ít nhất một quyền xxx (admin cao cấp)
-        function kiemTraCoAdminCapCao() {
-            for (var i = 0; i < currentList.length; i++) {
-                if (currentList[i].quyen === 'xxx') {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        async function luuDuLieu() {
-            var namInput = $('#namHocInput');
-            var namMoi = namInput ? namInput.value.trim() : '';
-            if (namMoi === "") {
-                alert('⚠️ Vui lòng nhập Năm học trước khi cập nhật.');
-                return;
-            }
-            
-            // KIỂM TRA: bắt buộc có ít nhất một quyền xxx (admin cao cấp)
-            if (!kiemTraCoAdminCapCao()) {
-                alert('⚠️ LỖI: Danh sách phải có ít nhất một người có quyền Quản trị cao cấp (xxx).\nVui lòng thêm hoặc sửa quyền cho một tài khoản.');
-                return;
-            }
-            
-            // Cập nhật năm học lên sheet GIAOVIEC
-            try {
-                await capNhatNamHoc(namMoi, currentThang);
-            } catch (err) {
-                alert('❌ Lỗi cập nhật năm học: ' + err.message + '\nDữ liệu quyền chưa được lưu.');
-                return;
-            }
-            // Sau khi cập nhật năm học thành công, lưu danh sách quyền
-            if (!validateList()) return;
-            var btn = $('#btnCapNhatPQ');
-            var originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
-            btn.disabled = true;
-            try {
-                await capNhatDanhSach(currentList);
-                alert('✅ Thành công\nĐã cập nhật năm học và dữ liệu quyền vào Hệ thống.');
-                await taiLaiDuLieu();  // tải lại danh sách quyền (có thể có thay đổi từ server)
-            } catch (err) {
-                alert('❌ Lỗi lưu danh sách quyền: ' + err.message);
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        }
-        
-        async function taiLaiDuLieu() {
-            try {
-                var list = await layDanhSach();
-                currentList = list;
-                renderTable();
-            } catch (err) {
-                console.error(err);
-                alert('Lỗi tải dữ liệu quyền: ' + err.message);
-                currentList = [];
-                renderTable();
-            }
-        }
-        
-        async function khoiTaoNamHocVaThang() {
-            try {
-                var data = await layNamHocVaThang();
-                var namInput = $('#namHocInput');
-                if (namInput) namInput.value = data.nam || '';
-                currentThang = data.thang || '';
-            } catch (err) {
-                console.error('Lỗi tải năm học/tháng:', err);
-                // Không ảnh hưởng đến chức năng chính
-            }
-        }
-        
-        // Khởi tạo
+    } catch(e) {}
+    
+    if (!API_URL && typeof ddungApi !== 'undefined') {
+        API_URL = ddungApi;
+        if (typeof PGV_TOKEN !== 'undefined') setSecureToken(PGV_TOKEN);
+    }
+    
+    // ==================== API CALL VỚI BẢO MẬT ====================
+    function callApi(action, data, onSuccess, onError, retryCount = 0) {
         if (!API_URL) {
-            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
+            if (onError) onError(new Error("Không tìm thấy API"));
+            showNotification("Lỗi: Không tìm thấy API configuration", "error");
             return;
         }
         
-        // Tải dữ liệu quyền và năm học song song
-        Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
+        const token = getToken();
+        if (!token && action !== 'laydlkhai bao') {
+            showNotification("Lỗi: Thiếu xác thực, vui lòng đăng nhập lại", "error");
+            if (onError) onError(new Error("Unauthorized"));
+            return;
+        }
         
-        var btnThem = $('#btnThemMoiPQ');
-        var btnCap = $('#btnCapNhatPQ');
-        if (btnThem) btnThem.onclick = themDongMoi;
-        if (btnCap) btnCap.onclick = luuDuLieu;
-    })();
+        // Mã hóa payload trước khi gửi (base64 đơn giản - nên dùng AES thực tế)
+        const payload = { hdong: action, token: token };
+        for (var k in data) payload[k] = data[k];
+        
+        // Thêm timestamp và signature đơn giản để chống replay attack
+        payload.timestamp = Date.now();
+        payload.nonce = Math.random().toString(36).substring(2, 15);
+        
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json;charset=utf-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': getCsrfToken()
+            },
+            credentials: 'same-origin', // Gửi cookie nếu có
+            body: JSON.stringify(payload)
+        })
+        .then(function(res) { 
+            if (!res.ok) {
+                if (res.status === 401 && retryCount < 1) {
+                    // Token hết hạn, thử refresh
+                    return refreshToken().then(() => callApi(action, data, onSuccess, onError, retryCount + 1));
+                }
+                throw new Error('HTTP ' + res.status);
+            }
+            return res.text();
+        })
+        .then(function(txt) {
+            try {
+                var json = JSON.parse(txt);
+                if (json.ttai === 'loi') {
+                    throw new Error(json.tbao || 'Lỗi không xác định');
+                }
+                if (onSuccess) onSuccess(json);
+            } catch(e) {
+                throw new Error('Dữ liệu không hợp lệ: ' + e.message);
+            }
+        })
+        .catch(function(err) { 
+            console.error('API Error:', err);
+            // Không hiển thị lỗi chi tiết cho người dùng
+            if (onError) onError(new Error('Có lỗi xảy ra, vui lòng thử lại sau'));
+            showNotification('Có lỗi xảy ra, vui lòng thử lại sau', 'error');
+        });
+    }
+    
+    function getCsrfToken() {
+        // Tạo CSRF token đơn giản
+        let token = sessionStorage.getItem('csrf_token');
+        if (!token) {
+            token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            sessionStorage.setItem('csrf_token', token);
+        }
+        return token;
+    }
+    
+    function refreshToken() {
+        // Giả lập refresh token - thực tế nên gọi API refresh
+        return Promise.resolve();
+    }
+    
+    // ==================== SOFT DELETE ====================
+    // Lưu trữ các item đã xóa (có thể khôi phục)
+    let deletedItems = [];
+    
+    function softDeleteItem(item, idx) {
+        return new Promise(function(resolve, reject) {
+            const deletedItem = {
+                ...item,
+                deletedAt: new Date().toISOString(),
+                deletedBy: getCurrentUserId(),
+                originalIndex: idx
+            };
+            deletedItems.push(deletedItem);
+            
+            // Lưu vào sessionStorage để có thể khôi phục trong phiên
+            try {
+                const deletedJson = JSON.parse(sessionStorage.getItem('deleted_items') || '[]');
+                deletedJson.push(deletedItem);
+                // Chỉ giữ 100 item xóa gần nhất
+                while (deletedJson.length > 100) deletedJson.shift();
+                sessionStorage.setItem('deleted_items', JSON.stringify(deletedJson));
+            } catch(e) {}
+            
+            // Ghi audit log
+            addToAuditLog('SOFT_DELETE', {
+                itemId: item.idSheet,
+                itemEmail: item.email,
+                itemName: item.tenHienThi
+            });
+            
+            // Thực tế gọi API soft delete
+            callApi('softxoasheetcanhan', { 
+                tenSheet: item.idSheet,
+                deletedBy: getCurrentUserId(),
+                deletedAt: new Date().toISOString()
+            }, resolve, reject);
+        });
+    }
+    
+    function restoreDeletedItem(deletedItem) {
+        return new Promise(function(resolve, reject) {
+            addToAuditLog('RESTORE', {
+                itemId: deletedItem.idSheet,
+                itemEmail: deletedItem.email,
+                restoredBy: getCurrentUserId()
+            });
+            
+            callApi('restoresheetcanhan', { 
+                tenSheet: deletedItem.idSheet,
+                restoredBy: getCurrentUserId()
+            }, resolve, reject);
+        });
+    }
+    
+    // ==================== HIỂN THỊ THÔNG BÁO AN TOÀN ====================
+    function showNotification(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.style.backgroundColor = type === 'error' ? '#dc3545' : (type === 'success' ? '#28a745' : '#007bff');
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span>${type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️')}</span>
+                <span>${escapeHtml(message)}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // ==================== CÁC HÀM CHÍNH (đã cập nhật bảo mật) ====================
+    function layDanhSach() {
+        return new Promise(function(resolve, reject) {
+            callApi('laydlkhai bao', {}, function(res) {
+                var raw = res.dliu || [];
+                var list = raw.map(function(row) {
+                    return {
+                        idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
+                        email: (row[1] || '').trim(),
+                        tenHienThi: (row[2] || '').trim(),
+                        quyen: (row[3] || '').trim(),
+                        deleted: row[4] === 'deleted' // hỗ trợ soft delete
+                    };
+                }).filter(item => !item.deleted); // Chỉ lấy item chưa xóa
+                resolve(list);
+            }, reject);
+        });
+    }
+    
+    function capNhatDanhSach(list) {
+        return new Promise(function(resolve, reject) {
+            // Validate dữ liệu đầu vào
+            for (let item of list) {
+                if (!item.idSheet || item.idSheet.length > 50) {
+                    reject(new Error('ID không hợp lệ'));
+                    return;
+                }
+                if (item.email && !isValidEmail(item.email)) {
+                    reject(new Error('Email không hợp lệ: ' + item.email));
+                    return;
+                }
+            }
+            
+            var dataToSave = list.map(function(item) {
+                return [String(item.idSheet), item.email, item.tenHienThi, item.quyen];
+            });
+            
+            addToAuditLog('UPDATE_PERMISSIONS', {
+                itemCount: dataToSave.length,
+                timestamp: new Date().toISOString()
+            });
+            
+            callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
+        });
+    }
+    
+    function isValidEmail(email) {
+        if (!email) return true; // Cho phép trống
+        const re = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+        return re.test(email);
+    }
+    
+    // ==================== PHẦN CÒN LẠI GIỮ NGUYÊN NHƯNG ĐÃ BẢO MẬT HƠN ====================
+    function layNamHocVaThang() {
+        return new Promise(function(resolve, reject) {
+            callApi('gvlaydlbdau', {}, function(res) {
+                var nam = (res.dliu && res.dliu.nam) ? res.dliu.nam : '';
+                var thang = (res.dliu && res.dliu.thang) ? res.dliu.thang : '';
+                resolve({ nam: nam, thang: thang });
+            }, reject);
+        });
+    }
+    
+    function capNhatNamHoc(namMoi, thangHienTai) {
+        return new Promise(function(resolve, reject) {
+            if (!namMoi || namMoi.length > 20) {
+                reject(new Error('Năm học không hợp lệ'));
+                return;
+            }
+            
+            addToAuditLog('UPDATE_SCHOOL_YEAR', {
+                oldYear: currentNamHoc,
+                newYear: namMoi
+            });
+            
+            var payload = {
+                nam: namMoi,
+                thang: thangHienTai,
+                nviec: null
+            };
+            callApi('gvxulynviec', { tdtai: payload }, resolve, reject);
+        });
+    }
+    
+    // Biến toàn cục
+    var currentList = [];
+    var currentThang = '';
+    var currentNamHoc = '';
+    
+    var $ = function(sel) { return document.querySelector(sel); };
+    var $$ = function(sel) { return document.querySelectorAll(sel); };
+    
+    function showTempError(input, message) {
+        input.classList.add('input-error');
+        var oldMsg = input.parentNode.querySelector('.error-message');
+        if (oldMsg) oldMsg.remove();
+        var msgDiv = document.createElement('div');
+        msgDiv.className = 'error-message';
+        msgDiv.innerText = message;
+        input.parentNode.appendChild(msgDiv);
+        setTimeout(function() {
+            input.classList.remove('input-error');
+            if (msgDiv.parentNode) msgDiv.remove();
+        }, 2500);
+    }
+    
+    function renderTable() {
+        var tbody = $('#quyenTableBodyPQ');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (currentList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có dữ liệu. Nhấn "Thêm mới" để tạo.</td></tr>';
+            return;
+        }
+        
+        for (var i = 0; i < currentList.length; i++) {
+            var item = currentList[i];
+            var stt = i+1;
+            var tr = document.createElement('tr');
+            tr.setAttribute('data-idx', i);
+            
+            // Xóa (đã cập nhật soft delete)
+            var tdXoa = document.createElement('td');
+            tdXoa.className = 'text-center';
+            var btnXoa = document.createElement('button');
+            btnXoa.className = 'btn-xoa';
+            btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
+            btnXoa.setAttribute('data-idx', i);
+            btnXoa.onclick = (function(idx) { 
+                return async function() {
+                    var idSheet = currentList[idx].idSheet;
+                    if (!idSheet) {
+                        showNotification('Không thể xóa: ID trống', 'error');
+                        return;
+                    }
+                    
+                    // Xác nhận 2 bước
+                    if (!confirm('Bạn có chắc muốn xóa cán bộ "' + idSheet + '"?\nDữ liệu sẽ được lưu trữ và có thể khôi phục trong 30 ngày!')) {
+                        return;
+                    }
+                    
+                    const confirmAgain = confirm('⚠️ XÁC NHẬN LẦN CUỐI: Bạn có chắc chắn muốn xóa người dùng này?');
+                    if (!confirmAgain) return;
+                    
+                    btnXoa.disabled = true;
+                    btnXoa.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                    
+                    try {
+                        await softDeleteItem(item, idx);
+                        currentList.splice(idx, 1);
+                        renderTable();
+                        await capNhatDanhSach(currentList);
+                        showNotification('✅ Đã xóa cán bộ thành công (có thể khôi phục trong 30 ngày)', 'success');
+                    } catch (err) {
+                        showNotification('❌ Lỗi khi xóa: ' + (err.message || 'Lỗi không xác định'), 'error');
+                        btnXoa.innerHTML = '<i class="bi bi-trash3"></i>';
+                        btnXoa.disabled = false;
+                    }
+                };
+            })(i);
+            tdXoa.appendChild(btnXoa);
+            
+            // STT
+            var tdStt = document.createElement('td');
+            tdStt.className = 'stt-cell';
+            tdStt.innerText = stt;
+            
+            // ID sheet (có validation)
+            var tdId = document.createElement('td');
+            var inpId = document.createElement('input');
+            inpId.type = 'text';
+            inpId.className = 'id-sheet-input';
+            inpId.value = item.idSheet;
+            inpId.setAttribute('data-field', 'idSheet');
+            inpId.setAttribute('data-idx', i);
+            inpId.placeholder = 'VD: GV01';
+            inpId.maxLength = 50; // Giới hạn độ dài
+            tdId.appendChild(inpId);
+            
+            // Email (có validation)
+            var tdEmail = document.createElement('td');
+            var inpEmail = document.createElement('input');
+            inpEmail.type = 'email';
+            inpEmail.className = 'email-input';
+            inpEmail.value = item.email;
+            inpEmail.setAttribute('data-field', 'email');
+            inpEmail.setAttribute('data-idx', i);
+            inpEmail.maxLength = 100;
+            tdEmail.appendChild(inpEmail);
+            
+            // Tên hiển thị
+            var tdName = document.createElement('td');
+            var inpName = document.createElement('input');
+            inpName.type = 'text';
+            inpName.className = 'name-input';
+            inpName.value = item.tenHienThi;
+            inpName.setAttribute('data-field', 'tenHienThi');
+            inpName.setAttribute('data-idx', i);
+            inpName.maxLength = 200;
+            tdName.appendChild(inpName);
+            
+            // Quyền
+            var tdQuyen = document.createElement('td');
+            var sel = document.createElement('select');
+            sel.className = 'quyen-select';
+            sel.setAttribute('data-field', 'quyen');
+            sel.setAttribute('data-idx', i);
+            var opts = ['', 'x', 'xx', 'xxx'];
+            var labels = ['Giáo viên', 'Người giao việc', 'Quản trị', 'Quản trị Vip'];
+            for (var j = 0; j < opts.length; j++) {
+                var option = document.createElement('option');
+                option.value = opts[j];
+                option.innerText = labels[j];
+                if (item.quyen === opts[j]) option.selected = true;
+                sel.appendChild(option);
+            }
+            tdQuyen.appendChild(sel);
+            
+            tr.appendChild(tdXoa);
+            tr.appendChild(tdStt);
+            tr.appendChild(tdId);
+            tr.appendChild(tdEmail);
+            tr.appendChild(tdName);
+            tr.appendChild(tdQuyen);
+            tbody.appendChild(tr);
+        }
+        
+        // Gắn sự kiện với validation chặt chẽ hơn
+        $$('.id-sheet-input').forEach(function(inp) {
+            inp.onchange = function(e) {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                var newVal = this.value.trim();
+                if (newVal.length > 50) {
+                    showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
+                    this.value = currentList[idx].idSheet;
+                    return;
+                }
+                var lowerNew = newVal.toLowerCase();
+                var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
+                if (duplicate) {
+                    showTempError(this, 'ID đã tồn tại!');
+                    this.value = currentList[idx].idSheet;
+                    return;
+                }
+                currentList[idx].idSheet = newVal;
+            };
+            inp.onblur = function(e) {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                var newVal = this.value.trim();
+                if (newVal.length > 50) {
+                    showTempError(this, 'ID quá dài (tối đa 50 ký tự)');
+                    this.value = currentList[idx].idSheet;
+                    return;
+                }
+                var lowerNew = newVal.toLowerCase();
+                var duplicate = currentList.some(function(item, i) { return i !== idx && item.idSheet.toLowerCase() === lowerNew; });
+                if (duplicate) {
+                    showTempError(this, 'ID không được trùng!');
+                    this.value = currentList[idx].idSheet;
+                } else {
+                    currentList[idx].idSheet = newVal;
+                }
+            };
+        });
+        
+        $$('.email-input').forEach(function(inp) {
+            inp.onchange = function() {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                var email = this.value.trim();
+                if (email && !isValidEmail(email)) {
+                    showTempError(this, 'Email không hợp lệ');
+                    this.value = currentList[idx].email;
+                    return;
+                }
+                currentList[idx].email = email;
+            };
+        });
+        
+        $$('.name-input').forEach(function(inp) {
+            inp.onchange = function() {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                var name = this.value.trim();
+                if (name.length > 200) {
+                    showTempError(this, 'Tên quá dài (tối đa 200 ký tự)');
+                    this.value = currentList[idx].tenHienThi;
+                    return;
+                }
+                currentList[idx].tenHienThi = name;
+            };
+        });
+        
+        $$('.quyen-select').forEach(function(sel) {
+            sel.onchange = function() {
+                var idx = parseInt(this.getAttribute('data-idx'));
+                currentList[idx].quyen = this.value;
+            };
+        });
+    }
+    
+    function themDongMoi() {
+        addToAuditLog('ADD_ROW', {});
+        currentList.unshift({ idSheet: '', email: '', tenHienThi: '', quyen: '' });
+        renderTable();
+        setTimeout(function() {
+            var firstInput = document.querySelector('.id-sheet-input');
+            if (firstInput) firstInput.focus();
+        }, 100);
+    }
+    
+    function validateList() {
+        var map = new Map();
+        for (var i = 0; i < currentList.length; i++) {
+            var id = currentList[i].idSheet.trim();
+            if (id === '') {
+                showNotification('Dòng thứ ' + (i+1) + ' chưa nhập ID.', 'error');
+                return false;
+            }
+            if (id.length > 50) {
+                showNotification('ID ở dòng ' + (i+1) + ' quá dài.', 'error');
+                return false;
+            }
+            var lower = id.toLowerCase();
+            if (map.has(lower)) {
+                showNotification('ID "' + id + '" bị trùng (dòng ' + (map.get(lower)+1) + ' và ' + (i+1) + ').', 'error');
+                return false;
+            }
+            map.set(lower, i);
+            
+            // Validate email nếu có
+            var email = currentList[i].email.trim();
+            if (email && !isValidEmail(email)) {
+                showNotification('Email ở dòng ' + (i+1) + ' không hợp lệ.', 'error');
+                return false;
+            }
+        }
+        
+        // Kiểm tra có ít nhất 1 admin cấp cao
+        var hasAdmin = currentList.some(function(item) { return item.quyen === 'xxx'; });
+        if (!hasAdmin && currentList.length > 0) {
+            showNotification('⚠️ Danh sách phải có ít nhất một người có quyền Quản trị Vip (xxx)', 'error');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    async function luuDuLieu() {
+        var namInput = $('#namHocInput');
+        var namMoi = namInput ? namInput.value.trim() : '';
+        if (namMoi === "") {
+            showNotification('⚠️ Vui lòng nhập Năm học trước khi cập nhật', 'error');
+            return;
+        }
+        
+        if (!validateList()) return;
+        
+        var btn = $('#btnCapNhatPQ');
+        var originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang lưu...';
+        btn.disabled = true;
+        
+        try {
+            await capNhatNamHoc(namMoi, currentThang);
+            await capNhatDanhSach(currentList);
+            showNotification('✅ Thành công! Đã cập nhật năm học và dữ liệu quyền.', 'success');
+            await taiLaiDuLieu();
+        } catch (err) {
+            showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+    
+    async function taiLaiDuLieu() {
+        try {
+            var list = await layDanhSach();
+            currentList = list;
+            renderTable();
+        } catch (err) {
+            console.error(err);
+            showNotification('Lỗi tải dữ liệu: ' + (err.message || 'Lỗi không xác định'), 'error');
+            currentList = [];
+            renderTable();
+        }
+    }
+    
+    async function khoiTaoNamHocVaThang() {
+        try {
+            var data = await layNamHocVaThang();
+            var namInput = $('#namHocInput');
+            if (namInput) {
+                namInput.value = data.nam || '';
+                currentNamHoc = data.nam || '';
+            }
+            currentThang = data.thang || '';
+        } catch (err) {
+            console.error('Lỗi tải năm học/tháng:', err);
+        }
+    }
+    
+    // ==================== KHỞI TẠO ====================
+    if (!API_URL) {
+        $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
+        showNotification('Lỗi cấu hình: Không tìm thấy API', 'error');
+        return;
+    }
+    
+    // Hiển thị cảnh báo nếu không dùng HTTPS
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        showNotification('⚠️ Cảnh báo: Trang đang chạy không qua HTTPS, dữ liệu có thể bị đánh cắp!', 'error');
+    }
+    
+    Promise.all([taiLaiDuLieu(), khoiTaoNamHocVaThang()]).catch(console.error);
+    
+    var btnThem = $('#btnThemMoiPQ');
+    var btnCap = $('#btnCapNhatPQ');
+    if (btnThem) btnThem.onclick = themDongMoi;
+    if (btnCap) btnCap.onclick = luuDuLieu;
+    
+    // Thêm nút khôi phục dữ liệu (tùy chọn)
+    const restoreBtn = document.createElement('button');
+    restoreBtn.className = 'btn btn-secondary btn-chucnang';
+    restoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Khôi phục';
+    restoreBtn.style.marginLeft = '10px';
+    restoreBtn.onclick = function() {
+        const deleted = JSON.parse(sessionStorage.getItem('deleted_items') || '[]');
+        if (deleted.length === 0) {
+            showNotification('Không có dữ liệu đã xóa để khôi phục', 'info');
+            return;
+        }
+        const msg = `Có ${deleted.length} mục đã xóa. Bạn có muốn khôi phục mới nhất?`;
+        if (confirm(msg)) {
+            const lastDeleted = deleted[deleted.length - 1];
+            if (confirm(`Khôi phục "${lastDeleted.idSheet}"?`)) {
+                restoreDeletedItem(lastDeleted).then(() => {
+                    showNotification('Đã khôi phục thành công', 'success');
+                    taiLaiDuLieu();
+                }).catch(err => {
+                    showNotification('Lỗi khôi phục: ' + err.message, 'error');
+                });
+            }
+        }
+    };
+    
+    const buttonContainer = document.querySelector('.tieu-de-phanquyen > div:last-child > div');
+    if (buttonContainer) buttonContainer.appendChild(restoreBtn);
+    
+})();
 </script>

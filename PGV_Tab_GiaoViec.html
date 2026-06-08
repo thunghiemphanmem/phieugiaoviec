@@ -136,14 +136,21 @@
         if (vTgGiao.toLowerCase() === "dd/mm/yyyy") vTgGiao = "";
         if (vTgHt.toLowerCase() === "dd/mm/yyyy") vTgHt = "";
 
-        let vDiemDg = "";
-        if (dong) {
-            vDiemDg = dong[7] || "";
-        } else {
+        let vDiemDg = dong ? dong[7] || "" : "";
+        let vColJ = dong ? dong[9] || "" : "";
+        let vColK = dong ? dong[10] || "" : "";
+        let vColL = dong ? dong[11] || "" : "";
+        let vColM = dong ? dong[12] || "" : "";
+
+        if (!dong) {
             const cacDong = document.querySelectorAll('#gvThanBang tr');
             if (cacDong.length > 0) {
-                const inpCuoi = cacDong[cacDong.length - 1].querySelector('.oDiemDgGv');
-                if (inpCuoi) vDiemDg = inpCuoi.value;
+                const dongCuoi = cacDong[cacDong.length - 1];
+                if (dongCuoi.querySelector('.oDiemDgGv')) vDiemDg = dongCuoi.querySelector('.oDiemDgGv').value;
+                if (dongCuoi.querySelector('.oColJ')) vColJ = dongCuoi.querySelector('.oColJ').value;
+                if (dongCuoi.querySelector('.oColK')) vColK = dongCuoi.querySelector('.oColK').value;
+                if (dongCuoi.querySelector('.oColL')) vColL = dongCuoi.querySelector('.oColL').value;
+                if (dongCuoi.querySelector('.oColM')) vColM = dongCuoi.querySelector('.oColM').value;
             }
         }
         
@@ -158,6 +165,10 @@
             <textarea class="form-control oGchuGv" placeholder="Ghi chú" rows="1" oninput="gvCoDan(this)" onfocus="gvCoDan(this)">${dong?dong[8]||"":""}</textarea>
             <input type="hidden" class="oDiemDgGv" value="${vDiemDg}">
             <input type="hidden" class="oTGHoanThanh" value="${vTgHt}">
+            <input type="hidden" class="oColJ" value="${vColJ}">
+            <input type="hidden" class="oColK" value="${vColK}">
+            <input type="hidden" class="oColL" value="${vColL}">
+            <input type="hidden" class="oColM" value="${vColM}">
         </td>`;
         
         tb.appendChild(tr);
@@ -171,7 +182,6 @@
         const tbody = $('#gvThanBang');
         const lastRow = tbody.find('tr:last');
 
-        // Khởi tạo dòng đầu tiên nếu bảng rỗng
         if (lastRow.length === 0) {
             gvVeDong();
             $('#gvThanBang tr:last .oSttGv').val("1");
@@ -196,16 +206,21 @@
         $newRow.find('.oTdoGv').val('');
         $newRow.find('.oNnghanGv').val('');
         $newRow.find('.oTGHoanThanh').val('');
-        $newRow.find('.oDiemDgGv').val('');
-        $newRow.find('.chonKq').val('');
+        if ($newRow.find('.chonKq').length > 0) { $newRow.find('.chonKq').val(''); }
+
+        // BẮT BUỘC KẾ THỪA CÁC GIÁ TRỊ ẨN TỪ DÒNG TRƯỚC VÀO DÒNG NHÂN BẢN
+        $newRow.find('.oDiemDgGv').val(lastRow.find('.oDiemDgGv').val());
+        $newRow.find('.oColJ').val(lastRow.find('.oColJ').val());
+        $newRow.find('.oColK').val(lastRow.find('.oColK').val());
+        $newRow.find('.oColL').val(lastRow.find('.oColL').val());
+        $newRow.find('.oColM').val(lastRow.find('.oColM').val());
         
-        $newRow.find('input, select').css({
+        $newRow.find('input:not([type="hidden"]), select').css({
             'background-color': 'transparent',
             'border-color': 'transparent',
             'font-weight': 'normal'
         });
 
-        // Phục hồi lại cột nếu dòng liền trước là tiêu đề gộp
         var $tdNoiDung = $newRow.find('td').eq(2); 
         if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
             $tdNoiDung.attr('colspan', '1');
@@ -247,11 +262,15 @@
             tggiao: dong.querySelector('.oTGGiao').value,
             tdo: dong.querySelector('.oTdoGv').value,
             tght: dong.querySelector('.oTGHoanThanh').value,
-            diemdg: dong.querySelector('.oDiemDgGv').value,
+            diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "",
             gchu: dong.querySelector('.oGchuGv').value,
             ngnhan: gt,
             trangngnhan: gt,
-            tenngnhan: tngn
+            tenngnhan: tngn,
+            colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
+            colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
+            colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
+            colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : ""
         };
         
         const th_htai = document.getElementById('gvLocThang').value;
@@ -275,11 +294,15 @@
                     tggiao: dong.querySelector('.oTGGiao').value, 
                     tdo: dong.querySelector('.oTdoGv').value, 
                     tght: dong.querySelector('.oTGHoanThanh').value, 
-                    diemdg: dong.querySelector('.oDiemDgGv').value, 
+                    diemdg: dong.querySelector('.oDiemDgGv') ? dong.querySelector('.oDiemDgGv').value : "", 
                     gchu: dong.querySelector('.oGchuGv').value.trim(), 
                     ngnhan: dong.querySelector('.oNnghanGv').value, 
                     trangngnhan: dong.querySelector('.oNnghanGv').value, 
-                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "" 
+                    tenngnhan: dong.querySelector('.oNnghanGv').options[dong.querySelector('.oNnghanGv').selectedIndex]?.getAttribute('data-name') || "",
+                    colJ: dong.querySelector('.oColJ') ? dong.querySelector('.oColJ').value : "",
+                    colK: dong.querySelector('.oColK') ? dong.querySelector('.oColK').value : "",
+                    colL: dong.querySelector('.oColL') ? dong.querySelector('.oColL').value : "",
+                    colM: dong.querySelector('.oColM') ? dong.querySelector('.oColM').value : ""
                 });
             }
         });

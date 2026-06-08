@@ -705,12 +705,18 @@ function xulyTaiBcao(ptu) {
 }
 
 function guiTepLenMayChu(mngTep) {
+    // Hàm xử lý phản hồi khi máy chủ trả về kết quả
     const xuLyThanhCong = function(kqTho) {
         anTaiDl();
-        let kq = epKieuKq(kqTho); 
+        console.log("Dữ liệu nhận từ server:", kqTho); // In ra để debug nếu còn lỗi
         
-        if (kq && kq.ttai === 'tcong') {
-            window.tepdinhkBcao = window.tepdinhkBcao.concat(kq.dliu);
+        // Ép kiểu dữ liệu an toàn
+        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        
+        // Kiểm tra điều kiện thành công: Hoặc có cờ ttai='tcong', hoặc nhận được danh sách tệp dliu
+        if (kq && (kq.ttai === 'tcong' || (kq.dliu && kq.dliu.length > 0))) {
+            let duLieuTep = kq.dliu || kq; // Hỗ trợ cả trường hợp server trả về trực tiếp mảng
+            window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
             if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");

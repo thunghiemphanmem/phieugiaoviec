@@ -34,6 +34,59 @@
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
   #khuGvChinh input:disabled, #khuGvChinh select:disabled {background-color: transparent !important; cursor: not-allowed; color: #333; font-weight: normal;}
+
+  /* CSS cho toast thông báo */
+  .gv-toast-notify {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    min-width: 280px;
+    max-width: 400px;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: gvSlideInRight 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .gv-toast-success {
+    background-color: #28a745;
+    color: white;
+    border-left: 4px solid #155724;
+  }
+  .gv-toast-error {
+    background-color: #dc3545;
+    color: white;
+    border-left: 4px solid #721c24;
+  }
+  .gv-toast-warning {
+    background-color: #ffc107;
+    color: #856404;
+    border-left: 4px solid #856404;
+  }
+  .gv-toast-info {
+    background-color: #17a2b8;
+    color: white;
+    border-left: 4px solid #0c5460;
+  }
+  .gv-toast-icon {
+    font-size: 20px;
+  }
+  @keyframes gvSlideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .gv-toast-fade-out {
+    animation: gvFadeOut 0.3s ease-out forwards;
+  }
+  @keyframes gvFadeOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
+  }
 </style>
 
 <div id="khuGvChinh">
@@ -81,7 +134,48 @@
     setTimeout(function() { gvTaiCanb(); }, 500);
 
     function gvDatTai(dt, tbt = null) { const mh = document.getElementById('gvLopPhuTai'); const ct = document.getElementById('gvChuTai'); if (dt) { ct.innerText = tbt || "Đang xử lý..."; mh.style.display = 'flex'; } else mh.style.display = 'none'; }
-    function gvTbaoNhanh(loai, tb) { if (typeof hienThongb === 'function') hienThongb(loai, tb); else alert(tb); }
+    
+    // Hàm thông báo với màu sắc phù hợp
+    function gvTbaoNhanh(loai, tb) {
+        let icon = '';
+        let bgClass = '';
+        switch(loai) {
+            case 'tc': // thành công
+            case 'success':
+                icon = '✓';
+                bgClass = 'gv-toast-success';
+                break;
+            case 'loi': // lỗi
+            case 'error':
+                icon = '✗';
+                bgClass = 'gv-toast-error';
+                break;
+            case 'cbh': // cảnh báo
+            case 'warning':
+                icon = '⚠';
+                bgClass = 'gv-toast-warning';
+                break;
+            default:
+                icon = 'ℹ';
+                bgClass = 'gv-toast-info';
+        }
+        
+        // Xóa toast cũ nếu có
+        const oldToast = document.querySelector('.gv-toast-notify');
+        if (oldToast) oldToast.remove();
+        
+        // Tạo toast mới
+        const toast = document.createElement('div');
+        toast.className = `gv-toast-notify ${bgClass}`;
+        toast.innerHTML = `<span class="gv-toast-icon">${icon}</span><span>${tb}</span>`;
+        document.body.appendChild(toast);
+        
+        // Tự động ẩn sau 3 giây
+        setTimeout(() => {
+            toast.classList.add('gv-toast-fade-out');
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
+        }, 3000);
+    }
 
     function gvTaiCanb() { 
         gvDatTai(true, "Đang tải danh sách nhân sự..."); 
@@ -95,15 +189,13 @@
 
     // HÀM CHUẨN: tự động giãn textarea SAU KHI RENDER HOÀN TẤT
     function gvAutoResizeAllTextareas() {
-        // Đợi DOM render xong + layout hoàn chỉnh
         requestAnimationFrame(() => {
             setTimeout(() => {
                 const allTextareas = document.querySelectorAll('#khuGvChinh textarea.form-control');
                 allTextareas.forEach(textarea => {
-                    // Reset chiều cao về auto để lấy scrollHeight chính xác
                     textarea.style.height = 'auto';
                     const newHeight = textarea.scrollHeight;
-                    if (newHeight > 35) { // chỉ giãn nếu cao hơn min-height
+                    if (newHeight > 35) {
                         textarea.style.height = newHeight + 'px';
                     } else {
                         textarea.style.height = '35px';
@@ -124,7 +216,6 @@
             bns.forEach(dong => { gvVeDong(dong); }); 
         } else { gvVeDong(); }
 
-        // ⭐ QUAN TRỌNG: GỌI SAU KHI TẤT CẢ DÒNG ĐÃ ĐƯỢC THÊM
         setTimeout(() => {
             gvAutoResizeAllTextareas();
         }, 100);
@@ -150,7 +241,6 @@
             tdNoiDung.colSpan = 1;
             tr.querySelectorAll('td:nth-child(n+4)').forEach(td => td.style.display = '');
         }
-        // tự động resize lại sau khi thay đổi cấu trúc
         gvAutoResizeAllTextareas();
     }
 
@@ -291,7 +381,7 @@
             if (bangCuon) {
                 bangCuon.scrollTop = bangCuon.scrollHeight;
             }
-            gvAutoResizeAllTextareas(); // tự resize lại
+            gvAutoResizeAllTextareas();
         }, 100);
         
         if (typeof tinhtTdong === 'function') tinhtTdong();
@@ -373,10 +463,37 @@
         });
         if (dsNviec.length === 0) return;
         gvDatTai(true, "⏳ Đang cập nhật toàn bộ nhiệm vụ...");
-        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') setTimeout(gvLaydlGoc, 1000); else gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Thông báo: " + l.message); });
+        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { 
+            gvDatTai(false); 
+            if (kq && kq.ttai === 'tcong') {
+                gvTbaoNhanh('tc', "✓ Cập nhật nhiệm vụ thành công!");
+                setTimeout(gvLaydlGoc, 1000);
+            } else {
+                gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); 
+            }
+        }, function(l) { 
+            gvDatTai(false); 
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); 
+        });
     }
 
-    function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Thông báo: " + l.message); } ); }
+    function gvGoiMayChu(n, t, nv, ptu, hth) { 
+        khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { 
+            gvDatTai(false); 
+            if (kq && kq.ttai === 'tcong') { 
+                gvTbaoNhanh('tc', "✓ Giao việc thành công!");
+                ptu.style.backgroundColor = '#d1e7dd'; 
+                ptu.style.borderColor = '#badbcc'; 
+                ptu.style.fontWeight = 'bold'; 
+            } else { 
+                gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); 
+                if (ptu.tagName !== 'BUTTON') ptu.value = ""; 
+            } 
+        }, function(l) { 
+            gvDatTai(false); 
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); 
+        }); 
+    }
 
     function gvXlmChth(btn) {
         if (!confirm("Bạn có chắc chắn muốn chuyển sang tháng tiếp theo và làm mới toàn bộ dữ liệu giao việc?")) return;
@@ -398,14 +515,14 @@
         khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: newTask }, function(kq) {
             gvDatTai(false);
             if (kq && kq.ttai === 'tcong') {
-                gvTbaoNhanh('tc', "Đã chuyển tháng thành công!");
+                gvTbaoNhanh('tc', "✓ Đã chuyển tháng thành công!");  // 👈 ĐÃ SỬA: màu xanh, icon ✓
                 setTimeout(gvLaydlGoc, 1000);
             } else {
                 gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
             }
         }, function(l) {
             gvDatTai(false);
-            gvTbaoNhanh('loi', "Thông báo: " + l.message);
+            gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message);
         });
     }
 </script>

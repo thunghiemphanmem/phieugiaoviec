@@ -147,7 +147,7 @@ function kiemTraQuyenTruyCap() {
                 if (nutLuu) nutLuu.disabled = true; 
                 if (nutNop) nutNop.disabled = true; 
                 if (diemThuong) diemThuong.disabled = true;
-                if (typeof hienThongb === 'function') hienThongb('chuy', '⚠️ Bạn đang xem nhật ký của giáo viên khác. Chỉ giáo viên đó hoặc Ban Giám hiệu mới được lưu.'); 
+                if (typeof hienThongb === 'function') hienThongb('chuy', { chu: '⚠️ Bạn đang xem nhật ký của giáo viên khác. Chỉ giáo viên đó hoặc Ban Giám hiệu mới được lưu.' }); 
             }
         } else { 
             if (nutLuu) nutLuu.disabled = false; 
@@ -193,26 +193,26 @@ function xulyLuuTam(ath = false, xltc = null) {
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
             if (!isBGH) { 
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác."); 
+                if (typeof hienThongb === 'function') hienThongb('loi', { chu: "⚠️ Bạn không có quyền lưu nhật ký đánh giá của người khác." }); 
                 return; 
             } 
             maTrangDich = selectGv.value;
         } else if (isBGH) {
             if (!maTrangDich || maTrangDich.trim() === "") {
-                if (typeof hienThongb === 'function') hienThongb('cbh', "⚠️ Đồng chí vui lòng chọn một giáo viên từ danh sách trước khi lưu.");
+                if (typeof hienThongb === 'function') hienThongb('cbh', { chu: "⚠️ Đồng chí vui lòng chọn một giáo viên từ danh sách trước khi lưu." });
                 return;
             }
         }
     }
     
     if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền lưu nhật ký của người khác."); 
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Bạn không có quyền lưu nhật ký của người khác." }); 
         return; 
     }
 
     if (!maTrangDich || maTrangDich.trim() === "") {
         let thongBaoLoi = isBGH ? "Đồng chí vui lòng chọn một giáo viên từ danh sách để lưu nhật ký." : "Lỗi hệ thống: Trang dữ liệu đích không xác định. Đồng chí kiểm tra lại Cột B tại Trang Khai Báo.";
-        if (typeof hienThongb === 'function') hienThongb('loi', thongBaoLoi);
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: thongBaoLoi });
         return;
     }
 
@@ -242,9 +242,9 @@ function xulyLuuTam(ath = false, xltc = null) {
 
     khachApi.luuTam(ht, function(kq) {
         if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();
-        if (kq && kq.ttai === 'tcong') { if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); } if(xltc) xltc(); } 
-        else { let ltc = kq ? kq.tbao : "Lỗi"; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); }
-    }, function(loi) { if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); });
+        if (kq && kq.ttai === 'tcong') { if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', { chu: "Đã ghi nhớ kết quả thành công!" }); } if(xltc) xltc(); } 
+        else { let ltc = kq ? kq.tbao : "Lỗi"; if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi lưu: " + ltc }); }
+    }, function(loi) { if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi Server: " + loi.message }); });
 }
 
 function nopBcaoChinh() {
@@ -254,24 +254,33 @@ function nopBcaoChinh() {
     if (cotETonTai) { 
         var selectGv = document.getElementById("hopChonGv"); 
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") { 
-            if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác."); 
+            if (typeof hienThongb === 'function') hienThongb('loi', { chu: "⚠️ Bạn không có quyền nộp báo cáo thay cho giáo viên khác." }); 
             return; 
         } 
     }
     if (!window.PGV_IS_SELF && !isBGH) { 
-        if (typeof hienThongb === 'function') hienThongb('loi', "Bạn không có quyền nộp báo cáo của người khác."); 
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Bạn không có quyền nộp báo cáo của người khác." }); 
         return; 
     }
     if (!maTrangDich || maTrangDich.trim() === "") {
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi: Không xác định được mã hồ sơ để nộp báo cáo. Hãy kiểm tra lại khai báo.");
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi: Không xác định được mã hồ sơ để nộp báo cáo. Hãy kiểm tra lại khai báo." });
         return;
     }
 
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
-    if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
+    if (gn > 0 && ld === "") { 
+        if (typeof hienThongb === 'function') hienThongb('cbh', { 
+            chu: `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`,
+            callback: function() { setTimeout(() => $('#nhapLdoNghi').focus(), 500); }
+        }); 
+        return; 
+    }
     
     const yk = $('#nhapYkien').val().trim(), bc = $('#nhapBcao').val().trim();
-    if (yk === "" || bc === "") { hienThongb('loi', "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt"); return; }
+    if (yk === "" || bc === "") { 
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt" }); 
+        return; 
+    }
     
     let bhl = true;
     $('#bangNviec tbody tr.dongNv').each(function(i) {
@@ -279,7 +288,7 @@ function nopBcaoChinh() {
       let inputNgay = $(this).find('.nhapTgHt');
       if (selectKq.css('display') !== 'none') {
           if (!selectKq.val() || !inputNgay.val()) { 
-              hienThongb('loi', `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!`); 
+              if (typeof hienThongb === 'function') hienThongb('loi', { chu: `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!` }); 
               bhl = false; 
               return false; 
           }
@@ -287,18 +296,21 @@ function nopBcaoChinh() {
     }); 
     if (!bhl) return;
 
-    hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
-      const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
-      xulyLuuTam(true, function() {
-          hienTaiDl("🚀 Bước 2: Đang ghi vào dữ liệu tổng...");
-          let ht = $('#chuKqHthi'); let chukq = ht.is('input, select, textarea') ? ht.val() : ht.text(); chukq = chukq ? chukq.trim() : "";
-          const cnb = { ttrg: maTrangDich, tenn: canbHientai.tde.tenn, snnghi: $('#nhapSngayNghi').val(), nhoc: canbHientai.tde.nhoc, tgian: canbHientai.tde.tgian, kq: chukq, dthuong: $('#nhapDiemThuong').val(), kienn: $('#nhapYkien').val(), bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), ldo: $('#nhapLdoNghi').val(), taik: window.PGV_ID_TC };
-          khachApi.nopBcao(cnb, function(kq) {
-            anTaiDl(); if(ntn) ntn.disabled = false; 
-            if (kq && kq.ttai === 'tcong') { $('#chuTrangThai').text("Đã nộp báo cáo"); let tc = (kq.lacn === true) ? "Đã nộp lại kết quả mới nhất" : "Đã nộp xong kết quả"; hienThongb('tcong', tc); if(typeof taiDlBdau === 'function') taiDlBdau(); if(typeof khaBcao === 'function') khaBcao(); } 
-            else { hienThongb('loi', "Lỗi nộp báo cáo: " + (kq ? kq.tbao : "Lỗi")); }
-          }, function(loi) { if(ntn) ntn.disabled = false; if(typeof khiLoiMayChu === 'function') khiLoiMayChu(loi); });
-      });
+    if (typeof hienThongb === 'function') hienThongb('xn', { 
+        chu: "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?",
+        callback: function() {
+            const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
+            xulyLuuTam(true, function() {
+                hienTaiDl("🚀 Bước 2: Đang ghi vào dữ liệu tổng...");
+                let ht = $('#chuKqHthi'); let chukq = ht.is('input, select, textarea') ? ht.val() : ht.text(); chukq = chukq ? chukq.trim() : "";
+                const cnb = { ttrg: maTrangDich, tenn: canbHientai.tde.tenn, snnghi: $('#nhapSngayNghi').val(), nhoc: canbHientai.tde.nhoc, tgian: canbHientai.tde.tgian, kq: chukq, dthuong: $('#nhapDiemThuong').val(), kienn: $('#nhapYkien').val(), bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), ldo: $('#nhapLdoNghi').val(), taik: window.PGV_ID_TC };
+                khachApi.nopBcao(cnb, function(kq) {
+                    anTaiDl(); if(ntn) ntn.disabled = false; 
+                    if (kq && kq.ttai === 'tcong') { $('#chuTrangThai').text("Đã nộp báo cáo"); let tc = (kq.lacn === true) ? "Đã nộp lại kết quả mới nhất" : "Đã nộp xong kết quả"; if (typeof hienThongb === 'function') hienThongb('tcong', { chu: tc }); if(typeof taiDlBdau === 'function') taiDlBdau(); if(typeof khaBcao === 'function') khaBcao(); } 
+                    else { if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi nộp báo cáo: " + (kq ? kq.tbao : "Lỗi") }); }
+                }, function(loi) { if(ntn) ntn.disabled = false; if(typeof khiLoiMayChu === 'function') khiLoiMayChu(loi); });
+            });
+        }
     });
 }
 
@@ -423,14 +435,14 @@ function veBangNviec(db) {
               <input type="hidden" class="oColK" value="${k_val}">
               <input type="hidden" class="oColL" value="${l_val}">
               <input type="hidden" class="oColM" value="${m_val}">
-           </td>
+            </td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
           <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
           <td class="align-middle" style="${dsp}">${htmlDiem}</td>
           <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-         </tr>`;
+        </table>`;
         bg.append(dg);
     });
     setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
@@ -442,7 +454,7 @@ function addNv() {
         var selectGv = document.getElementById("hopChonGv");
         if (selectGv && selectGv.style.display !== "none" && selectGv.value && selectGv.value !== "") {
             if (!isBGH) {
-                if (typeof hienThongb === 'function') hienThongb('loi', "⚠️ Không thể sửa dòng của người khác.");
+                if (typeof hienThongb === 'function') hienThongb('loi', { chu: "⚠️ Không thể sửa dòng của người khác." });
                 return;
             }
         }
@@ -469,7 +481,7 @@ function addNv() {
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
             <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
             <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </tr>`;
+         </tr>`;
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
@@ -676,7 +688,11 @@ function xulyTaiBcao(ptu) {
         
         if (f.size > 5 * 1024 * 1024) {
             anTaiDl();
-            alert("Tệp '" + f.name + "' quá lớn (vượt 5MB). Vui lòng chọn tệp nhỏ hơn.");
+            if (typeof hienThongb === 'function') {
+                hienThongb('loi', { chu: "Tệp '" + f.name + "' quá lớn (vượt 5MB). Vui lòng chọn tệp nhỏ hơn." });
+            } else {
+                alert("Tệp '" + f.name + "' quá lớn (vượt 5MB). Vui lòng chọn tệp nhỏ hơn.");
+            }
             ptu.value = '';
             return;
         }
@@ -696,44 +712,40 @@ function xulyTaiBcao(ptu) {
             } catch (err) {
                 hasError = true;
                 anTaiDl();
-                alert("Lỗi đọc tệp: " + err.message);
+                if (typeof hienThongb === 'function') {
+                    hienThongb('loi', { chu: "Lỗi đọc tệp: " + err.message });
+                } else {
+                    alert("Lỗi đọc tệp: " + err.message);
+                }
                 ptu.value = '';
             }
         };
         reader.readAsDataURL(f);
     }
 }
+
 function guiTepLenMayChu(mngTep) {
     const xuLyThanhCong = function(kqTho) {
         anTaiDl();
         
-        // 1. Chuyển đổi dữ liệu trả về thành đối tượng
         let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
-        
-        // 2. LOGIC KIỂM TRA MỚI: 
-        // Cho phép thành công nếu:
-        // - Có cờ ttai: 'tcong' 
-        // - HOẶC dữ liệu trả về là một mảng (trường hợp server trả về danh sách tệp trực tiếp)
         let laThanhCong = (kq.ttai === 'tcong') || Array.isArray(kq);
         
         if (laThanhCong) {
-            // Lấy danh sách tệp: Nếu server trả về {dliu: [...]}, nếu không lấy thẳng kq (nếu là mảng)
             let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
-            
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
-            thongBaoAnToan('tcong', "Tải tệp thành công!");
+            if (typeof hienThongb === 'function') hienThongb('tcong', { chu: "Tải tệp thành công!" });
         } else {
-            // Chỉ báo lỗi nếu không phải là tcong và không phải mảng
             let msg = kq.tbao || JSON.stringify(kq);
-            thongBaoAnToan('loi', "Lỗi tải tệp: " + msg);
+            if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi tải tệp: " + msg });
         }
     };
 
     const xuLyLoi = function(loi) {
         anTaiDl();
-        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối Server: " + (loi.message || loi));
+        if (typeof hienThongb === 'function') hienThongb('loi', { chu: "Lỗi kết nối Server: " + (loi.message || loi) });
     };
 
     if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -742,7 +754,11 @@ function guiTepLenMayChu(mngTep) {
         khachApi.taiTepBcao({ teps: mngTep }, xuLyThanhCong, xuLyLoi);
     } else {
         anTaiDl();
-        alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', { chu: "Lỗi hệ thống: API tải tệp chưa được liên kết." });
+        } else {
+            alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
+        }
     }
 }
 
@@ -759,7 +775,6 @@ function veUiTepDinhKem() {
     });
 }
 
-// Hàm xử lý xóa tệp đã đính kèm
 function xoaTepDinhKem(idx) {
     if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
     
@@ -768,20 +783,17 @@ function xoaTepDinhKem(idx) {
     
     const xuLyXoaXong = function(kqTho) {
         anTaiDl();
-        // Ép kiểu an toàn
         let kq = epKieuKq(kqTho);
         
         if (kq && kq.ttai === 'tcong') {
             window.tepdinhkBcao.splice(idx, 1);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
-           thongBaoAnToan('tcong', "Đã xóa tệp thành công!");
+            if (typeof hienThongb === 'function') hienThongb('tcong', { chu: "Đã xóa tệp thành công!" });
         } else {
-            // Xử lý an toàn: Đảm bảo msg luôn là chuỗi, tránh lỗi "undefined"
             let msg = (kq && kq.tbao) ? kq.tbao : (kq ? JSON.stringify(kq) : "Máy chủ không phản hồi dữ liệu");
-            
             if (typeof hienThongb === 'function') {
-                hienThongb('loi', "Lỗi xóa tệp: " + msg);
+                hienThongb('loi', { chu: "Lỗi xóa tệp: " + msg });
             } else {
                 alert("Lỗi xóa tệp: " + msg);
             }
@@ -792,7 +804,7 @@ function xoaTepDinhKem(idx) {
         anTaiDl();
         let msgLoi = (loi && loi.message) ? loi.message : "Mất kết nối tới máy chủ";
         if (typeof hienThongb === 'function') {
-            hienThongb('loi', "Lỗi kết nối: " + msgLoi);
+            hienThongb('loi', { chu: "Lỗi kết nối: " + msgLoi });
         } else {
             alert("Lỗi kết nối: " + msgLoi);
         }
@@ -804,16 +816,18 @@ function xoaTepDinhKem(idx) {
         khachApi.xoaTepBcao({ duongd: tepXoa.duongd }, xuLyXoaXong, xuLyLoiXoa);
     } else {
         anTaiDl();
-        alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
+        if (typeof hienThongb === 'function') {
+            hienThongb('loi', { chu: "Lỗi hệ thống: API xóa tệp chưa được liên kết." });
+        } else {
+            alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
+        }
     }
 }
 
-  // Hàm giải mã chuỗi [FILE:name|url] thành danh sách tệp
 function giaiMaBcao(chuoiBcao) {
-    window.tepdinhkBcao = []; // Reset danh sách tệp cũ
+    window.tepdinhkBcao = [];
     if (!chuoiBcao) return;
     
-    // Tìm tất cả các đoạn có dạng [FILE:tên|link]
     const regex = /\[FILE:(.*?)\|(.*?)\]/g;
     let match;
     while ((match = regex.exec(chuoiBcao)) !== null) {
@@ -822,20 +836,6 @@ function giaiMaBcao(chuoiBcao) {
             duongd: match[2]
         });
     }
-    veUiTepDinhKem(); // Vẽ lại giao diện sau khi giải mã xong
-}
-
-function thongBaoAnToan(loai, noiDung) {
-    if (typeof hienThongb === 'function') {
-        // Kiểm tra nếu hệ thống yêu cầu object có thuộc tính 'chu'
-        try {
-            hienThongb(loai, { chu: noiDung });
-        } catch (e) {
-            // Nếu hienThongb chỉ nhận string, ta gửi trực tiếp
-            hienThongb(loai, noiDung);
-        }
-    } else {
-        alert(noiDung);
-    }
+    veUiTepDinhKem();
 }
 </script>

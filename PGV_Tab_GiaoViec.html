@@ -1,11 +1,15 @@
 <style>
-  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; }
-  #khuGvChinh .hopDau { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
+  /* Cấu trúc Flexbox cho toàn bộ khu vực chính để chiếm hết chiều cao */
+  #khuGvChinh { font-family: 'Times New Roman', Times, serif; font-size: 14px; display: flex; flex-direction: column; height: 92vh; } 
+  #khuGvChinh .hopDau { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #0d6efd; padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
+  
   #khuGvChinh .tDe { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
   #khuGvChinh .hopLoc { display: flex; gap: 10px; align-items: center; }
   #khuGvChinh .nhapTuyChinh { font-size: 16px; font-weight: bold; color: #0d6efd; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px; }
   
-  #khuGvChinh .hopBang { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; max-height: 65vh; overflow-y: auto; overflow-x: auto; }
+  /* Bảng tự động giãn theo không gian còn lại */
+  #khuGvChinh .hopBang { flex-grow: 1; background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; overflow-y: auto; overflow-x: auto; position: relative; }
+  
   #khuGvChinh table { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; border: none; }
   #khuGvChinh th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: none; border-right: 1px solid #7ea8f8; vertical-align: middle; font-size: 13px; position: sticky; top: 0; z-index: 10; }
   #khuGvChinh th:last-child { border-right: none; }
@@ -18,7 +22,7 @@
   #gvBangNv input::placeholder { color: #adb5bd; font-style: italic; }
 
   #khuGvChinh td.oHdong { text-align: center; padding: 2px !important; background-color: transparent; }
-  #khuGvChinh .nutThem { margin: 5px; font-size: 13px; font-weight: bold; }
+  #khuGvChinh .nutThem { margin: 10px; font-size: 13px; font-weight: bold; }
   
   #gvLopPhuTai { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
   #gvChuTai { margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif; }
@@ -208,14 +212,12 @@
         $newRow.find('.oTGHoanThanh').val('');
         if ($newRow.find('.chonKq').length > 0) { $newRow.find('.chonKq').val(''); }
 
-        // KẾ THỪA GIÁ TRỊ ẨN
         $newRow.find('.oDiemDgGv').val(lastRow.find('.oDiemDgGv').val());
         $newRow.find('.oColJ').val(lastRow.find('.oColJ').val());
         $newRow.find('.oColK').val(lastRow.find('.oColK').val());
         $newRow.find('.oColL').val(lastRow.find('.oColL').val());
         $newRow.find('.oColM').val(lastRow.find('.oColM').val());
         
-        // MỞ KHÓA VÀ KHÔI PHỤC TRẠNG THÁI NÚT XÓA CHO DÒNG MỚI
         $newRow.find('select').removeAttr('disabled'); 
         $newRow.find('.oHdong').html('<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px;" onclick="gvXoaDong(this)">X</button>');
         
@@ -236,6 +238,10 @@
         tbody.append($newRow);
         
         $newRow.find('textarea').each(function() { gvCoDan(this); });
+        
+        // AUTO FOCUS VÀO Ô NỘI DUNG MỚI
+        setTimeout(function() { $newRow.find('.oNdGv').focus(); }, 100);
+        
         if (typeof tinhtTdong === 'function') tinhtTdong();
         if (typeof mokBcao === 'function') mokBcao();
     }
@@ -317,7 +323,6 @@
 
     function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }
 
-    // HÀM XỬ LÝ CHUYỂN THÁNG MỚI
     function gvXlmChth(btn) {
         if (!confirm("Bạn có chắc chắn muốn chuyển sang tháng tiếp theo và làm mới toàn bộ dữ liệu giao việc?")) return;
         
@@ -326,7 +331,7 @@
         let match = val.match(/\d+/);
         let thangHienTai = match ? parseInt(match[0]) : 1;
         let thangMoi = thangHienTai + 1;
-        if (thangMoi > 12) thangMoi = 1; // Quay vòng lại Tháng 1 nếu vượt quá 12
+        if (thangMoi > 12) thangMoi = 1;
         
         selectThang.value = "Tháng " + thangMoi;
         const nm = document.getElementById('gvLocNam').value;
@@ -339,7 +344,7 @@
             gvDatTai(false);
             if (kq && kq.ttai === 'tcong') {
                 gvTbaoNhanh('tc', "Đã chuyển tháng thành công!");
-                setTimeout(gvLaydlGoc, 1000); // Tải lại giao diện sau khi dọn dẹp
+                setTimeout(gvLaydlGoc, 1000);
             } else {
                 gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown"));
             }

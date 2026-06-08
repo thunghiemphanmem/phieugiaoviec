@@ -63,6 +63,25 @@
       border: none !important;
       background-color: transparent !important;
   }
+  
+  .file-badge {
+      background-color: #e9ecef;
+      border-radius: 16px;
+      padding: 2px 8px 2px 10px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #ced4da;
+  }
+  .file-badge .btn-close-sm {
+      width: 14px;
+      height: 14px;
+      font-size: 10px;
+      cursor: pointer;
+      opacity: 0.6;
+  }
+  .file-badge .btn-close-sm:hover { opacity: 1; }
 </style>
 
 <div class="hopDau">
@@ -122,8 +141,8 @@
 </div>
 
 <script>
-// Biến lưu danh sách file đính kèm
-window.tepdinhkBcao = window.tepdinhkBcao || [];
+// Biến lưu danh sách file đính kèm (chỉ lưu tên file, không lưu base64)
+window.dsFileDinhKem = window.dsFileDinhKem || [];
 
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 
@@ -187,9 +206,19 @@ function cdang(ptu) {
 }
 function gdang(ptu) { ptu.style.height = 'auto'; ptu.style.height = ptu.scrollHeight + 'px'; }
 function cgon(ptu, ccao) { ptu.style.height = ccao; ptu.scrollTop = 0; }
-function maHoaBcao(chu, tepdk) { let q = (chu || "").trim(); if (tepdk && tepdk.length > 0) { tepdk.forEach(t => { q += ` [FILE:${t.tentep}|${t.duongd}]`; }); } return q; }
 
-// ==================== HÀM XỬ LÝ ĐÍNH KÈM FILE ====================
+// Hàm tạo chuỗi báo cáo (chỉ lưu tên file, không lưu nội dung base64)
+function maHoaBcao(chu, dsFile) { 
+    let q = (chu || "").trim(); 
+    if (dsFile && dsFile.length > 0) { 
+        dsFile.forEach(function(f) { 
+            q += ' [FILE:' + f.tentep + ']'; 
+        }); 
+    } 
+    return q; 
+}
+
+// ==================== XỬ LÝ FILE ĐÍNH KÈM (KHÔNG NHÚNG BASE64) ====================
 function xulyTaiBcao(input) {
     if (!input.files || input.files.length === 0) return;
     
@@ -197,39 +226,35 @@ function xulyTaiBcao(input) {
     if (!vungDinhk) return;
     
     for (var i = 0; i < input.files.length; i++) {
-        (function(file) {
-            var fileName = file.name;
-            
-            // Kiểm tra trùng tên file
-            if (window.tepdinhkBcao.some(function(f) { return f.tentep === fileName; })) {
-                if (typeof hienThongb === 'function') {
-                    hienThongb('cbh', 'File "' + fileName + '" đã được đính kèm trước đó!');
-                } else {
-                    alert('File "' + fileName + '" đã được đính kèm trước đó!');
-                }
-                return;
+        var file = input.files[i];
+        var fileName = file.name;
+        
+        // Kiểm tra trùng tên file
+        var isDuplicate = window.dsFileDinhKem.some(function(f) { return f.tentep === fileName; });
+        if (isDuplicate) {
+            if (typeof hienThongb === 'function') {
+                hienThongb('cbh', 'File "' + fileName + '" đã được đính kèm trước đó!');
+            } else {
+                alert('File "' + fileName + '" đã được đính kèm trước đó!');
             }
-            
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var fileData = {
-                    tentep: fileName,
-                    duongd: e.target.result,
-                    loai: file.type,
-                    kichthuoc: file.size
-                };
-                window.tepdinhkBcao.push(fileData);
-                hienThiFileDinhKem(fileData, vungDinhk);
-            };
-            reader.onerror = function() {
-                if (typeof hienThongb === 'function') {
-                    hienThongb('loi', 'Lỗi đọc file "' + fileName + '"');
-                } else {
-                    alert('Lỗi đọc file "' + fileName + '"');
-                }
-            };
-            reader.readAsDataURL(file);
-        })(input.files[i]);
+            continue;
+        }
+        
+        // Chỉ lưu thông tin file, KHÔNG đọc base64
+        var fileInfo = {
+            tentep: fileName,
+            loai: file.type,
+            kichthuoc: file.size,
+            thoiGian: new Date().toISOString()
+        };
+        
+        window.dsFileDinhKem.push(fileInfo);
+        hienThiFileDinhKem(fileInfo, vungDinhk);
+        
+        // Thông báo chỉ lưu tên file (không upload trực tiếp lên server ở đây)
+        if (typeof hienThongb === 'function') {
+            hienThongb('chuy', 'Đã thêm file "' + fileName + '". Lưu ý: File sẽ chỉ được ghi nhận tên, không upload nội dung lên server.');
+        }
     }
     
     input.value = '';
@@ -237,24 +262,31 @@ function xulyTaiBcao(input) {
 
 function hienThiFileDinhKem(fileData, container) {
     var badge = document.createElement('span');
-    badge.className = 'badge bg-light text-dark border p-2 d-inline-flex align-items-center gap-1';
-    badge.style.fontSize = '12px';
+    badge.className = 'file-badge';
     badge.setAttribute('data-filename', fileData.tentep);
-    badge.innerHTML = '<i class="bi bi-file-earmark-text"></i>' +
-        '<span class="text-truncate" style="max-width: 200px;">' + fileData.tentep + '</span>' +
-        '<button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 10px;" onclick="xoaFileDinhKem(this)" aria-label="Xóa"></button>';
+    
+    var sizeText = '';
+    if (fileData.kichthuoc) {
+        var kb = Math.round(fileData.kichthuoc / 1024);
+        sizeText = kb > 0 ? ' (' + kb + 'KB)' : '';
+    }
+    
+    badge.innerHTML = '<i class="bi bi-paperclip"></i>' +
+        '<span style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' + fileData.tentep + '">' + fileData.tentep + sizeText + '</span>' +
+        '<span class="btn-close btn-close-sm" onclick="xoaFileDinhKem(this)" style="font-size: 10px; cursor: pointer;" aria-label="Xóa"></span>';
+    
     container.appendChild(badge);
 }
 
-function xoaFileDinhKem(btn) {
-    var badge = btn.closest('.badge');
+function xoaFileDinhKem(btnElement) {
+    var badge = btnElement.closest('.file-badge');
     if (badge) {
         var fileName = badge.getAttribute('data-filename');
-        window.tepdinhkBcao = window.tepdinhkBcao.filter(function(f) { return f.tentep !== fileName; });
+        window.dsFileDinhKem = window.dsFileDinhKem.filter(function(f) { return f.tentep !== fileName; });
         badge.remove();
     }
 }
-// ==================== KẾT THÚC HÀM ĐÍNH KÈM ====================
+// ==================== KẾT THÚC XỬ LÝ FILE ====================
 
 function xulyLuuTam(ath = false, xltc = null) {
     var isBGH = kiemTraLaBGH();
@@ -309,13 +341,44 @@ function xulyLuuTam(ath = false, xltc = null) {
     });
 
     let qth = $('#chuKqHthi'); let chukq = qth.is('input, select, textarea') ? qth.val() : qth.text(); chukq = chukq ? chukq.trim() : "";
-    const ht = { ttrg: maTrangDich, snnghi: $('#nhapSngayNghi').val() || 0, dthuong: $('#nhapDiemThuong').val() || 0, ldo: $('#nhapLdoNghi').val() || "", kienn: $('#nhapYkien').val() || "", bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), dlbang: dlbg, kq: chukq };
+    
+    // Báo cáo chỉ lưu danh sách tên file, không lưu base64
+    let noiDungBaoCao = $('#nhapBcao').val() || "";
+    let chuoiFileDinhKem = window.dsFileDinhKem.map(function(f) { return f.tentep; }).join(', ');
+    if (chuoiFileDinhKem && noiDungBaoCao) {
+        noiDungBaoCao = noiDungBaoCao + '\n[File đính kèm: ' + chuoiFileDinhKem + ']';
+    } else if (chuoiFileDinhKem) {
+        noiDungBaoCao = '[File đính kèm: ' + chuoiFileDinhKem + ']';
+    }
+    
+    const ht = { 
+        ttrg: maTrangDich, 
+        snnghi: $('#nhapSngayNghi').val() || 0, 
+        dthuong: $('#nhapDiemThuong').val() || 0, 
+        ldo: $('#nhapLdoNghi').val() || "", 
+        kienn: $('#nhapYkien').val() || "", 
+        bcao: noiDungBaoCao,
+        dlbang: dlbg, 
+        kq: chukq 
+    };
 
     khachApi.luuTam(ht, function(kq) {
         if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if(typeof mokBcao === 'function') mokBcao();
-        if (kq && kq.ttai === 'tcong') { if (!ath) { if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); } if(xltc) xltc(); } 
-        else { let ltc = kq ? kq.tbao : "Lỗi"; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); }
-    }, function(loi) { if(!ath) anTaiDl(); if(ntl && !ath) ntl.disabled = false; if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + loi.message); });
+        if (kq && kq.ttai === 'tcong') { 
+            if (!ath) { 
+                if (typeof hienThongb === 'function') hienThongb('tcong', "Đã ghi nhớ kết quả thành công!"); 
+            } 
+            if(xltc) xltc(); 
+        } 
+        else { 
+            let ltc = kq ? kq.tbao : "Lỗi"; 
+            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi lưu: " + ltc); 
+        }
+    }, function(loi) { 
+        if(!ath) anTaiDl(); 
+        if(ntl && !ath) ntl.disabled = false; 
+        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi Server: " + (loi.message || loi)); 
+    });
 }
 
 function nopBcaoChinh() {
@@ -339,10 +402,16 @@ function nopBcaoChinh() {
     }
 
     const gn = parseInt($('#nhapSngayNghi').val()) || 0, ld = $('#nhapLdoNghi').val().trim();
-    if (gn > 0 && ld === "") { hienThongb('cbh', `Bạn đã có ${gn} ngày nghỉ.\nPhải nhập lý do!`, () => setTimeout(() => $('#nhapLdoNghi').focus(), 500)); return; }
+    if (gn > 0 && ld === "") { 
+        if (typeof hienThongb === 'function') hienThongb('cbh', 'Bạn đã có ' + gn + ' ngày nghỉ.\nPhải nhập lý do!', function() { setTimeout(function() { $('#nhapLdoNghi').focus(); }, 500); }); 
+        return; 
+    }
     
     const yk = $('#nhapYkien').val().trim(), bc = $('#nhapBcao').val().trim();
-    if (yk === "" || bc === "") { hienThongb('loi', "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt"); return; }
+    if (yk === "" || bc === "") { 
+        if (typeof hienThongb === 'function') hienThongb('loi', "Thiếu: Ý kiến tham mưu hoặc Báo cáo tóm tắt"); 
+        return; 
+    }
     
     let bhl = true;
     $('#bangNviec tbody tr.dongNv').each(function(i) {
@@ -350,7 +419,7 @@ function nopBcaoChinh() {
       let inputNgay = $(this).find('.nhapTgHt');
       if (selectKq.css('display') !== 'none') {
           if (!selectKq.val() || !inputNgay.val()) { 
-              hienThongb('loi', `Dòng ${i + 1} chưa xong.\nChọn Kết quả và Ngày hoàn thành!`); 
+              if (typeof hienThongb === 'function') hienThongb('loi', 'Dòng ' + (i + 1) + ' chưa xong.\nChọn Kết quả và Ngày hoàn thành!'); 
               bhl = false; 
               return false; 
           }
@@ -358,18 +427,73 @@ function nopBcaoChinh() {
     }); 
     if (!bhl) return;
 
-    hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
-      const ntn = document.getElementById('nutNopBcao'); if(ntn) ntn.disabled = true; hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
-      xulyLuuTam(true, function() {
-          hienTaiDl("🚀 Bước 2: Đang ghi vào dữ liệu tổng...");
-          let ht = $('#chuKqHthi'); let chukq = ht.is('input, select, textarea') ? ht.val() : ht.text(); chukq = chukq ? chukq.trim() : "";
-          const cnb = { ttrg: maTrangDich, tenn: canbHientai.tde.tenn, snnghi: $('#nhapSngayNghi').val(), nhoc: canbHientai.tde.nhoc, tgian: canbHientai.tde.tgian, kq: chukq, dthuong: $('#nhapDiemThuong').val(), kienn: $('#nhapYkien').val(), bcao: maHoaBcao($('#nhapBcao').val() || "", window.tepdinhkBcao), ldo: $('#nhapLdoNghi').val(), taik: window.PGV_ID_TC };
-          khachApi.nopBcao(cnb, function(kq) {
-            anTaiDl(); if(ntn) ntn.disabled = false; 
-            if (kq && kq.ttai === 'tcong') { $('#chuTrangThai').text("Đã nộp báo cáo"); let tc = (kq.lacn === true) ? "Đã nộp lại kết quả mới nhất" : "Đã nộp xong kết quả"; hienThongb('tcong', tc); if(typeof taiDlBdau === 'function') taiDlBdau(); if(typeof khaBcao === 'function') khaBcao(); } 
-            else { hienThongb('loi', "Lỗi nộp báo cáo: " + (kq ? kq.tbao : "Lỗi")); }
-          }, function(loi) { if(ntn) ntn.disabled = false; if(typeof khiLoiMayChu === 'function') khiLoiMayChu(loi); });
-      });
+    if (typeof hienThongb === 'function') {
+        hienThongb('xn', "Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?", function() {
+            thucHienNopBaoCao(maTrangDich, isBGH);
+        });
+    } else {
+        if (confirm("Hệ thống sẽ đồng bộ nhật ký và nộp báo cáo. Xác nhận?")) {
+            thucHienNopBaoCao(maTrangDich, isBGH);
+        }
+    }
+}
+
+function thucHienNopBaoCao(maTrangDich, isBGH) {
+    const ntn = document.getElementById('nutNopBcao'); 
+    if(ntn) ntn.disabled = true; 
+    if (typeof hienTaiDl === 'function') hienTaiDl("🚀 Bước 1: Đang lưu vào nhật ký cá nhân...");
+    
+    // Tạo nội dung báo cáo với danh sách file
+    let noiDungBaoCao = $('#nhapBcao').val() || "";
+    let chuoiFileDinhKem = window.dsFileDinhKem.map(function(f) { return f.tentep; }).join(', ');
+    if (chuoiFileDinhKem && noiDungBaoCao) {
+        noiDungBaoCao = noiDungBaoCao + '\n[File đính kèm: ' + chuoiFileDinhKem + ']';
+    } else if (chuoiFileDinhKem) {
+        noiDungBaoCao = '[File đính kèm: ' + chuoiFileDinhKem + ']';
+    }
+    
+    xulyLuuTam(true, function() {
+        if (typeof hienTaiDl === 'function') hienTaiDl("🚀 Bước 2: Đang ghi vào dữ liệu tổng...");
+        let ht = $('#chuKqHthi'); 
+        let chukq = ht.is('input, select, textarea') ? ht.val() : ht.text(); 
+        chukq = chukq ? chukq.trim() : "";
+        const cnb = { 
+            ttrg: maTrangDich, 
+            tenn: canbHientai.tde.tenn, 
+            snnghi: $('#nhapSngayNghi').val(), 
+            nhoc: canbHientai.tde.nhoc, 
+            tgian: canbHientai.tde.tgian, 
+            kq: chukq, 
+            dthuong: $('#nhapDiemThuong').val(), 
+            kienn: $('#nhapYkien').val(), 
+            bcao: noiDungBaoCao, 
+            ldo: $('#nhapLdoNghi').val(), 
+            taik: window.PGV_ID_TC 
+        };
+        
+        if (typeof khachApi !== 'undefined' && khachApi.nopBcao) {
+            khachApi.nopBcao(cnb, function(kq) {
+                if (typeof anTaiDl === 'function') anTaiDl(); 
+                if(ntn) ntn.disabled = false; 
+                if (kq && kq.ttai === 'tcong') { 
+                    if (typeof $('#chuTrangThai').text === 'function') $('#chuTrangThai').text("Đã nộp báo cáo"); 
+                    let tc = (kq.lacn === true) ? "Đã nộp lại kết quả mới nhất" : "Đã nộp xong kết quả"; 
+                    if (typeof hienThongb === 'function') hienThongb('tcong', tc); 
+                    if (typeof taiDlBdau === 'function') taiDlBdau(); 
+                    if (typeof khaBcao === 'function') khaBcao(); 
+                } 
+                else { 
+                    if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi nộp báo cáo: " + (kq ? kq.tbao : "Lỗi")); 
+                }
+            }, function(loi) { 
+                if(ntn) ntn.disabled = false; 
+                if (typeof khiLoiMayChu === 'function') khiLoiMayChu(loi); 
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi server: " + (loi.message || loi));
+            });
+        } else {
+            if(ntn) ntn.disabled = false;
+            if (typeof hienThongb === 'function') hienThongb('loi', "Không thể kết nối API. Vui lòng kiểm tra lại.");
+        }
     });
 }
 
@@ -389,7 +513,7 @@ function mokBcao() {
         }
         nt.style.transition = "transform 0.2s"; 
         nt.style.transform = "scale(1.1)"; 
-        setTimeout(() => nt.style.transform = "scale(1)", 200); 
+        setTimeout(function() { nt.style.transform = "scale(1)"; }, 200); 
     } 
 }
 function khaBcao() { if (!mbcMo) { const nt = document.getElementById('nutNopBcao'); if(nt && nt.style.display !== 'none') nt.disabled = true; } }
@@ -402,11 +526,11 @@ function ktraAnHienTieuDe(ptu) {
     if(isTitle) {
         ptu.classList.add('fw-bold', 'text-primary', 'text-uppercase');
         tdNoiDung.colSpan = 7;
-        tr.querySelectorAll('td:nth-child(n+3)').forEach(td => td.style.display = 'none');
+        tr.querySelectorAll('td:nth-child(n+3)').forEach(function(td) { td.style.display = 'none'; });
     } else {
         ptu.classList.remove('fw-bold', 'text-primary', 'text-uppercase');
         tdNoiDung.colSpan = 1;
-        tr.querySelectorAll('td:nth-child(n+3)').forEach(td => td.style.display = '');
+        tr.querySelectorAll('td:nth-child(n+3)').forEach(function(td) { td.style.display = ''; });
     }
     tinhtTdong();
 }
@@ -416,7 +540,7 @@ function veBangNviec(db) {
     if (!db || db.length === 0) { bg.append('<tr><td colspan=\"8\" class=\"text-center text-muted py-3 small\">Chưa có nhiệm vụ.</td></tr>'); tinhtTdong(); return; }
     
     const showDeleteBtn = window.PGV_CAN_SHOW_DELETE_BUTTON === true;
-    db.forEach((dong, chs) => {
+    db.forEach(function(dong, chs) {
         let sn = (dong[0] !== null && dong[0] !== undefined && dong[0] !== "") ? dong[0] : "";
         let ndc = dong[1] || ""; let dMax = dong[2] || ""; 
         
@@ -444,20 +568,20 @@ function veBangNviec(db) {
         let vTgGiao = (tGiao.toLowerCase() === "dd/mm/yyyy") ? "" : tGiao;
         let vTgHt   = (tHt.toLowerCase() === "dd/mm/yyyy") ? "" : tHt;
 
-        let htmlDiem = `<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="${safeConfig}" value="${valChon}" style="color:red; ${dsp}" onchange="tinhtTdong()">`;
+        let htmlDiem = '<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="' + safeConfig + '" value="' + valChon + '" style="color:red; ' + dsp + '" onchange="tinhtTdong()">';
         
         if (valConfig.includes("|")) {
-            htmlDiem = `<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="${safeConfig}" style="color:red; ${dsp}; max-width: 100%;" onchange="tinhtTdong()">`;
-            htmlDiem += `<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>`;
+            htmlDiem = '<select class="form-select form-select-sm text-center fw-bold chonKq" data-config="' + safeConfig + '" style="color:red; ' + dsp + '; max-width: 100%;" onchange="tinhtTdong()">';
+            htmlDiem += '<option value="" style="text-align: left; padding: 0px; margin: 0px; white-space: normal;">-- Trống --</option>';
             
-            let optsArray = [];
+            var optsArray = [];
             if (valConfig.includes(";")) {
                 optsArray = valConfig.split(";");
             } else if (valConfig.includes("\n")) {
-                let lines = valConfig.split("\n");
-                let currentOpt = "";
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
+                var lines = valConfig.split("\n");
+                var currentOpt = "";
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
                     if (line === "") continue; 
                     currentOpt = currentOpt === "" ? line : currentOpt + " " + line;
                     if (line.includes("|") || i === lines.length - 1) {
@@ -469,42 +593,47 @@ function veBangNviec(db) {
                 optsArray = valConfig.split(",");
             }
 
-            optsArray.forEach(opt => {
-                let kv = opt.split("|"); 
-                let txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
-                let val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
+            for (var idx = 0; idx < optsArray.length; idx++) {
+                var opt = optsArray[idx];
+                var kv = opt.split("|"); 
+                var txt = kv[0].replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); 
+                var val = kv.length > 1 ? kv[1].replace(/[\r\n]+/g, '').trim() : txt;
                 
                 if(txt !== "") {
-                    let isSel = (val === valChon) ? "selected" : "";
-                    let safeTxt = txt.replace(/"/g, '&quot;');
-                    htmlDiem += `<option value="${val}" ${isSel} title="${safeTxt}" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">${txt}</option>`;
+                    var isSel = (val === valChon) ? "selected" : "";
+                    var safeTxt = txt.replace(/"/g, '&quot;');
+                    htmlDiem += '<option value="' + val + '" ' + isSel + ' title="' + safeTxt + '" style="text-align: left; padding: 0px; margin: 0px; white-space: normal; word-wrap: break-word; max-width: 350px;">' + txt + '</option>';
                 }
-            });
-            htmlDiem += `</select>`;
+            }
+            htmlDiem += '</select>';
         }
 
-        let nutx = showDeleteBtn ? `<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>` : ``;
-        let dg = `<tr class="dongNv">
-          <td class="text-center align-middle oStt fw-bold">${sn}</td>
-          <td ${colSp}>
-              <textarea class="form-control nhapNdung ${fw}" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">${ndc}</textarea>
-              <input type="hidden" class="anNguoiTH" value="${nTH}">
-              <input type="hidden" class="anGhiChu" value="${gc}">
-              <input type="hidden" class="oColJ" value="${j_val}">
-              <input type="hidden" class="oColK" value="${k_val}">
-              <input type="hidden" class="oColL" value="${l_val}">
-              <input type="hidden" class="oColM" value="${m_val}">
-            </td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="${dMax}" readonly></td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="${vTgGiao}" readonly></td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="${lTdo}" readonly></td>
-          <td class="align-middle" style="${dsp}"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="${vTgHt}"></td>
-          <td class="align-middle" style="${dsp}">${htmlDiem}</td>
-          <td class="text-center align-middle" style="${dsp}">${nutx}</td>
-        </tr>`;
+        var nutx = showDeleteBtn ? '<button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button>' : '';
+        var dg = '<tr class="dongNv">' +
+          '<td class="text-center align-middle oStt fw-bold">' + sn + '</td>' +
+          '<td ' + colSp + '>' +
+              '<textarea class="form-control nhapNdung ' + fw + '" readonly rows="1" oninput="cdang(this)" onfocus="cdang(this)">' + ndc.replace(/</g, '&lt;') + '</textarea>' +
+              '<input type="hidden" class="anNguoiTH" value="' + nTH + '">' +
+              '<input type="hidden" class="anGhiChu" value="' + gc.replace(/</g, '&lt;') + '">' +
+              '<input type="hidden" class="oColJ" value="' + j_val + '">' +
+              '<input type="hidden" class="oColK" value="' + k_val + '">' +
+              '<input type="hidden" class="oColL" value="' + l_val + '">' +
+              '<input type="hidden" class="oColM" value="' + m_val + '">' +
+            '</td>' +
+          '<td class="align-middle" style="' + dsp + '"><input type="text" class="form-control form-control-sm text-center nhapDiemMax" value="' + dMax + '" readonly></td>' +
+          '<td class="align-middle" style="' + dsp + '"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy" value="' + vTgGiao + '" readonly></td>' +
+          '<td class="align-middle" style="' + dsp + '"><input type="text" class="form-control form-control-sm text-center nhapTdo" value="' + lTdo.replace(/</g, '&lt;') + '" readonly></td>' +
+          '<td class="align-middle" style="' + dsp + '"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy" value="' + vTgHt + '"></td>' +
+          '<td class="align-middle" style="' + dsp + '">' + htmlDiem + '</td>' +
+          '<td class="text-center align-middle" style="' + dsp + '">' + nutx + '</td>' +
+        '</tr>';
         bg.append(dg);
     });
-    setTimeout(() => { $('#bangNviec textarea').each(function() { cdang(this); }); tinhtTdong(); khaBcao(); }, 100);
+    setTimeout(function() { 
+        $('#bangNviec textarea').each(function() { cdang(this); }); 
+        tinhtTdong(); 
+        khaBcao(); 
+    }, 100);
 }
 
 function addNv() {
@@ -527,20 +656,20 @@ function addNv() {
     const lastRow = tbody.find('tr.dongNv:last');
     
     if (lastRow.length === 0) {
-        let defaultRow = `<tr class="dongNv">
-            <td class="text-center align-middle oStt fw-bold"></td>
-            <td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>
-                <input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">
-                <input type="hidden" class="oColJ" value=""><input type="hidden" class="oColK" value="">
-                <input type="hidden" class="oColL" value=""><input type="hidden" class="oColM" value="">
-            </td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>
-            <td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>
-            <td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>
-        </tr>`;
+        var defaultRow = '<tr class="dongNv">' +
+            '<td class="text-center align-middle oStt fw-bold"></td>' +
+            '<td><textarea class="form-control nhapNdung" oninput="cdang(this); ktraAnHienTieuDe(this);" rows="1" placeholder="Nhập nội dung..."></textarea>' +
+                '<input type="hidden" class="anNguoiTH" value=""><input type="hidden" class="anGhiChu" value="">' +
+                '<input type="hidden" class="oColJ" value=""><input type="hidden" class="oColK" value="">' +
+                '<input type="hidden" class="oColL" value=""><input type="hidden" class="oColM" value="">' +
+            '</td>' +
+            '<td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapDiemMax"></td>' +
+            '<td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgGiao" placeholder="dd/mm/yyyy"></td>' +
+            '<td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTdo"></td>' +
+            '<td class="align-middle"><input type="text" class="form-control form-control-sm text-center nhapTgHt" placeholder="dd/mm/yyyy"></td>' +
+            '<td class="align-middle"><input type="text" class="form-control form-control-sm text-center chonKq" data-config=""></td>' +
+            '<td class="text-center align-middle"><button class="btn btn-sm btn-danger py-0 px-2" onclick="xoaDongNv(this)">✕</button></td>' +
+        '</tr>';
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
@@ -574,33 +703,34 @@ function xoaDongNv(nt) {
 
 function kiemTraTatCaRangBuoc(giaTriThuc, chuoiDieuKien) {
     if (!chuoiDieuKien || chuoiDieuKien.trim() === "") return false;
-    let str = chuoiDieuKien.trim();
-    let constraints = [];
-    if (str.includes(',')) constraints = str.split(',').map(s=>s.trim()).filter(s=>s);
-    else if (str.includes(' ')) constraints = str.split(/\s+/).filter(s=>s);
+    var str = chuoiDieuKien.trim();
+    var constraints = [];
+    if (str.includes(',')) constraints = str.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s; });
+    else if (str.includes(' ')) constraints = str.split(/\s+/).filter(function(s){ return s; });
     else constraints = [str];
     if (constraints.length === 0) return false;
-    let numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
+    var numVal = parseFloat(String(giaTriThuc).replace(/[^\d.-]/g, ''));
     if (isNaN(numVal)) return false;
-    for (let cond of constraints) {
+    for (var c = 0; c < constraints.length; c++) {
+        var cond = constraints[c];
         if (cond.startsWith(">=")) {
-            let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
+            var threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
             if (isNaN(threshold)) return false;
             if (!(numVal >= threshold)) return false;
         } else if (cond.startsWith("<=")) {
-            let threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
+            var threshold = parseFloat(cond.substring(2).replace(/[^\d.-]/g, ''));
             if (isNaN(threshold)) return false;
             if (!(numVal <= threshold)) return false;
         } else if (cond.startsWith(">") && !cond.startsWith(">=")) {
-            let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
+            var threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
             if (isNaN(threshold)) return false;
             if (!(numVal > threshold)) return false;
         } else if (cond.startsWith("<") && !cond.startsWith("<=")) {
-            let threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
+            var threshold = parseFloat(cond.substring(1).replace(/[^\d.-]/g, ''));
             if (isNaN(threshold)) return false;
             if (!(numVal < threshold)) return false;
         } else {
-            let exact = parseFloat(cond.replace(/[^\d.-]/g, ''));
+            var exact = parseFloat(cond.replace(/[^\d.-]/g, ''));
             if (isNaN(exact)) return false;
             if (Math.abs(numVal - exact) > 1e-9) return false;
         }
@@ -625,7 +755,7 @@ function tinhtTdong() {
     let minRank = 5;
     let hasJMLogic = false;
 
-    document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach((dg) => {
+    document.querySelectorAll('#bangNviec tbody tr.dongNv').forEach(function(dg) {
         const cg = dg.querySelector('.chonKq');
         if (cg && cg.style.display !== 'none') {
             soNhiemVu++;
@@ -637,7 +767,7 @@ function tinhtTdong() {
             if (cg.value !== "") {
                 soDaDanhGia++;
                 let valThuc = cg.value.trim();
-                let txtHienThi = valThuc;
+                var txtHienThi = valThuc;
                 if (cg.tagName === "SELECT") {
                     let selOpt = cg.options[cg.selectedIndex];
                     if (selOpt) txtHienThi = selOpt.text;
@@ -645,14 +775,14 @@ function tinhtTdong() {
                 let diem = parseFloat(valThuc);
                 if (!isNaN(diem)) tongDiem += diem;
                 
-                let j = dg.querySelector('.oColJ')?.value.trim() || "";
-                let k = dg.querySelector('.oColK')?.value.trim() || "";
-                let l = dg.querySelector('.oColL')?.value.trim() || "";
-                let m = dg.querySelector('.oColM')?.value.trim() || "";
+                let j = (dg.querySelector('.oColJ') && dg.querySelector('.oColJ').value) ? dg.querySelector('.oColJ').value.trim() : "";
+                let k = (dg.querySelector('.oColK') && dg.querySelector('.oColK').value) ? dg.querySelector('.oColK').value.trim() : "";
+                let l = (dg.querySelector('.oColL') && dg.querySelector('.oColL').value) ? dg.querySelector('.oColL').value.trim() : "";
+                let m = (dg.querySelector('.oColM') && dg.querySelector('.oColM').value) ? dg.querySelector('.oColM').value.trim() : "";
                 
                 if (j !== "" || k !== "" || l !== "" || m !== "") {
                     hasJMLogic = true;
-                    let rank = 0;
+                    var rank = 0;
                     if (kiemTraTatCaRangBuoc(valThuc, j)) rank = 4;
                     else if (kiemTraTatCaRangBuoc(valThuc, k)) rank = 3;
                     else if (kiemTraTatCaRangBuoc(valThuc, l)) rank = 2;
@@ -687,9 +817,9 @@ function tinhtTdong() {
         }
     }
     
-    let txtKq = xpl;
+    var txtKq = xpl;
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        txtKq = `${xpl}: ${diemCuoiCung} điểm`;
+        txtKq = xpl + ": " + diemCuoiCung + " điểm";
     }
     
     const qht = document.getElementById('chuKqHthi');
@@ -697,16 +827,16 @@ function tinhtTdong() {
         qht.innerText = txtKq; 
         qht.className = "fw-bold epMotDong"; 
         if (xpl === "Xuất sắc") qht.classList.add("text-success"); 
-        else if (xpl.includes("Hoàn thành")) qht.classList.add("text-primary"); 
+        else if (xpl.indexOf("Hoàn thành") >= 0) qht.classList.add("text-primary"); 
         else qht.classList.add("text-danger"); 
     }
     
     const theMenuDoc = document.querySelectorAll('#oKetQuaMenuDoc, .oKetQuaMenuDoc, .ketQuaMenuDoc');
-    theMenuDoc.forEach(el => {
+    theMenuDoc.forEach(function(el) {
         el.innerText = txtKq;
         el.className = "epMotDong"; 
         if (xpl === "Xuất sắc") el.classList.add("text-success", "fw-bold"); 
-        else if (xpl.includes("Hoàn thành")) el.classList.add("text-primary", "fw-bold"); 
+        else if (xpl.indexOf("Hoàn thành") >= 0) el.classList.add("text-primary", "fw-bold"); 
         else el.classList.add("text-danger", "fw-bold"); 
     });
 }
@@ -715,11 +845,22 @@ function capnhTdong() { tinhtTdong(); }
 
 function khoiTaoTheoQuyen() {
     if (typeof canbHientai !== 'undefined' && canbHientai.quyen === 'xx') {
-        if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { khachApi.gvLaydsCanb(function(dl) { xuLyCotE('xx', dl); }, function(err) { xuLyCotE('xx', []); }); } else { xuLyCotE('xx', []); }
+        if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
+            khachApi.gvLaydsCanb(function(dl) { xuLyCotE('xx', dl); }, function(err) { xuLyCotE('xx', []); }); 
+        } else { 
+            xuLyCotE('xx', []); 
+        }
     } else {
-        cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none';
+        cotETonTai = false; 
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv) selectGv.style.display = 'none';
         kiemTraQuyenTruyCap();
     }
 }
-$(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
+
+if (typeof $ !== 'undefined' && $.fn.ready) {
+    $(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
+} else {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(khoiTaoTheoQuyen, 500); });
+}
 </script>

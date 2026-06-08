@@ -792,21 +792,6 @@ function xoaTepDinhKem(idx) {
         alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
     }
 }
-  // Hàm giải mã chuỗi [FILE:name|url] thành danh sách tệp
-function giaiMaBcao(chuoiBcao) {
-    window.tepdinhkBcao = []; // Reset danh sách tệp cũ
-    if (!chuoiBcao) return;
-    
-    // Tìm tất cả các đoạn có dạng [FILE:tên|link]
-    const regex = /\[FILE:(.*?)\|(.*?)\]/g;
-    let match;
-    while ((match = regex.exec(chuoiBcao)) !== null) {
-        window.tepdinhkBcao.push({
-            tentep: match[1],
-            duongd: match[2]
-        });
-    }
-    veUiTepDinhKem(); // Vẽ lại giao diện sau khi giải mã xong
-}
+ 
 
 </script>

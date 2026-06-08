@@ -373,7 +373,7 @@
         });
         if (dsNviec.length === 0) return;
         gvDatTai(true, "⏳ Đang cập nhật toàn bộ nhiệm vụ...");
-        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') setTimeout(gvLaydlGoc, 1000); else gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); });
+        khachApi.gvXulyNviec({ nam: nm, thang: th_htai, nviec: { batch: true, ds: dsNviec } }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') setTimeout(gvLaydlGoc, 1000); else gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unknown")); }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Thông báo: " + l.message); });
     }
 
     function gvGoiMayChu(n, t, nv, ptu, hth) { khachApi.gvXulyNviec( { nam: n, thang: t, nviec: nv }, function(kq) { gvDatTai(false); if (kq && kq.ttai === 'tcong') { ptu.style.backgroundColor = '#d1e7dd'; ptu.style.borderColor = '#badbcc'; ptu.style.fontWeight = 'bold'; } else { gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown")); if (ptu.tagName !== 'BUTTON') ptu.value = ""; } }, function(l) { gvDatTai(false); gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message); } ); }

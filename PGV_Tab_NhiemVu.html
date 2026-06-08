@@ -655,4 +655,93 @@ function khoiTaoTheoQuyen() {
     }
 }
 $(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
+
+  // ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
+// Khởi tạo mảng lưu trữ tệp đính kèm toàn cục
+window.tepdinhkBcao = window.tepdinhkBcao || [];
+
+// Hàm xử lý khi người dùng chọn tệp
+function xulyTaiBcao(ptu) {
+    const files = ptu.files;
+    if (!files || files.length === 0) return;
+    hienTaiDl("⏳ Đang tải tệp đính kèm lên máy chủ...");
+    
+    let tepXuLy = 0;
+    let mngTep = [];
+    
+    // Đọc và mã hóa từng tệp sang định dạng Base64
+    for (let i = 0; i < files.length; i++) {
+        let f = files[i];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            // Tách lấy mã dữ liệu Base64
+            let dlBase64 = e.target.result.split(',')[1];
+            mngTep.push({ tentep: f.name, kieu: f.type, dliu: dlBase64 });
+            tepXuLy++;
+            
+            // Khi đã đọc xong tất cả các tệp thì gửi lệnh gọi máy chủ
+            if (tepXuLy === files.length) {
+                if (typeof khachApi !== 'undefined' && khachApi.taiTepBcao) {
+                    khachApi.taiTepBcao({ teps: mngTep }, function(kq) {
+                        anTaiDl();
+                        if (kq && kq.ttai === 'tcong') {
+                            window.tepdinhkBcao = window.tepdinhkBcao.concat(kq.dliu);
+                            veUiTepDinhKem(); // Cập nhật giao diện hiển thị tệp
+                            if (typeof mokBcao === 'function') mokBcao(); // Mở khóa nút lưu/nộp
+                            if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
+                        } else {
+                            if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + (kq ? kq.tbao : "Không xác định"));
+                        }
+                    }, function(loi) {
+                        anTaiDl();
+                        if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message);
+                    });
+                } else {
+                    anTaiDl();
+                    alert("Lỗi hệ thống: API tải tệp chưa được liên kết.");
+                }
+            }
+        };
+        reader.readAsDataURL(f);
+    }
+    ptu.value = ''; // Đặt lại thẻ input để có thể chọn lại cùng 1 tệp nếu cần
+}
+
+// Hàm vẽ lại danh sách các tệp đã tải lên thành công trên giao diện
+function veUiTepDinhKem() {
+    const vung = document.getElementById('vungDinhkBcao');
+    if (!vung) return;
+    vung.innerHTML = '';
+    window.tepdinhkBcao.forEach((t, i) => {
+        let theTep = document.createElement('span');
+        theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
+        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}">${t.tentep}</a>
+                            <i class="bi bi-x-circle-fill ms-1 text-danger" style="cursor:pointer; font-size:14px;" title="Xóa tệp này" onclick="xoaTepDinhKem(${i})"></i>`;
+        vung.appendChild(theTep);
+    });
+}
+
+// Hàm xử lý xóa tệp đã đính kèm
+function xoaTepDinhKem(idx) {
+    if(confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) {
+        let tepXoa = window.tepdinhkBcao[idx];
+        hienTaiDl("🗑️ Đang xóa tệp...");
+        if (typeof khachApi !== 'undefined' && khachApi.xoaTepBcao) {
+            khachApi.xoaTepBcao({ duongd: tepXoa.duongd }, function(kq) {
+                anTaiDl();
+                if(kq && kq.ttai === 'tcong') {
+                    window.tepdinhkBcao.splice(idx, 1);
+                    veUiTepDinhKem(); // Cập nhật lại giao diện
+                    if (typeof mokBcao === 'function') mokBcao(); // Báo cho hệ thống biết có sự thay đổi
+                } else {
+                    if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi xóa tệp: " + (kq ? kq.tbao : ""));
+                }
+            }, function(loi) { 
+                anTaiDl(); 
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi kết nối: " + loi.message); 
+            });
+        }
+    }
+}
+
 </script>

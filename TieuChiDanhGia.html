@@ -1,13 +1,12 @@
 <style>
-  /* Khống chế vùng chứa tuyệt đối không phình to ra ngoài màn hình */
   #vungTieuChi { height: calc(100vh - 60px); display: flex; flex-direction: column; background-color: #f8f9fa; width: 100%; overflow: hidden; }
   .tDeTieuChi { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
   
   /* Bật tính năng cuộn ngang/dọc bên trong vùng chứa bảng */
   .bangTieuChi-wrapper { flex: 1 1 auto; overflow: auto; width: 100%; padding: 0; border-top: 2px solid #0d6efd; background: #fff; display: block; position: relative; }
   
-  /* Ép bảng phải rộng tối thiểu 1600px để bắt buộc sinh thanh trượt ngang */
-  #bangTieuChi { width: 100%; min-width: 1600px; border-collapse: collapse; table-layout: fixed; }
+  /* Ép bảng rộng tối thiểu 1800px để bắt buộc sinh thanh trượt ngang */
+  #bangTieuChi { width: 100%; min-width: 1800px; border-collapse: collapse; table-layout: fixed; }
   #bangTieuChi thead th { position: sticky; top: 0; background-color: #0d6efd !important; color: white !important; text-align: center; vertical-align: middle; padding: 8px 4px; font-size: 13px; z-index: 10; border: none; border-right: 1px solid #7ea8f8; border-bottom: 2px solid #0a58ca; }
   #bangTieuChi th:last-child { border-right: none; }
   #bangTieuChi td { border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; padding: 0; vertical-align: middle; }
@@ -41,20 +40,20 @@
     <table id="bangTieuChi" class="table table-hover table-bordered mb-0">
       <thead>
         <tr>
-          <th style="width: 5.5%;" class="cotHanhDong">Công cụ</th>
-          <th style="width: 3.5%;" class="cotStt">STT (A)</th>
-          <th style="width: 22%;">Nội dung tiêu chí (B)</th>
-          <th style="width: 5%;">Max (C)</th>
-          <th style="width: 7%;">Giao (D)</th>
-          <th style="width: 10%;">Tiến độ (E)</th>
-          <th style="width: 7%;">HT (F)</th>
-          <th style="width: 8%;">Người TH (G)</th>
-          <th style="width: 10%;">Điểm ĐG (H)</th>
-          <th style="width: 10%;">Ghi chú (I)</th>
-          <th style="width: 3%;">XS (J)</th>
-          <th style="width: 3%;">HTT (K)</th>
-          <th style="width: 3%;">HT (L)</th>
-          <th style="width: 3%;">CHT (M)</th>
+          <th style="width: 90px;" class="cotHanhDong">Công cụ</th>
+          <th style="width: 60px;" class="cotStt">STT (Cột A)</th>
+          <th style="width: 300px;">Nội dung tiêu chí (Cột B)</th>
+          <th style="width: 120px;">Thang điểm tối đa (Cột C)</th>
+          <th style="width: 120px;">Thời gian giao (Cột D)</th>
+          <th style="width: 150px;">Tiến độ (Cột E)</th>
+          <th style="width: 130px;">Thời gian hoàn thành (Cột F)</th>
+          <th style="width: 130px;">Người thực hiện (Cột G)</th>
+          <th style="width: 200px;">Điểm đánh giá (Cột H)</th>
+          <th style="width: 150px;">Ghi chú (Cột I)</th>
+          <th style="width: 90px;">Xếp loại XS (J)</th>
+          <th style="width: 90px;">Xếp loại HTT (Cột K)</th>
+          <th style="width: 90px;">Xếp loại HT (Cột L)</th>
+          <th style="width: 100px;">Chưa hoàn thành (Cột M)</th>
         </tr>
       </thead>
       <tbody>
@@ -89,10 +88,10 @@ function themDongTieuChi() {
         <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="VD: *Nhiệm vụ chung..."></textarea></td>
         <td><input type="text" class="nhapDiemMaxTC text-center text-danger fw-bold" placeholder="10"></td>
         <td><input type="text" class="nhapTgGiaoTC text-center" placeholder="dd/mm/yyyy"></td>
-        <td><input type="text" class="nhapTienDoTC" placeholder="Nhiệm vụ chung"></td>
+        <td><textarea class="nhapTienDoTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Nhiệm vụ chung" rows="1"></textarea></td>
         <td><input type="text" class="nhapTgHtTC text-center" placeholder="dd/mm/yyyy"></td>
-        <td><input type="text" class="nhapNguoiThTC" placeholder="ALL"></td>
-        <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Đạt|1; Không|0"></textarea></td>
+        <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="ALL" rows="1"></textarea></td>
+        <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Hoàn thành|10; Chưa xong|0"></textarea></td>
         <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="TOÀN TRƯỜNG"></textarea></td>
         <td><input type="text" class="nhapXSTC text-center text-success fw-bold" placeholder=">=9"></td>
         <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" placeholder=">=7"></td>
@@ -131,12 +130,12 @@ function hienThiTieuChi(mangDl) {
         const tr = document.createElement('tr');
         tr.className = "dongTieuChi";
         
-        let gtri = (val) => {
+        let es = (val) => {
             if (val === undefined || val === null) return "";
             if (Object.prototype.toString.call(val) === '[object Date]') {
                 return new Date(val.getTime() - (val.getTimezoneOffset() * 60000)).toISOString().split('T')[0].split('-').reverse().join('/');
             }
-            return String(val);
+            return String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         };
         
         tr.innerHTML = `
@@ -145,19 +144,19 @@ function hienThiTieuChi(mangDl) {
                 <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Xuống" onclick="diChuyenXuong(this)"><i class="bi bi-arrow-down"></i></button>
                 <button class="btn btn-sm btn-danger nutDieuKhien shadow-sm" title="Xóa" onclick="xoaDongTieuChi(this)"><i class="bi bi-x"></i></button>
             </td>
-            <td class="cotStt align-middle"><input type="text" class="nhapSttTC text-center fw-bold" placeholder="1" value="${gtri(dong[0])}"></td>
-            <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="VD: *Nhiệm vụ chung...">${gtri(dong[1])}</textarea></td>
-            <td><input type="text" class="nhapDiemMaxTC text-center text-danger fw-bold" placeholder="10" value="${gtri(dong[2])}"></td>
-            <td><input type="text" class="nhapTgGiaoTC text-center" placeholder="dd/mm/yyyy" value="${gtri(dong[3])}"></td>
-            <td><input type="text" class="nhapTienDoTC" placeholder="Nhiệm vụ chung" value="${gtri(dong[4])}"></td>
-            <td><input type="text" class="nhapTgHtTC text-center" placeholder="dd/mm/yyyy" value="${gtri(dong[5])}"></td>
-            <td><input type="text" class="nhapNguoiThTC" placeholder="ALL" value="${gtri(dong[6])}"></td>
-            <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Đạt|1; Không|0">${gtri(dong[7])}</textarea></td>
-            <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="TOÀN TRƯỜNG">${gtri(dong[8])}</textarea></td>
-            <td><input type="text" class="nhapXSTC text-center text-success fw-bold" placeholder=">=9" value="${gtri(dong[9])}"></td>
-            <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" placeholder=">=7" value="${gtri(dong[10])}"></td>
-            <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5" value="${gtri(dong[11])}"></td>
-            <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5" value="${gtri(dong[12])}"></td>
+            <td class="cotStt align-middle"><input type="text" class="nhapSttTC text-center fw-bold" placeholder="1" value="${es(dong[0])}"></td>
+            <td><textarea class="nhapNoiDungTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="VD: *Nhiệm vụ chung...">${es(dong[1])}</textarea></td>
+            <td><input type="text" class="nhapDiemMaxTC text-center text-danger fw-bold" placeholder="10" value="${es(dong[2])}"></td>
+            <td><input type="text" class="nhapTgGiaoTC text-center" placeholder="dd/mm/yyyy" value="${es(dong[3])}"></td>
+            <td><textarea class="nhapTienDoTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Nhiệm vụ chung" rows="1">${es(dong[4])}</textarea></td>
+            <td><input type="text" class="nhapTgHtTC text-center" placeholder="dd/mm/yyyy" value="${es(dong[5])}"></td>
+            <td><textarea class="nhapNguoiThTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="ALL" rows="1">${es(dong[6])}</textarea></td>
+            <td><textarea class="nhapDiemDgTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="Hoàn thành|10; Chưa xong|0">${es(dong[7])}</textarea></td>
+            <td><textarea class="nhapGhiChuTC" oninput="cdangTC(this)" onfocus="cdangTC(this)" placeholder="TOÀN TRƯỜNG">${es(dong[8])}</textarea></td>
+            <td><input type="text" class="nhapXSTC text-center text-success fw-bold" placeholder=">=9" value="${es(dong[9])}"></td>
+            <td><input type="text" class="nhapHTTTC text-center text-primary fw-bold" placeholder=">=7" value="${es(dong[10])}"></td>
+            <td><input type="text" class="nhapHTTC text-center fw-bold" placeholder=">=5" value="${es(dong[11])}"></td>
+            <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5" value="${es(dong[12])}"></td>
         `;
         bg.appendChild(tr);
     });

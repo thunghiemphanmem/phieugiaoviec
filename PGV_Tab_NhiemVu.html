@@ -201,6 +201,16 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     let isBGH = kiemTraLaBGH();
     let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
+    // [KHẮC PHỤC LỖI] Đưa kiểm tra nút Khóa Tất Cả vào đây để đảm bảo load đúng quyền
+    let btnAll = document.getElementById("nutKhoaTatCa");
+    if(btnAll) {
+        if(isBGH) {
+            btnAll.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnAll.style.setProperty('display', 'none', 'important');
+        }
+    }
+
     if (btn) {
         if (isBGH) {
             btn.style.setProperty('display', 'inline-flex', 'important');
@@ -213,7 +223,6 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
             btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'inline-flex', 'important');
-                // Chỉnh sửa tiền tố hiển thị thành "Đã khoá: "
                 spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
             }
         } else {

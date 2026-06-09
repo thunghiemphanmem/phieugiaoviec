@@ -1,7 +1,7 @@
 <style>
   #vungTieuChi { height: 100vh; display: flex; flex-direction: column; background-color: #f8f9fa; }
   .tDeTieuChi { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
-  .bangTieuChi-wrapper { flex-grow: 1; overflow: auto; padding: 0 10px; border-top: 2px solid #0d6efd; background: #fff; }
+  .bangTieuChi-wrapper { flex-grow: 1; overflow: auto; padding: 0; border-top: 2px solid #0d6efd; background: #fff; }
   #bangTieuChi { width: 100%; border-collapse: collapse; min-width: 1500px; }
   #bangTieuChi thead th { position: sticky; top: 0; background-color: #0d6efd; color: white; text-align: center; vertical-align: middle; padding: 8px 4px; font-size: 13px; z-index: 10; border: 1px solid #7ea8f8; border-bottom: 2px solid #0a58ca; }
   #bangTieuChi td { border: 1px solid #dee2e6; padding: 0; vertical-align: middle; }
@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <div class="bangTieuChi-wrapper shadow-sm">
+  <div class="bangTieuChi-wrapper shadow-sm table-responsive" style="overflow-x: auto; overflow-y: auto;">
     <table id="bangTieuChi" class="table table-hover table-bordered mb-0">
       <thead>
         <tr>

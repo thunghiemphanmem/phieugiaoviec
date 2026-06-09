@@ -87,18 +87,13 @@ function themDongTieuChi() {
         <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
-    if (bg.firstChild) {
-        bg.insertBefore(tr, bg.firstChild);
-    } else {
-        bg.appendChild(tr);
-    }
+    if (bg.firstChild) bg.insertBefore(tr, bg.firstChild);
+    else bg.appendChild(tr);
     cdangTC(tr.querySelector('.nhapNoiDungTC'));
 }
 
 function xoaDongTieuChi(btn) {
-    if (confirm("Đồng chí có chắc chắn muốn xóa dòng tiêu chí này không?")) {
-        btn.closest('tr').remove();
-    }
+    if (confirm("Đồng chí có chắc chắn muốn xóa dòng tiêu chí này không?")) btn.closest('tr').remove();
 }
 
 function diChuyenLen(btn) {
@@ -192,9 +187,7 @@ function capNhatTieuChi() {
         if(nutLuu) nutLuu.disabled = false;
         
         let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
-        let laThanhCong = false;
-        
-        if (kq === true || (kq && kq.ttai === 'tcong')) laThanhCong = true;
+        let laThanhCong = (kq === true || (kq && kq.ttai === 'tcong'));
         
         if(laThanhCong) {
             if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã cập nhật đồng bộ Tiêu chí lên máy chủ thành công!');
@@ -225,35 +218,29 @@ function capNhatTieuChi() {
     }
 }
 
+// KHẮC PHỤC TRIỆT ĐỂ LỖI ĐỌC DỮ LIỆU TỪ MẢNG (ARRAY) 
 function khoiDongTabTieuChi() {
     if(typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải Tiêu chí đánh giá...");
     
     const fnThanhCong = function(kqTho) {
         if(typeof anTaiDl === 'function') anTaiDl();
         
-        let kq = null;
-        try { kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho; } 
-        catch(e) { kq = kqTho; }
-
-        let dlt = [];
-        let isThanhCong = false;
-
-        // Nếu thư viện API mẹ tự động bóc tách và trả về mảng trực tiếp
-        if (Array.isArray(kq)) {
-            dlt = kq;
-            isThanhCong = true;
+        let mangDuLieu = null;
+        
+        // 1. Nếu API mẹ tự bóc tách lớp dliu và truyền thành Mảng
+        if (Array.isArray(kqTho)) {
+            mangDuLieu = kqTho;
         } 
-        // Nếu trả về Object đầy đủ từ google.script.run
-        else if (kq && kq.ttai === 'tcong') {
-            dlt = Array.isArray(kq.dliu) ? kq.dliu : [];
-            isThanhCong = true;
+        // 2. Nếu trả về nguyên cục Object có mảng dliu bên trong
+        else if (kqTho && Array.isArray(kqTho.dliu)) {
+            mangDuLieu = kqTho.dliu;
         }
 
-        if (isThanhCong) {
-            hienThiTieuChi(dlt);
+        if (mangDuLieu !== null) {
+            hienThiTieuChi(mangDuLieu);
         } else {
             hienThiTieuChi([]);
-            let tb = (kq && kq.tbao) ? kq.tbao : "Không nhận được dữ liệu (Tệp sheet có thể đang rỗng).";
+            let tb = (kqTho && kqTho.tbao) ? kqTho.tbao : "Dữ liệu trả về trống hoặc trang tính đang rỗng.";
             if(typeof hienThongb === 'function') hienThongb('loi', 'Chưa tải được dữ liệu: ' + tb);
         }
     };

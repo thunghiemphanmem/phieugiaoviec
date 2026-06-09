@@ -121,6 +121,11 @@
             <span class="b-tuong"><i class="bi bi-chat-text"></i></span> Tổng hợp ý kiến
         </button>
         
+        <!-- Tab Tiêu chí đánh giá (Vị trí dưới Tổng hợp ý kiến) -->
+        <button class="the-chuyen nav-link" id="tabTieuChi" data-bs-toggle="tab" data-bs-target="#khuTieuChi" type="button" role="tab" style="display: none;">
+            <span class="b-tuong"><i class="bi bi-list-check"></i></span> Tiêu chí đánh giá
+        </button>
+        
         <a href="https://gdlaocai.github.io/he-thong/DanhGiaVienChuc/index.html" target="_blank" class="the-chuyen">
             <span class="b-tuong"><i class="bi bi-award"></i></span> Đánh giá cuối năm
         </a>
@@ -144,30 +149,28 @@
 </div>
 
 <script>
-    // Cập nhật tên tác giả từ biến toàn cục PGV_TAC_GIA (nếu có)
     (function() {
         if (typeof PGV_TAC_GIA !== 'undefined' && document.getElementById('dev_author_name_menu')) {
             document.getElementById('dev_author_name_menu').innerText = PGV_TAC_GIA;
         }
         
-        // Hàm kiểm tra hiển thị tab Cấp quyền dựa trên biến window.PGV_SHOW_CAPQUYEN
         window.kiemTraHienThiTabCapQuyen = function() {
             var tabCapQuyen = document.getElementById('tabCapQuyen');
             if (tabCapQuyen) {
-                if (window.PGV_SHOW_CAPQUYEN === true) {
-                    tabCapQuyen.style.display = 'flex';
-                } else {
-                    tabCapQuyen.style.display = 'none';
-                }
+                tabCapQuyen.style.display = (window.PGV_SHOW_CAPQUYEN === true) ? 'flex' : 'none';
+            }
+        };
+
+        window.kiemTraHienThiTabTieuChi = function() {
+            var tabTieuChi = document.getElementById('tabTieuChi');
+            if (tabTieuChi) {
+                tabTieuChi.style.display = (window.PGV_SHOW_TIEUCHI === true) ? 'flex' : 'none';
             }
         };
         
-        // Gọi ngay khi script chạy
-        window.kiemTraHienThiTabCapQuyen();
-        
-        // Lắng nghe sự kiện load để đảm bảo (nếu cần)
         window.addEventListener('load', function() {
             window.kiemTraHienThiTabCapQuyen();
+            window.kiemTraHienThiTabTieuChi();
         });
     })();
 </script>

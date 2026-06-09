@@ -197,7 +197,7 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     trangThaiKhoa = trangThai;
     let btn = document.getElementById("nutMoKhoa");
     let isBGH = kiemTraLaBGH();
-    let spanNgay = document.getElementById("hienThiNgayKhoa"); // Bổ sung tham chiếu
+    let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
     if (btn) {
         if (isBGH) {
@@ -209,15 +209,14 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
         if (trangThaiKhoa === "Khóa") {
             btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
             btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
-            // Hiện ngày khóa cho TẤT CẢ mọi người
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'inline-flex', 'important');
-                spanNgay.innerText = ngayKhoa ? "Ngày khóa: " + ngayKhoa : "Đã khóa";
+                // Chỉnh sửa tiền tố hiển thị thành "Đã khoá: "
+                spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
             }
         } else {
             btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
             btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
-            // Ẩn ngày khóa khi đang Mở
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'none', 'important');
                 spanNgay.innerText = "";

@@ -67,7 +67,10 @@
         taiTepBcao: function(tdtai, khiTcong, khiLoi) { this.yeucauApi("taitepbcao", { tdtai: tdtai }, khiTcong, khiLoi); },
         xoaTepBcao: function(tdtai, khiTcong, khiLoi) { this.yeucauApi("xoatepbcao", { tdtai: tdtai }, khiTcong, khiLoi); },
         hoiDapAi: function(cauHoi, khiTcong, khiLoi) { this.yeucauApi("hoidapai", { cauhoi: cauHoi }, khiTcong, khiLoi); },
-        ghiKetQuaThop: function(dl, khiTcong, khiLoi) { this.yeucauApi("ghiketquathop", { dldeu: dl }, khiTcong, khiLoi); }
+        ghiKetQuaThop: function(dl, khiTcong, khiLoi) { this.yeucauApi("ghiketquathop", { dldeu: dl }, khiTcong, khiLoi); },
+        
+        // Hỗ trợ gọi thủ công linh hoạt cho các module mới như TieuChiDanhGia
+        goiThuCong: function(dlGoi, khiTcong, khiLoi) { this.yeucauApi(dlGoi.hdong, dlGoi, khiTcong, khiLoi); }
     };
 
     (function tiepTrinhTaiHeThong() {
@@ -295,6 +298,7 @@
           <div class="tab-pane fade px-4 py-3" id="khuYkien"></div>
           <div class="tab-pane fade px-4 py-3" id="khuBaoCao"></div>
           <div class="tab-pane fade px-4 py-3" id="khuCapQuyen"></div>
+          <div class="tab-pane fade px-4 py-3" id="khuTieuChi"></div>
         </div>
     </div>
   </div>
@@ -379,6 +383,9 @@
         $('#tabYkien').on('click', () => taiDlYkien(false)); 
         $('#tabBaoCao').on('click', () => { if(typeof taidlBcao === 'function') taidlBcao(false, false); });
         
+        // Bắt sự kiện kích hoạt tab Tiêu chí đánh giá mới
+        $(document).on('click', '#tabTieuChi', () => { if(typeof khoiDongTabTieuChi === 'function') khoiDongTabTieuChi(); });
+        
         $('#locNamThop').on('change', () => veBangThop()); 
         $('#locNamNghi').on('change', () => veBangNghi()); 
         $('#locNamYkien').on('change', () => veBangYkien()); 
@@ -389,11 +396,13 @@
     async function taiCacPhan() {
       try {
         const mb = "?v=" + new Date().getTime();
-        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen] = await Promise.all([
+        // Bổ sung tải giao diện Tiêu Chí Đánh Giá
+        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi] = await Promise.all([
             fetch('./Menu_Doc.html' + mb), fetch('./PGV_Tab_NhiemVu.html' + mb), fetch('./PGV_Tab_GiaoViec.html' + mb),
             fetch('./PGV_Tab_TongHop.html' + mb), fetch('./PGV_Tab_Nghi.html' + mb), fetch('./PGV_Tab_YKien.html' + mb), 
-            fetch('./PGV_Tab_BaoCao.html' + mb), fetch('./PGV_PhanQuyen.html' + mb)
+            fetch('./PGV_Tab_BaoCao.html' + mb), fetch('./PGV_PhanQuyen.html' + mb), fetch('./TieuChiDanhGia.html' + mb)
         ]);
+        
         document.getElementById('khuVucMenu').innerHTML = await phMenu.text(); 
         document.getElementById('khuNhiemVu').innerHTML = await phNhiemVu.text(); 
         document.getElementById('khuGiaoViecChinh').innerHTML = await phGiaoViec.text(); 
@@ -402,11 +411,12 @@
         document.getElementById('khuYkien').innerHTML = await phYKien.text(); 
         document.getElementById('khuBaoCao').innerHTML = await phBaoCao.text();
         document.getElementById('khuCapQuyen').innerHTML = await phCapQuyen.text();
+        document.getElementById('khuTieuChi').innerHTML = await phTieuChi.text(); // Nhúng giao diện tiêu chí
         
         if (typeof PGV_LINK_LOGO !== 'undefined') { var mnLg = document.getElementById('menu_logo'); if(mnLg) mnLg.src = PGV_LINK_LOGO; }
         if (typeof PGV_TEN_TRUONG !== 'undefined') { var mnSc = document.getElementById('menu_school_name'); if(mnSc) mnSc.innerText = PGV_TEN_TRUONG; }
         
-        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen'].forEach(i => thuchScript(document.getElementById(i)));
+        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi'].forEach(i => thuchScript(document.getElementById(i)));
       } catch (e) { throw new Error("LỖI KẾT NỐI TỆP GIAO DIỆN: " + e.message); }
     }
 
@@ -448,8 +458,13 @@
           $('#khuGiaoViec').hide();
       }
       
+      // Mở rộng biến kiểm soát hiển thị phân quyền cho các tab Admin
       window.PGV_SHOW_CAPQUYEN = (quyen === 'xxx');
+      window.PGV_SHOW_TIEUCHI = (quyen === 'xxx'); // Khai báo cho Menu_Doc ẩn/hiện Tiêu chí
+      
       if (typeof kiemTraHienThiTabCapQuyen === 'function') kiemTraHienThiTabCapQuyen();
+      // Nếu sau này có hàm tương tự cho tab Tiêu Chí trong Menu_Doc
+      if (typeof kiemTraHienThiTabTieuChi === 'function') kiemTraHienThiTabTieuChi();
       
       var canEditScore = false;
       if (quyen === 'xx' && !isSelf) canEditScore = true;

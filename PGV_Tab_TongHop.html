@@ -129,7 +129,7 @@ function runAIAssistant() {
 
                     let textLower = cellText.toLowerCase();
                     if (textLower.includes("xuất sắc")) {
-                        totalScore += (90 + diem);
+                        totalScore += (100 + diem);
                         countHTXS++;
                         validMonths++;
                     } else if (textLower.includes("chưa hoàn thành")) {
@@ -137,11 +137,11 @@ function runAIAssistant() {
                         countCHT++;
                         validMonths++;
                     } else if (textLower.includes("tốt")) {
-                        totalScore += (85 + diem);
+                        totalScore += (80 + diem);
                         countHTT++;
                         validMonths++;
                     } else if (textLower.includes("hoàn thành")) {
-                        totalScore += (75 + diem);
+                        totalScore += (60 + diem);
                         countHT++;
                         validMonths++;
                     }

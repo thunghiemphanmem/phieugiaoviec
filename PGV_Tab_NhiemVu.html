@@ -650,10 +650,63 @@ function khoiTaoTheoQuyen() {
         kiemTraQuyenTruyCap();
     }
 }
-$(document).ready(function() { setTimeout(khoiTaoTheoQuyen, 500); });
 
 // ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
 window.tepdinhkBcao = window.tepdinhkBcao || [];
+
+// 1. Hook tàng hình tự động giải mã báo cáo khi Load giao diện từ hệ thống mẹ
+(function() {
+    const oBcao = document.getElementById('nhapBcao');
+    if (oBcao) {
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+        if (descriptor) {
+            const setGoc = descriptor.set;
+            const getGoc = descriptor.get;
+            Object.defineProperty(oBcao, 'value', {
+                set: function(val) {
+                    let chuGoc = String(val || "");
+                    window.tepdinhkBcao = [];
+                    let chuSach = chuGoc;
+                    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
+                    let match;
+                    while ((match = regex.exec(chuGoc)) !== null) {
+                        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
+                        chuSach = chuSach.replace(match[0], "");
+                    }
+                    setGoc.call(this, chuSach.trim());
+                    if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
+                },
+                get: function() {
+                    return getGoc.call(this);
+                }
+            });
+        }
+    }
+})();
+
+// Hàm dự phòng cho phép giải mã thủ công nếu cần gọi từ hàm ngoài
+function giaiMaBcao(chuGoc) {
+    window.tepdinhkBcao = [];
+    let chuSach = chuGoc || "";
+    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
+    let match;
+    while ((match = regex.exec(chuGoc)) !== null) {
+        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
+        chuSach = chuSach.replace(match[0], "");
+    }
+    veDinhKemBcao();
+    return chuSach.trim();
+}
+
+$(document).ready(function() { 
+    setTimeout(khoiTaoTheoQuyen, 500); 
+    
+    // Đề phòng ô báo cáo được điền sẵn từ nội dung HTML tĩnh trước khi Hook được cấy
+    const oBcao = document.getElementById('nhapBcao');
+    if(oBcao && oBcao.value && oBcao.value.includes("[FILE:")) {
+        oBcao.value = oBcao.value; 
+    }
+});
 
 function epKieuKq(kq) {
     if (typeof kq === 'string') {
@@ -715,7 +768,7 @@ function guiTepLenMayChu(mngTep) {
             let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
             
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
-            veUiTepDinhKem();
+            veDinhKemBcao();
             if (typeof mokBcao === 'function') mokBcao();
             if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
         } else {
@@ -739,34 +792,35 @@ function guiTepLenMayChu(mngTep) {
     }
 }
 
-function veUiTepDinhKem() {
+function veDinhKemBcao() {
     const vung = document.getElementById('vungDinhkBcao');
     if (!vung) return;
     vung.innerHTML = '';
+    if (!window.tepdinhkBcao || window.tepdinhkBcao.length === 0) return;
+    
     window.tepdinhkBcao.forEach((t, i) => {
         let theTep = document.createElement('span');
         theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
         theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}"><i class="bi bi-paperclip"></i> ${t.tentep}</a>
-                            <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaTepDinhKem(${i})"></i>`;
+                            <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaDinhKemBcao(${i})"></i>`;
         vung.appendChild(theTep);
     });
 }
 
-function xoaTepDinhKem(idx) {
+function xoaDinhKemBcao(chs) {
     if(!confirm("Xác nhận xóa tệp đính kèm này khỏi máy chủ?")) return;
     
-    let tepXoa = window.tepdinhkBcao[idx];
+    let tepXoa = window.tepdinhkBcao[chs];
     hienTaiDl("🗑️ Đang xóa tệp...");
     
     const xuLyXoaXong = function(kqTho) {
         anTaiDl();
         let kq = epKieuKq(kqTho); 
         if(kq && kq.ttai === 'tcong') {
-            window.tepdinhkBcao.splice(idx, 1);
-            veUiTepDinhKem();
+            window.tepdinhkBcao.splice(chs, 1);
+            veDinhKemBcao();
             if (typeof mokBcao === 'function') mokBcao();
             
-            // [Bổ sung]: Cập nhật lưu vết nháp xuống nhật ký báo cáo theo đúng thuật toán.
             xulyLuuTam(true);
             if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xoá tệp và cập nhật nhật ký!");
         } else {

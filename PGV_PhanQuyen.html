@@ -335,7 +335,14 @@
 <body>
     <div class="khung-phanquyen">
         <div class="tieu-de-phanquyen">
-            <span><i class="bi bi-shield-lock"></i> CẤP QUYỀN TRUY CẬP</span>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <span><i class="bi bi-shield-lock"></i> CẤP QUYỀN TRUY CẬP</span>
+                <div class="nhom-namhoc" style="background: #e8f5e9; border: 1px solid #c8e6c9;">
+                    <label><i class="bi bi-clock-history"></i> Ngày nộp BC hàng tháng:</label>
+                    <input type="text" id="ngayNopInput" placeholder="VD: 28" style="width: 60px; text-align: center; font-weight: bold; color: #dc3545;">
+                </div>
+            </div>
+            
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div class="nhom-namhoc">
                     <label><i class="bi bi-calendar"></i> Năm học:</label>
@@ -510,16 +517,18 @@
                 callApi('gvlaydlbdau', {}, function(res) {
                     var nam = (res.dliu && res.dliu.nam) ? res.dliu.nam : '';
                     var thang = (res.dliu && res.dliu.thang) ? res.dliu.thang : '';
-                    resolve({ nam: nam, thang: thang });
+                    var ngaynop = (res.dliu && res.dliu.ngaynop) ? res.dliu.ngaynop : ''; // [BỔ SUNG] Lấy ngày nộp
+                    resolve({ nam: nam, thang: thang, ngaynop: ngaynop }); 
                 }, reject);
             });
         }
         
-        function capNhatNamHoc(namMoi, thangHienTai) {
+      function capNhatNamHoc(namMoi, thangHienTai, ngayNopMoi) { // [BỔ SUNG] Thêm tham số
             return new Promise(function(resolve, reject) {
                 var payload = {
                     nam: namMoi,
                     thang: thangHienTai,
+                    ngaynop: ngayNopMoi, // [BỔ SUNG] Đẩy vào payload
                     nviec: null
                 };
                 callApi('gvxulynviec', { tdtai: payload }, resolve, reject);
@@ -902,12 +911,16 @@
         }
         
         // ==================== LƯU DỮ LIỆU ====================
-        async function luuDuLieu() {
+       async function luuDuLieu() {
             var namInput = $('#namHocInput');
+            var ngayNopInput = $('#ngayNopInput'); // [BỔ SUNG]
+            
             var namMoi = namInput ? namInput.value.trim() : '';
+            var ngayNopMoi = ngayNopInput ? ngayNopInput.value.trim() : ''; // [BỔ SUNG]
+            
             if (namMoi === "") {
                 showNotification('⚠️ Vui lòng nhập Năm học trước khi cập nhật', 'error');
-                namInput.focus();
+                if (namInput) namInput.focus();
                 return;
             }
             
@@ -919,9 +932,9 @@
             btn.disabled = true;
             
             try {
-                await capNhatNamHoc(namMoi, currentThang);
+                await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); // [BỔ SUNG] Truyền ngày nộp mới
                 await capNhatDanhSach(currentList);
-                showNotification('✅ Thành công! Đã cập nhật năm học và dữ liệu quyền.', 'success');
+                showNotification('✅ Thành công! Đã cập nhật cấu hình và dữ liệu quyền.', 'success');
                 await taiLaiDuLieu();
             } catch (err) {
                 showNotification('❌ Lỗi lưu: ' + (err.message || 'Lỗi không xác định'), 'error');
@@ -947,17 +960,18 @@
         }
         
         // ==================== KHỞI TẠO NĂM HỌC ====================
-        async function khoiTaoNamHocVaThang() {
+       async function khoiTaoNamHocVaThang() {
             try {
                 var data = await layNamHocVaThang();
                 var namInput = $('#namHocInput');
-                if (namInput) {
-                    namInput.value = data.nam || '';
-                }
+                var ngayNopInput = $('#ngayNopInput'); // [BỔ SUNG]
+                
+                if (namInput) namInput.value = data.nam || '';
+                if (ngayNopInput) ngayNopInput.value = data.ngaynop || ''; // [BỔ SUNG] Gán giá trị vào UI
+                
                 currentThang = data.thang || '';
-                console.log('Đã tải năm học:', data.nam, 'tháng:', data.thang);
             } catch (err) {
-                console.error('Lỗi tải năm học/tháng:', err);
+                console.error('Lỗi tải năm học/tháng/ngày nộp:', err);
             }
         }
         

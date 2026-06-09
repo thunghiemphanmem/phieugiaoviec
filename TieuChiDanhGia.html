@@ -1,8 +1,3 @@
-<!-- ==========================================================================
-     Tệp: TieuChiDanhGia.html (Giao diện Quản lý Tiêu chí đánh giá)
-     Cập nhật: Bổ sung tính năng quản lý tiêu chí gốc từ A9:M của sheet TieuChi
-     Nguyên tắc: Tôn trọng cấu trúc UI hành chính, không dùng biến nhạy cảm
-     ========================================================================== -->
 <style>
   #vungTieuChi { height: 100vh; display: flex; flex-direction: column; background-color: #f8f9fa; }
   .tDeTieuChi { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
@@ -54,8 +49,7 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Dữ liệu sẽ được load vào đây qua hàm hiển thị -->
-      </tbody>
+        </tbody>
     </table>
   </div>
 </div>
@@ -75,6 +69,8 @@ function themDongTieuChi() {
     const bg = document.querySelector('#bangTieuChi tbody');
     const tr = document.createElement('tr');
     tr.className = "dongTieuChi";
+    
+    // Giao diện một dòng trống chuẩn kèm placeholder hướng dẫn
     tr.innerHTML = `
         <td class="cotHanhDong align-middle text-center">
             <button class="btn btn-sm btn-light nutDieuKhien border text-primary shadow-sm" title="Lên" onclick="diChuyenLen(this)"><i class="bi bi-arrow-up"></i></button>
@@ -96,6 +92,7 @@ function themDongTieuChi() {
         <td><input type="text" class="nhapCHTTC text-center text-danger fw-bold" placeholder="<5"></td>
     `;
     
+    // Thêm lên đầu danh sách
     if (bg.firstChild) {
         bg.insertBefore(tr, bg.firstChild);
     } else {
@@ -129,7 +126,7 @@ function hienThiTieuChi(mangDl) {
     const bg = document.querySelector('#bangTieuChi tbody');
     bg.innerHTML = "";
     if (!mangDl || mangDl.length === 0) {
-        themDongTieuChi();
+        themDongTieuChi(); // Nếu trống thì tự mồi một dòng để nhập
         return;
     }
     
@@ -137,6 +134,7 @@ function hienThiTieuChi(mangDl) {
         const tr = document.createElement('tr');
         tr.className = "dongTieuChi";
         
+        // Hàm lọc null/undefined
         const gtri = (val) => (val === undefined || val === null) ? "" : String(val);
         
         tr.innerHTML = `
@@ -190,7 +188,7 @@ function capNhatTieuChi() {
         let r11 = tr.querySelector('.nhapHTTC').value;
         let r12 = tr.querySelector('.nhapCHTTC').value;
         
-        // Bỏ qua dòng nếu nội dung tiêu chí trống
+        // Chỉ đẩy lên mảng những dòng có Nội dung tiêu chí
         if(String(r1).trim() !== "") {
             mangMoi.push([r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]);
         }
@@ -202,12 +200,19 @@ function capNhatTieuChi() {
         if(typeof anTaiDl === 'function') anTaiDl();
         if(nutLuu) nutLuu.disabled = false;
         
-        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        let kq = null;
+        try {
+            kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        } catch(e) {
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi định dạng dữ liệu trả về từ máy chủ.');
+            return;
+        }
+
         if(kq && kq.ttai === 'tcong') {
             if(typeof hienThongb === 'function') hienThongb('tcong', 'Đã cập nhật đồng bộ Tiêu chí lên máy chủ thành công!');
             else alert("Cập nhật thành công!");
         } else {
-            let tb = kq ? kq.tbao : "Lỗi không xác định";
+            let tb = kq ? (kq.tbao || "Lỗi không xác định") : "Không có phản hồi hợp lệ.";
             if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi cập nhật: ' + tb);
             else alert("Lỗi: " + tb);
         }
@@ -216,12 +221,12 @@ function capNhatTieuChi() {
     const fnLoi = function(loi) {
         if(typeof anTaiDl === 'function') anTaiDl();
         if(nutLuu) nutLuu.disabled = false;
-        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi máy chủ: ' + loi.message);
-        else alert("Lỗi máy chủ: " + loi.message);
+        let loiMsg = (loi && loi.message) ? loi.message : String(loi);
+        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi máy chủ: ' + loiMsg);
+        else alert("Lỗi máy chủ: " + loiMsg);
     };
 
     if (typeof google !== 'undefined' && google.script && google.script.run) {
-        // Gọi hàm backend (.gs)
         google.script.run.withSuccessHandler(fnThanhCong).withFailureHandler(fnLoi).pgv_capnhat_tieuchi(dlGoi);
     } else if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
         khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
@@ -232,17 +237,28 @@ function capNhatTieuChi() {
     }
 }
 
-// Hàm khởi động, được thiết kế để nhúng gọi từ hệ thống Menu
+// ==========================================================================
+// THUẬT TOÁN ĐỌC DỮ LIỆU ĐÃ NÂNG CẤP XỬ LÝ LỖI UNDEFINED & BẮT LỖI JSON
+// ==========================================================================
 function khoiDongTabTieuChi() {
     if(typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải Tiêu chí đánh giá...");
     
-    const fnThanhCong = function(kq) {
+    const fnThanhCong = function(kqTho) {
         if(typeof anTaiDl === 'function') anTaiDl();
         
-        // Kiểm tra đối tượng phản hồi an toàn
+        let kq = null;
+        try {
+            // Cố gắng parse JSON an toàn, đề phòng máy chủ trả về mã HTML lỗi
+            kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
+        } catch(e) {
+            hienThiTieuChi([]);
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi cấu trúc dữ liệu từ Google Sheets. Có thể cấu hình ID tệp đang sai.');
+            return;
+        }
+
         if (!kq) {
             hienThiTieuChi([]);
-            if(typeof hienThongb === 'function') hienThongb('loi', 'Phản hồi từ máy chủ trống.');
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Máy chủ không trả về dữ liệu nào.');
             return;
         }
 
@@ -250,16 +266,17 @@ function khoiDongTabTieuChi() {
             hienThiTieuChi(kq.dliu);
         } else {
             hienThiTieuChi([]);
-            let thongBaoLoi = (kq.tbao) ? kq.tbao : "Lỗi không xác định (tbao undefined)";
+            let thongBaoLoi = (kq.tbao) ? kq.tbao : "Lỗi hệ thống không xác định (tbao trống)";
             if(typeof hienThongb === 'function') hienThongb('loi', 'Không tải được dữ liệu: ' + thongBaoLoi);
         }
     };
     
     const fnLoi = function(loi) {
         if(typeof anTaiDl === 'function') anTaiDl();
-        console.error("Lỗi API:", loi); // Kiểm tra lỗi thực sự trong F12
         hienThiTieuChi([]);
-        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi kết nối Server: ' + (loi.message || "Không xác định"));
+        let loiMsg = (loi && loi.message) ? loi.message : String(loi);
+        console.error("Mã lỗi truyền tải:", loi);
+        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi kết nối Server: ' + loiMsg);
     };
     
     const dlGoi = { hdong: "laydlTieuChi" };
@@ -269,7 +286,7 @@ function khoiDongTabTieuChi() {
         khachApi.goiThuCong(dlGoi, fnThanhCong, fnLoi);
     } else {
         if(typeof anTaiDl === 'function') anTaiDl();
-        alert("Lỗi: API đọc dữ liệu hệ thống chưa được định nghĩa.");
+        alert("Lỗi: API đọc dữ liệu hệ thống chưa được thiết lập.");
     }
 }
 </script>

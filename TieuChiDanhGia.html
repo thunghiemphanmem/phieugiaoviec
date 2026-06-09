@@ -1,12 +1,13 @@
 <style>
-  #vungTieuChi { height: 100vh; display: flex; flex-direction: column; background-color: #f8f9fa; overflow: hidden; }
+  /* Khống chế vùng chứa tuyệt đối không phình to ra ngoài màn hình */
+  #vungTieuChi { height: calc(100vh - 60px); display: flex; flex-direction: column; background-color: #f8f9fa; width: 100%; overflow: hidden; }
   .tDeTieuChi { font-weight: bold; color: #dc3545; font-size: 20px; text-transform: uppercase; margin: 0; padding: 15px 0; text-align: center; }
   
-  /* Tối ưu bộ khung chứa bảng để bật thanh trượt ngang/dọc chuẩn xác */
-  .bangTieuChi-wrapper { flex-grow: 1; overflow-x: auto; overflow-y: auto; padding: 0; border-top: 2px solid #0d6efd; background: #fff; width: 100%; min-height: 0; }
+  /* Bật tính năng cuộn ngang/dọc bên trong vùng chứa bảng */
+  .bangTieuChi-wrapper { flex: 1 1 auto; overflow: auto; width: 100%; padding: 0; border-top: 2px solid #0d6efd; background: #fff; display: block; position: relative; }
   
-  /* Cố định layout bảng và ép chiều rộng tối thiểu để tạo thanh trượt ngang */
-  #bangTieuChi { width: 100%; border-collapse: collapse; min-width: 1400px; table-layout: fixed; }
+  /* Ép bảng phải rộng tối thiểu 1600px để bắt buộc sinh thanh trượt ngang */
+  #bangTieuChi { width: 100%; min-width: 1600px; border-collapse: collapse; table-layout: fixed; }
   #bangTieuChi thead th { position: sticky; top: 0; background-color: #0d6efd !important; color: white !important; text-align: center; vertical-align: middle; padding: 8px 4px; font-size: 13px; z-index: 10; border: none; border-right: 1px solid #7ea8f8; border-bottom: 2px solid #0a58ca; }
   #bangTieuChi th:last-child { border-right: none; }
   #bangTieuChi td { border: none !important; border-bottom: 1px dashed #dee2e6 !important; border-right: 1px solid #dee2e6 !important; padding: 0; vertical-align: middle; }
@@ -41,7 +42,7 @@
       <thead>
         <tr>
           <th style="width: 5.5%;" class="cotHanhDong">Công cụ</th>
-          <th style="width: 3.5%;" class="cotStt">STT</th>
+          <th style="width: 3.5%;" class="cotStt">STT (A)</th>
           <th style="width: 22%;">Nội dung tiêu chí (B)</th>
           <th style="width: 5%;">Max (C)</th>
           <th style="width: 7%;">Giao (D)</th>

@@ -236,21 +236,30 @@ function capNhatTieuChi() {
 function khoiDongTabTieuChi() {
     if(typeof hienTaiDl === 'function') hienTaiDl("⏳ Đang tải Tiêu chí đánh giá...");
     
-    const fnThanhCong = function(kqTho) {
+    const fnThanhCong = function(kq) {
         if(typeof anTaiDl === 'function') anTaiDl();
-        let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
-        if (kq && kq.ttai === 'tcong') {
+        
+        // Kiểm tra đối tượng phản hồi an toàn
+        if (!kq) {
+            hienThiTieuChi([]);
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Phản hồi từ máy chủ trống.');
+            return;
+        }
+
+        if (kq.ttai === 'tcong') {
             hienThiTieuChi(kq.dliu);
         } else {
             hienThiTieuChi([]);
-            if(typeof hienThongb === 'function') hienThongb('loi', 'Không tải được dữ liệu: ' + (kq ? kq.tbao : "Lỗi"));
+            let thongBaoLoi = (kq.tbao) ? kq.tbao : "Lỗi không xác định (tbao undefined)";
+            if(typeof hienThongb === 'function') hienThongb('loi', 'Không tải được dữ liệu: ' + thongBaoLoi);
         }
     };
     
     const fnLoi = function(loi) {
         if(typeof anTaiDl === 'function') anTaiDl();
+        console.error("Lỗi API:", loi); // Kiểm tra lỗi thực sự trong F12
         hienThiTieuChi([]);
-        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi kết nối Server: ' + loi.message);
+        if(typeof hienThongb === 'function') hienThongb('loi', 'Lỗi kết nối Server: ' + (loi.message || "Không xác định"));
     };
     
     const dlGoi = { hdong: "laydlTieuChi" };

@@ -210,10 +210,12 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
         if(isBGH) {
             btnAll.style.setProperty('display', 'inline-block', 'important');
             if (ttKhoa === "Khóa") {
+                // Đang Khóa -> Nút hiện "Mở"
                 btnAll.setAttribute("data-tt", "Mở");
                 btnAll.className = "btn btn-sm btn-outline-success fw-bold me-3 align-middle";
                 btnAll.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở tất cả`;
             } else {
+                // Đang Mở -> Nút hiện "Khóa"
                 btnAll.setAttribute("data-tt", "Khóa");
                 btnAll.className = "btn btn-sm btn-outline-danger fw-bold me-3 align-middle";
                 btnAll.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa tất cả`;
@@ -232,15 +234,17 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
         }
         
         if (ttKhoa === "Khóa") {
-            btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
-            btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
+            // [ĐÃ SỬA] Hồ sơ đang Khóa -> Nút cá nhân hiện màu Xanh gợi ý "Mở"
+            btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'inline-flex', 'important');
                 spanNgay.innerText = ngayKhoa ? "Đã khoá: " + ngayKhoa : "Đã khoá";
             }
         } else {
-            btn.className = "btn btn-success btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
-            btn.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở`;
+            // [ĐÃ SỬA] Hồ sơ đang Mở -> Nút cá nhân hiện màu Đỏ gợi ý "Khóa"
+            btn.className = "btn btn-danger btn-sm fw-bold text-nowrap w-auto d-inline-flex align-items-center";
+            btn.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa`;
             if (spanNgay) {
                 spanNgay.style.setProperty('display', 'none', 'important');
                 spanNgay.innerText = "";

@@ -654,8 +654,9 @@ function khoiTaoTheoQuyen() {
 // ==================== BỔ SUNG KHỐI XỬ LÝ TỆP ĐÍNH KÈM BÁO CÁO ====================
 window.tepdinhkBcao = window.tepdinhkBcao || [];
 
-// 1. Hook tàng hình tự động giải mã báo cáo khi Load giao diện từ hệ thống mẹ
+// 1. Hook tàng hình tự động giải mã báo cáo (Hỗ trợ cả Native JS và jQuery)
 (function() {
+    // Hook cho Native JS (document.getElementById('nhapBcao').value = ...)
     const oBcao = document.getElementById('nhapBcao');
     if (oBcao) {
         const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
@@ -682,26 +683,45 @@ window.tepdinhkBcao = window.tepdinhkBcao || [];
             });
         }
     }
-})();
 
-// Hàm dự phòng cho phép giải mã thủ công nếu cần gọi từ hàm ngoài
-function giaiMaBcao(chuGoc) {
-    window.tepdinhkBcao = [];
-    let chuSach = chuGoc || "";
-    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
-    let match;
-    while ((match = regex.exec(chuGoc)) !== null) {
-        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
-        chuSach = chuSach.replace(match[0], "");
+    // Hook cho jQuery ($('#nhapBcao').val(...)) - Khắc phục triệt để lỗi mất icon khi load từ hệ thống mẹ
+    if (typeof jQuery !== 'undefined') {
+        const originalValHook = $.valHooks.textarea;
+        $.valHooks.textarea = {
+            set: function(elem, value) {
+                if (elem.id === 'nhapBcao') {
+                    let chuGoc = String(value || "");
+                    window.tepdinhkBcao = [];
+                    let chuSach = chuGoc;
+                    let regex = /\[FILE:(.*?)\|(.*?)\]/g;
+                    let match;
+                    while ((match = regex.exec(chuGoc)) !== null) {
+                        window.tepdinhkBcao.push({ tentep: match[1].trim(), duongd: match[2].trim() });
+                        chuSach = chuSach.replace(match[0], "");
+                    }
+                    elem.value = chuSach.trim();
+                    if (typeof veDinhKemBcao === 'function') veDinhKemBcao();
+                    return true; // Báo cho jQuery đã xử lý xong
+                }
+                if (originalValHook && originalValHook.set) {
+                    return originalValHook.set(elem, value);
+                }
+                return undefined;
+            },
+            get: function(elem) {
+                if (originalValHook && originalValHook.get) {
+                    return originalValHook.get(elem);
+                }
+                return undefined;
+            }
+        };
     }
-    veDinhKemBcao();
-    return chuSach.trim();
-}
+})();
 
 $(document).ready(function() { 
     setTimeout(khoiTaoTheoQuyen, 500); 
     
-    // Đề phòng ô báo cáo được điền sẵn từ nội dung HTML tĩnh trước khi Hook được cấy
+    // Đề phòng trường hợp ô báo cáo được điền sẵn từ nội dung HTML tĩnh trước khi Hook được cấy
     const oBcao = document.getElementById('nhapBcao');
     if(oBcao && oBcao.value && oBcao.value.includes("[FILE:")) {
         oBcao.value = oBcao.value; 
@@ -801,7 +821,7 @@ function veDinhKemBcao() {
     window.tepdinhkBcao.forEach((t, i) => {
         let theTep = document.createElement('span');
         theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
-        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}"><i class="bi bi-paperclip"></i> ${t.tentep}</a>
+        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="Tên gốc: ${t.tentep}"><i class="bi bi-paperclip"></i> Báo cáo ${i + 1}</a>
                             <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaDinhKemBcao(${i})"></i>`;
         vung.appendChild(theTep);
     });

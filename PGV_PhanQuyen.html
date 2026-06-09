@@ -910,13 +910,23 @@
             return true;
         }
         
-        // ==================== LƯU DỮ LIỆU ====================
-       async function luuDuLieu() {
+    // ==================== LƯU DỮ LIỆU ====================
+        async function luuDuLieu() {
             var namInput = $('#namHocInput');
-            var ngayNopInput = $('#ngayNopInput'); // [BỔ SUNG]
+            var ngayNopInput = $('#ngayNopInput'); 
             
             var namMoi = namInput ? namInput.value.trim() : '';
-            var ngayNopMoi = ngayNopInput ? ngayNopInput.value.trim() : ''; // [BỔ SUNG]
+            var ngayNopMoi = ngayNopInput ? ngayNopInput.value.trim() : ''; 
+            
+            // [CHỐT CHẶN BẢO MẬT] Kiểm tra tính hợp lệ của Ngày nộp báo cáo
+            if (ngayNopMoi !== "") {
+                var numNgay = parseInt(ngayNopMoi);
+                if (isNaN(numNgay) || numNgay < 1 || numNgay > 31) {
+                    showNotification('⚠️ Ngày nộp báo cáo phải là số từ 1 đến 31', 'error');
+                    if (ngayNopInput) ngayNopInput.focus();
+                    return;
+                }
+            }
             
             if (namMoi === "") {
                 showNotification('⚠️ Vui lòng nhập Năm học trước khi cập nhật', 'error');
@@ -932,7 +942,8 @@
             btn.disabled = true;
             
             try {
-                await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); // [BỔ SUNG] Truyền ngày nộp mới
+                // Truyền tham số ngayNopMoi xuống máy chủ thông qua API
+                await capNhatNamHoc(namMoi, currentThang, ngayNopMoi); 
                 await capNhatDanhSach(currentList);
                 showNotification('✅ Thành công! Đã cập nhật cấu hình và dữ liệu quyền.', 'success');
                 await taiLaiDuLieu();
@@ -977,7 +988,7 @@
         
         // ==================== KHỞI CHẠY ỨNG DỤNG ====================
         if (!API_URL) {
-            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></td>';
+            $('#quyenTableBodyPQ').innerHTML = '<tr><td colspan="6" class="text-danger text-center">⚠️ Không tìm thấy API. Vui lòng tải lại trang chính.</td></tr>';
             showNotification('Lỗi cấu hình: Không tìm thấy API', 'error');
             return;
         }

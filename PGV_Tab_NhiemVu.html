@@ -703,21 +703,15 @@ function xulyTaiBcao(ptu) {
         reader.readAsDataURL(f);
     }
 }
+
 function guiTepLenMayChu(mngTep) {
     const xuLyThanhCong = function(kqTho) {
         anTaiDl();
         
-        // 1. Chuyển đổi dữ liệu trả về thành đối tượng
         let kq = (typeof kqTho === 'string') ? JSON.parse(kqTho) : kqTho;
-        
-        // 2. LOGIC KIỂM TRA MỚI: 
-        // Cho phép thành công nếu:
-        // - Có cờ ttai: 'tcong' 
-        // - HOẶC dữ liệu trả về là một mảng (trường hợp server trả về danh sách tệp trực tiếp)
         let laThanhCong = (kq.ttai === 'tcong') || Array.isArray(kq);
         
         if (laThanhCong) {
-            // Lấy danh sách tệp: Nếu server trả về {dliu: [...]}, nếu không lấy thẳng kq (nếu là mảng)
             let duLieuTep = kq.dliu ? kq.dliu : (Array.isArray(kq) ? kq : []);
             
             window.tepdinhkBcao = window.tepdinhkBcao.concat(duLieuTep);
@@ -725,7 +719,6 @@ function guiTepLenMayChu(mngTep) {
             if (typeof mokBcao === 'function') mokBcao();
             if (typeof hienThongb === 'function') hienThongb('tcong', "Tải tệp thành công!");
         } else {
-            // Chỉ báo lỗi nếu không phải là tcong và không phải mảng
             let msg = kq.tbao || JSON.stringify(kq);
             if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi tải tệp: " + msg);
         }
@@ -753,8 +746,8 @@ function veUiTepDinhKem() {
     window.tepdinhkBcao.forEach((t, i) => {
         let theTep = document.createElement('span');
         theTep.className = "badge bg-light text-dark border d-flex align-items-center mt-1";
-        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}">${t.tentep}</a>
-                            <i class="bi bi-x-circle-fill ms-1 text-danger" style="cursor:pointer; font-size:14px;" title="Xóa tệp này" onclick="xoaTepDinhKem(${i})"></i>`;
+        theTep.innerHTML = `<a href="${t.duongd}" target="_blank" class="text-decoration-none text-truncate" style="max-width: 150px; font-size:11px;" title="${t.tentep}"><i class="bi bi-paperclip"></i> ${t.tentep}</a>
+                            <i class="bi bi-x text-danger ms-1" style="cursor:pointer; font-size:16px;" title="Xóa tệp này" onclick="event.stopPropagation(); xoaTepDinhKem(${i})"></i>`;
         vung.appendChild(theTep);
     });
 }
@@ -772,6 +765,10 @@ function xoaTepDinhKem(idx) {
             window.tepdinhkBcao.splice(idx, 1);
             veUiTepDinhKem();
             if (typeof mokBcao === 'function') mokBcao();
+            
+            // [Bổ sung]: Cập nhật lưu vết nháp xuống nhật ký báo cáo theo đúng thuật toán.
+            xulyLuuTam(true);
+            if (typeof hienThongb === 'function') hienThongb('tcong', "Đã xoá tệp và cập nhật nhật ký!");
         } else {
             let msg = kq ? (kq.tbao || JSON.stringify(kq)) : "Lỗi không xác định";
             if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi xóa tệp: " + msg);
@@ -792,6 +789,4 @@ function xoaTepDinhKem(idx) {
         alert("Lỗi hệ thống: API xóa tệp chưa được liên kết.");
     }
 }
- 
-
 </script>

@@ -201,11 +201,20 @@ function thietLapNutKhoa(trangThai, ngayKhoa = "") {
     let isBGH = kiemTraLaBGH();
     let spanNgay = document.getElementById("hienThiNgayKhoa"); 
     
-    // [KHẮC PHỤC LỖI] Đưa kiểm tra nút Khóa Tất Cả vào đây để đảm bảo load đúng quyền
     let btnAll = document.getElementById("nutKhoaTatCa");
     if(btnAll) {
         if(isBGH) {
             btnAll.style.setProperty('display', 'inline-block', 'important');
+            // Tự động đảo trạng thái Nút Khóa Tất Cả đồng bộ với hệ thống
+            if (trangThai === "Khóa") {
+                btnAll.setAttribute("data-tt", "Mở");
+                btnAll.className = "btn btn-sm btn-outline-success fw-bold me-3 align-middle";
+                btnAll.innerHTML = `<i class="bi bi-unlock-fill me-1"></i> Mở tất cả`;
+            } else {
+                btnAll.setAttribute("data-tt", "Khóa");
+                btnAll.className = "btn btn-sm btn-outline-danger fw-bold me-3 align-middle";
+                btnAll.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Khóa tất cả`;
+            }
         } else {
             btnAll.style.setProperty('display', 'none', 'important');
         }

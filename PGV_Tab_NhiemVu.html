@@ -139,9 +139,6 @@ function kiemTraLaBGH() {
     return false;
 }
 
-/**
- * Hàm điều khiển Ẩn/Hiện khu vực Điểm cộng/trừ 
- */
 function toggleKhuVucDiem() {
     let kv = document.getElementById('khuVucDiemThuong');
     let btn = document.getElementById('nutDieuKhienDiemThuong');
@@ -154,9 +151,6 @@ function toggleKhuVucDiem() {
     }
 }
 
-/**
- * Hàm cấp quyền và khóa/mở nút linh hoạt
- */
 function kiemSoatNutLinhHoat(ptuGoc, dkHienThi, dkMoKhoa) {
     let ptu = $(ptuGoc); 
     if (ptu.length === 0) return;
@@ -212,6 +206,16 @@ function kiemTraQuyenTruyCap() {
     kiemSoatNutLinhHoat('#nutLuuTam', true, moKhoaLuu);
     kiemSoatNutLinhHoat('#nutNopBcao', true, moKhoaNop);
     kiemSoatNutLinhHoat('#nhapDiemThuong', true, moKhoaDiem);
+
+    // [ĐÃ SỬA LỖI BẤT ĐỒNG BỘ]: Dời kiểm tra quyền nút mắt vào đây để đảm bảo API đã load xong
+    let btnCtrlDiem = document.getElementById("nutDieuKhienDiemThuong");
+    if(btnCtrlDiem) {
+        if(isBGH) {
+            btnCtrlDiem.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnCtrlDiem.style.setProperty('display', 'none', 'important');
+        }
+    }
 }
 
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
@@ -899,7 +903,6 @@ function khoiTaoTheoQuyen() {
         kiemTraQuyenTruyCap();
     }
     
-    // [ĐÃ SỬA] Dùng biến kiểm tra chung cho toàn bộ nhóm Quản lý
     let isBGH = kiemTraLaBGH();
 
     let btn = document.getElementById("nutMoKhoa");
@@ -917,16 +920,6 @@ function khoiTaoTheoQuyen() {
             btnAll.style.setProperty('display', 'inline-block', 'important');
         } else {
             btnAll.style.setProperty('display', 'none', 'important');
-        }
-    }
-    
-    // Cấp quyền hiển thị Nút ẩn/hiện Điểm thưởng cho mọi quyền Quản lý
-    let btnCtrlDiem = document.getElementById("nutDieuKhienDiemThuong");
-    if(btnCtrlDiem) {
-        if(isBGH) {
-            btnCtrlDiem.style.setProperty('display', 'inline-block', 'important');
-        } else {
-            btnCtrlDiem.style.setProperty('display', 'none', 'important');
         }
     }
 }

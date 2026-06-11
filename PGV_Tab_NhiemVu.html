@@ -73,11 +73,15 @@
     </div>
     <div class="tDe text-center text-nowrap" style="flex: 2;">NHIỆM VỤ CỦA TÔI</div>
     <div class="text-end text-nowrap" style="flex: 2;"> 
-      <div class="d-inline-block border-end border-secondary border-opacity-25 pe-3 me-2">
+      <div class="d-inline-flex align-items-center border-end border-secondary border-opacity-25 pe-3 me-2">
         <button id="nutKhoaTatCa" class="btn btn-sm btn-outline-danger fw-bold me-3 align-middle" style="display: none; height: 26px; font-size: 12px;" onclick="doiTrangThaiKhoaTatCa()" data-tt="Khóa"><i class="bi bi-lock-fill me-1"></i> Khóa tất cả</button>
         
-         <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
-         <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+        <button id="nutDieuKhienDiemThuong" class="btn btn-sm btn-outline-secondary me-2 align-middle" style="display: none; height: 26px; padding: 0px 8px; font-size: 12px;" onclick="toggleKhuVucDiem()" title="Ẩn/Hiện khu vực Điểm Thưởng"><i class="bi bi-eye-slash-fill"></i></button>
+        
+        <div id="khuVucDiemThuong" style="display: inline-block;">
+           <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
+           <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+        </div>
       </div>
     </div>
   </div>
@@ -133,6 +137,21 @@ function kiemTraLaBGH() {
     if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
     if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xxx' || canbHientai.quyen === 'xx')) return true;
     return false;
+}
+
+/**
+ * Hàm điều khiển Ẩn/Hiện khu vực Điểm cộng/trừ 
+ */
+function toggleKhuVucDiem() {
+    let kv = document.getElementById('khuVucDiemThuong');
+    let btn = document.getElementById('nutDieuKhienDiemThuong');
+    if (kv.style.display === 'none') {
+        kv.style.display = 'inline-block';
+        if (btn) btn.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+    } else {
+        kv.style.display = 'none';
+        if (btn) btn.innerHTML = '<i class="bi bi-eye-fill"></i>';
+    }
 }
 
 /**
@@ -700,23 +719,18 @@ function addNv() {
     } else {
         var $newRow = lastRow.clone();
         
-        // 1. Dọn dẹp dữ liệu và trả lại định dạng cơ bản
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
         $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
         
-        // 2. KHẮC PHỤC LỖI COLSPAN: Gọi chính xác cột Nội dung (cột số 1) để trả về 1 ô bình thường
         var $tdNoiDung = $newRow.find('td').eq(1);
         $tdNoiDung.attr('colspan', '1');
         
-        // Ép hiển thị lại TẤT CẢ các thẻ td bị ẩn do thuộc tính của dòng tiêu đề
         $newRow.find('td').show();
         
-        // 3. KHẮC PHỤC LỖI TÀNG HÌNH Ô ĐIỂM: Reset cột Điểm (cột số 6) thành Input văn bản rỗng hiển thị rõ ràng, xóa bỏ thuộc tính display:none
         var $tdDiem = $newRow.find('td').eq(6);
         $tdDiem.html('<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="" value="" style="color:red;" onchange="tinhtTdong()">');
         
-        // 4. Triệt tiêu triệt để các thuộc tính khóa nội dung (bổ sung .show() để bẻ gãy mọi thuộc tính ẩn)
         $newRow.find('input, textarea').show().removeAttr('readonly').prop('disabled', false);
         
         tbody.append($newRow);
@@ -827,7 +841,10 @@ function tinhtTdong() {
         }
     });
     
+    // [ĐÃ SỬA LỖI] - Tách biệt Tỷ lệ xếp loại (không cộng dc) và Tổng điểm hiển thị (có cộng dc)
+    let tyLeXepLoai = tongMax > 0 ? (tongDiem / tongMax) * 100 : tongDiem;
     let diemCuoiCung = tongDiem + dc;
+    
     let xpl = "Chưa hoàn thành";
     
     if (soNhiemVu === 0) {
@@ -842,16 +859,17 @@ function tinhtTdong() {
             else if (minRank === 1) xpl = "Chưa hoàn thành";
             else xpl = "Chưa xác định";
         } else {
-            let tyLe = tongMax > 0 ? (diemCuoiCung / tongMax) * 100 : diemCuoiCung;
-            if (tyLe >= 90) xpl = "Xuất sắc";
-            else if (tyLe >= 70) xpl = "Hoàn thành tốt";
-            else if (tyLe >= 50) xpl = "Hoàn thành";
+            // Xét mức đánh giá Xếp Loại dựa hoàn toàn trên điểm gốc
+            if (tyLeXepLoai >= 90) xpl = "Xuất sắc";
+            else if (tyLeXepLoai >= 70) xpl = "Hoàn thành tốt";
+            else if (tyLeXepLoai >= 50) xpl = "Hoàn thành";
             else xpl = "Chưa hoàn thành";
         }
     }
     
     let txtKq = xpl;
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
+        // Cộng gộp điểm thưởng vào txt hiển thị cuối cùng
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
@@ -884,20 +902,36 @@ function khoiTaoTheoQuyen() {
         kiemTraQuyenTruyCap();
     }
     
+    let isBGH = kiemTraLaBGH();
+    let isQuyenXX = false;
+    if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN === 'xx') isQuyenXX = true;
+    if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen === 'xx') isQuyenXX = true;
+
     let btn = document.getElementById("nutMoKhoa");
     if(btn) {
-        if(kiemTraLaBGH()) {
+        if(isBGH) {
             btn.style.setProperty('display', 'inline-flex', 'important');
         } else {
             btn.style.setProperty('display', 'none', 'important');
         }
     }
+    
     let btnAll = document.getElementById("nutKhoaTatCa");
     if(btnAll) {
-        if(kiemTraLaBGH()) {
+        if(isBGH) {
             btnAll.style.setProperty('display', 'inline-block', 'important');
         } else {
             btnAll.style.setProperty('display', 'none', 'important');
+        }
+    }
+    
+    // [BỔ SUNG] Cấp quyền hiển thị Nút ẩn/hiện Điểm thưởng dành riêng cho quyền xx
+    let btnCtrlDiem = document.getElementById("nutDieuKhienDiemThuong");
+    if(btnCtrlDiem) {
+        if(isQuyenXX) {
+            btnCtrlDiem.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnCtrlDiem.style.setProperty('display', 'none', 'important');
         }
     }
 }

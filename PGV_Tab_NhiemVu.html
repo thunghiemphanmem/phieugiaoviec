@@ -391,11 +391,8 @@ function apDungKhoaGiaoDien() {
         }
     }
     
-    let dkThemNhiemVu = false;
-    if (!isLocked) {
-        if (window.PGV_IS_SELF || isBGH) dkThemNhiemVu = true;
-    }
-    kiemSoatNutLinhHoat('button[onclick="addNv()"]', true, dkThemNhiemVu);
+    // [ĐÃ SỬA LỖI] Trả lại logic gốc: Chỉ khóa nút khi trạng thái hồ sơ là Khóa (!isLocked)
+    kiemSoatNutLinhHoat('button[onclick="addNv()"]', true, !isLocked);
     
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
     $('#bangNviec tbody tr').find('input, select, textarea, button').prop('disabled', isLocked);

@@ -699,21 +699,25 @@ function addNv() {
         tbody.append(defaultRow);
     } else {
         var $newRow = lastRow.clone();
+        
+        // 1. Dọn dẹp dữ liệu và trả lại định dạng cơ bản
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
         $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
         
-        var $chonKq = $newRow.find('.chonKq');
-        $chonKq.val(''); 
-        
+        // 2. KHẮC PHỤC LỖI COLSPAN: Gọi chính xác cột Nội dung (cột số 1) để trả về 1 ô bình thường
         var $tdNoiDung = $newRow.find('td').eq(1);
-        if ($tdNoiDung.attr('colspan') && $tdNoiDung.attr('colspan') !== '1') {
-            $tdNoiDung.attr('colspan', '1');
-            $newRow.find('td:nth-child(n+3)').show();
-        }
+        $tdNoiDung.attr('colspan', '1');
         
-        // [ĐÃ SỬA LỖI] - Triệt tiêu các thuộc tính khóa bị dính do nhân bản từ dòng cũ
-        $newRow.find('input, textarea').removeAttr('readonly').prop('disabled', false);
+        // Ép hiển thị lại TẤT CẢ các thẻ td bị ẩn do thuộc tính của dòng tiêu đề
+        $newRow.find('td').show();
+        
+        // 3. KHẮC PHỤC LỖI TÀNG HÌNH Ô ĐIỂM: Reset cột Điểm (cột số 6) thành Input văn bản rỗng hiển thị rõ ràng, xóa bỏ thuộc tính display:none
+        var $tdDiem = $newRow.find('td').eq(6);
+        $tdDiem.html('<input type="text" class="form-control form-control-sm text-center fw-bold chonKq" data-config="" value="" style="color:red;" onchange="tinhtTdong()">');
+        
+        // 4. Triệt tiêu triệt để các thuộc tính khóa nội dung (bổ sung .show() để bẻ gãy mọi thuộc tính ẩn)
+        $newRow.find('input, textarea').show().removeAttr('readonly').prop('disabled', false);
         
         tbody.append($newRow);
     }

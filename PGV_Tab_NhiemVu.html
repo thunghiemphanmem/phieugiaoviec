@@ -137,9 +137,6 @@ function kiemTraLaBGH() {
 
 /**
  * Hàm cấp quyền và khóa/mở nút linh hoạt
- * @param {string} ptuGoc - ID hoặc Lớp của phần tử (vd: '#nutLuuTam', '.btn-xoa')
- * @param {boolean} dkHienThi - Điều kiện nhìn thấy (true: Hiện, false: Ẩn)
- * @param {boolean} dkMoKhoa - Điều kiện thao tác (true: Mở, false: Khóa/Disabled)
  */
 function kiemSoatNutLinhHoat(ptuGoc, dkHienThi, dkMoKhoa) {
     let ptu = $(ptuGoc); 
@@ -391,7 +388,6 @@ function apDungKhoaGiaoDien() {
         }
     }
     
-    // [ĐÃ SỬA LỖI] Trả lại logic gốc: Chỉ khóa nút khi trạng thái hồ sơ là Khóa (!isLocked)
     kiemSoatNutLinhHoat('button[onclick="addNv()"]', true, !isLocked);
     
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
@@ -715,6 +711,9 @@ function addNv() {
             $tdNoiDung.attr('colspan', '1');
             $newRow.find('td:nth-child(n+3)').show();
         }
+        
+        // [ĐÃ SỬA LỖI] - Triệt tiêu các thuộc tính khóa bị dính do nhân bản từ dòng cũ
+        $newRow.find('input, textarea').removeAttr('readonly').prop('disabled', false);
         
         tbody.append($newRow);
     }

@@ -841,7 +841,6 @@ function tinhtTdong() {
         }
     });
     
-    // [ĐÃ SỬA LỖI] - Tách biệt Tỷ lệ xếp loại (không cộng dc) và Tổng điểm hiển thị (có cộng dc)
     let tyLeXepLoai = tongMax > 0 ? (tongDiem / tongMax) * 100 : tongDiem;
     let diemCuoiCung = tongDiem + dc;
     
@@ -859,7 +858,6 @@ function tinhtTdong() {
             else if (minRank === 1) xpl = "Chưa hoàn thành";
             else xpl = "Chưa xác định";
         } else {
-            // Xét mức đánh giá Xếp Loại dựa hoàn toàn trên điểm gốc
             if (tyLeXepLoai >= 90) xpl = "Xuất sắc";
             else if (tyLeXepLoai >= 70) xpl = "Hoàn thành tốt";
             else if (tyLeXepLoai >= 50) xpl = "Hoàn thành";
@@ -869,7 +867,6 @@ function tinhtTdong() {
     
     let txtKq = xpl;
     if (soNhiemVu > 0 && soDaDanhGia === soNhiemVu && xpl !== "Chưa giao việc" && xpl !== "Chưa đánh giá") {
-        // Cộng gộp điểm thưởng vào txt hiển thị cuối cùng
         txtKq = `${xpl}: ${diemCuoiCung} điểm`;
     }
     
@@ -902,10 +899,8 @@ function khoiTaoTheoQuyen() {
         kiemTraQuyenTruyCap();
     }
     
+    // [ĐÃ SỬA] Dùng biến kiểm tra chung cho toàn bộ nhóm Quản lý
     let isBGH = kiemTraLaBGH();
-    let isQuyenXX = false;
-    if (typeof window.PGV_QUYEN !== 'undefined' && window.PGV_QUYEN === 'xx') isQuyenXX = true;
-    if (typeof canbHientai !== 'undefined' && canbHientai && canbHientai.quyen === 'xx') isQuyenXX = true;
 
     let btn = document.getElementById("nutMoKhoa");
     if(btn) {
@@ -925,10 +920,10 @@ function khoiTaoTheoQuyen() {
         }
     }
     
-    // [BỔ SUNG] Cấp quyền hiển thị Nút ẩn/hiện Điểm thưởng dành riêng cho quyền xx
+    // Cấp quyền hiển thị Nút ẩn/hiện Điểm thưởng cho mọi quyền Quản lý
     let btnCtrlDiem = document.getElementById("nutDieuKhienDiemThuong");
     if(btnCtrlDiem) {
-        if(isQuyenXX) {
+        if(isBGH) {
             btnCtrlDiem.style.setProperty('display', 'inline-block', 'important');
         } else {
             btnCtrlDiem.style.setProperty('display', 'none', 'important');

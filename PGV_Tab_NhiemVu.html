@@ -76,8 +76,12 @@
       <div class="d-inline-flex align-items-center border-end border-secondary border-opacity-25 pe-3 me-2">
         <button id="nutKhoaTatCa" class="btn btn-sm btn-outline-danger fw-bold me-3 align-middle" style="display: none; height: 26px; font-size: 12px;" onclick="doiTrangThaiKhoaTatCa()" data-tt="Khóa"><i class="bi bi-lock-fill me-1"></i> Khóa tất cả</button>
         
-        <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
-        <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+        <button id="nutDieuKhienDiemThuong" class="btn btn-sm btn-outline-secondary me-2 align-middle" style="display: none; height: 26px; padding: 0px 8px; font-size: 12px;" onclick="toggleKhuVucDiem()" title="Ẩn/Hiện khu vực Điểm Thưởng"><i class="bi bi-eye-slash-fill"></i></button>
+        
+        <div id="khuVucDiemThuong" style="display: inline-block;">
+           <label class="me-1 fw-bold nhanNhiemVu" style="font-size:13px;">Điểm cộng/trừ:</label>
+           <input type="number" id="nhapDiemThuong" oninput="capnhTdong()" class="nhapTuyChinh text-center fw-bold diemKhong" style="width: 50px; display:inline-block;" value="0">
+        </div>
       </div>
     </div>
   </div>
@@ -132,6 +136,10 @@
 let mbcMo = false; let cotETonTai = false; let giaTriCotE = ""; let dsGiaoVien = [];
 let trangThaiKhoa = "Mở";
 
+// Khai báo biến toàn cục quản lý trạng thái hiển thị
+let trangThaiHienDiem = "Mở"; 
+let trangThaiHienThemNv = "Mở";
+
 function kiemTraLaBGH() {
     if (typeof window.PGV_QUYEN !== 'undefined' && (window.PGV_QUYEN === 'xxx' || window.PGV_QUYEN === 'xx')) return true;
     if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xxx' || canbHientai.quyen === 'xx')) return true;
@@ -139,26 +147,91 @@ function kiemTraLaBGH() {
 }
 
 /**
- * Hàm điều khiển Ẩn/Hiện nút Thêm nhiệm vụ 
+ * Hàm triển khai cấu hình hiển thị lên giao diện
  */
-function toggleNutThemNv() {
-    let btnThem = document.getElementById('nutThemNhiemVu');
-    let btnCtrl = document.getElementById('nutDieuKhienThemNv');
-    if (!btnThem || !btnCtrl) return;
+function apDungCauHinhHienThi() {
+    let kvDiem = document.getElementById('khuVucDiemThuong');
+    let btnCtrlDiem = document.getElementById('nutDieuKhienDiemThuong');
     
-    if (btnThem.style.display === 'none') {
-        btnThem.style.display = 'inline-block';
-        btnCtrl.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+    if (trangThaiHienDiem === "Mở") {
+        if (kvDiem) kvDiem.style.display = 'inline-block';
+        if (btnCtrlDiem) btnCtrlDiem.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
     } else {
-        btnThem.style.display = 'none';
-        btnCtrl.innerHTML = '<i class="bi bi-eye-fill"></i>';
+        if (kvDiem) kvDiem.style.display = 'none';
+        if (btnCtrlDiem) btnCtrlDiem.innerHTML = '<i class="bi bi-eye-fill"></i>';
+    }
+
+    let btnThem = document.getElementById('nutThemNhiemVu');
+    let btnCtrlThem = document.getElementById('nutDieuKhienThemNv');
+    
+    if (trangThaiHienThemNv === "Mở") {
+        if (btnThem) btnThem.style.display = 'inline-block';
+        if (btnCtrlThem) btnCtrlThem.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+    } else {
+        if (btnThem) btnThem.style.display = 'none';
+        if (btnCtrlThem) btnCtrlThem.innerHTML = '<i class="bi bi-eye-fill"></i>';
     }
 }
 
 /**
- * Hàm cấp quyền và khóa/mở nút linh hoạt. 
- * Hỗ trợ truyền null nếu không muốn thay đổi thuộc tính đó.
+ * Hàm gọi máy chủ để lấy cài đặt chung cho tất cả người dùng
  */
+function dongBoCauHinhToanCuc() {
+    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong({ hdong: "laycauhinhhienthi" }, function(kq) {
+            if (kq && kq.ttai === 'tcong') {
+                trangThaiHienDiem = kq.cauHinhDiem || "Mở";
+                trangThaiHienThemNv = kq.cauHinhThemNv || "Mở";
+                apDungCauHinhHienThi();
+            }
+        }, function(loi) { console.log("Hệ thống hiển thị mặc định. Chưa thể lấy cấu hình máy chủ: " + loi.message); });
+    }
+}
+
+/**
+ * Hàm điều khiển Ẩn/Hiện khu vực Điểm cộng/trừ và Lưu máy chủ
+ */
+function toggleKhuVucDiem() {
+    if (!kiemTraLaBGH()) return;
+    let trangThaiMoi = (trangThaiHienDiem === "Mở") ? "Khóa" : "Mở";
+    
+    hienTaiDl("⏳ Đang đồng bộ cấu hình hệ thống...");
+    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong({ hdong: "luucauhinhhienthi", thuocTinh: "cauHinhDiem", trangThai: trangThaiMoi }, function(kq) {
+            anTaiDl();
+            if (kq && kq.ttai === 'tcong') {
+                trangThaiHienDiem = trangThaiMoi;
+                apDungCauHinhHienThi();
+                if (typeof hienThongb === 'function') hienThongb('tcong', "Đã áp dụng cài đặt Điểm thưởng cho TẤT CẢ người dùng!");
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: Không thể lưu cấu hình.");
+            }
+        }, function(loi) { anTaiDl(); hienThongb('loi', "Lỗi kết nối Server: " + loi.message); });
+    }
+}
+
+/**
+ * Hàm điều khiển Ẩn/Hiện nút Thêm nhiệm vụ và Lưu máy chủ
+ */
+function toggleNutThemNv() {
+    if (!kiemTraLaBGH()) return;
+    let trangThaiMoi = (trangThaiHienThemNv === "Mở") ? "Khóa" : "Mở";
+    
+    hienTaiDl("⏳ Đang đồng bộ cấu hình hệ thống...");
+    if (typeof khachApi !== 'undefined' && typeof khachApi.goiThuCong === 'function') {
+        khachApi.goiThuCong({ hdong: "luucauhinhhienthi", thuocTinh: "cauHinhThemNv", trangThai: trangThaiMoi }, function(kq) {
+            anTaiDl();
+            if (kq && kq.ttai === 'tcong') {
+                trangThaiHienThemNv = trangThaiMoi;
+                apDungCauHinhHienThi();
+                if (typeof hienThongb === 'function') hienThongb('tcong', "Đã áp dụng cài đặt Thêm nhiệm vụ cho TẤT CẢ người dùng!");
+            } else {
+                if (typeof hienThongb === 'function') hienThongb('loi', "Lỗi hệ thống: Không thể lưu cấu hình.");
+            }
+        }, function(loi) { anTaiDl(); hienThongb('loi', "Lỗi kết nối Server: " + loi.message); });
+    }
+}
+
 function kiemSoatNutLinhHoat(ptuGoc, dkHienThi, dkMoKhoa) {
     let ptu = $(ptuGoc); 
     if (ptu.length === 0) return;
@@ -217,15 +290,20 @@ function kiemTraQuyenTruyCap() {
 
     kiemSoatNutLinhHoat('#nutLuuTam', true, moKhoaLuu);
     kiemSoatNutLinhHoat('#nutNopBcao', true, moKhoaNop);
-    kiemSoatNutLinhHoat('#nhapDiemThuong', true, moKhoaDiem);
+    
+    // Lưu ý: Dùng `null` để KHÔNG ghi đè thuộc tính hiển thị toàn cục do apDungCauHinhHienThi quản lý
+    kiemSoatNutLinhHoat('#nhapDiemThuong', null, moKhoaDiem);
 
+    let btnCtrlDiem = document.getElementById("nutDieuKhienDiemThuong");
     let btnCtrlThemNv = document.getElementById("nutDieuKhienThemNv");
+    
+    if(btnCtrlDiem) {
+        if(isBGH) btnCtrlDiem.style.setProperty('display', 'inline-block', 'important');
+        else btnCtrlDiem.style.setProperty('display', 'none', 'important');
+    }
     if(btnCtrlThemNv) {
-        if(isBGH) {
-            btnCtrlThemNv.style.setProperty('display', 'inline-block', 'important');
-        } else {
-            btnCtrlThemNv.style.setProperty('display', 'none', 'important');
-        }
+        if(isBGH) btnCtrlThemNv.style.setProperty('display', 'inline-block', 'important');
+        else btnCtrlThemNv.style.setProperty('display', 'none', 'important');
     }
 }
 
@@ -422,7 +500,6 @@ function apDungKhoaGiaoDien() {
         }
     }
     
-    // Gửi tham số null để không can thiệp thay đổi hiển thị, chỉ tác động vào trạng thái disabled
     kiemSoatNutLinhHoat('#nutThemNhiemVu', null, !isLocked);
     
     $('.bi-paperclip').closest('button').prop('disabled', isLocked);
@@ -915,8 +992,10 @@ function khoiTaoTheoQuyen() {
         kiemTraQuyenTruyCap();
     }
     
-    let isBGH = kiemTraLaBGH();
+    // Đọc cài đặt trên máy chủ và ép hiển thị ngay khi vừa tải xong quyền
+    dongBoCauHinhToanCuc();
 
+    let isBGH = kiemTraLaBGH();
     let btn = document.getElementById("nutMoKhoa");
     if(btn) {
         if(isBGH) {

@@ -203,8 +203,27 @@ function kiemTraQuyenTruyCap() {
 function khoiTaoDropdownGiaoVien(danhSachGiaoVien) {
     var selectGv = document.getElementById("hopChonGv"); if (!selectGv) return;
     selectGv.innerHTML = '<option value="">-- Lựa chọn giáo viên --</option>';
-    if (danhSachGiaoVien && danhSachGiaoVien.length > 0) { danhSachGiaoVien.forEach(function(gv) { var option = document.createElement("option"); option.value = gv.id || gv.ma || gv.ttrg; option.textContent = gv.ten || gv.hoTen || gv.tenn; selectGv.appendChild(option); }); selectGv.style.display = "inline-block"; selectGv.disabled = false; } 
-    else { selectGv.style.display = "none"; selectGv.disabled = true; }
+    
+    // [SỬA LỖI] Cơ chế phòng vệ tự động trích xuất nếu mảng nằm trong thuộc tính dliu của gói phản hồi API
+    var ds = danhSachGiaoVien;
+    if (ds && !Array.isArray(ds) && ds.dliu) {
+        ds = ds.dliu;
+    }
+    
+    if (ds && ds.length > 0) { 
+        ds.forEach(function(gv) { 
+            var option = document.createElement("option"); 
+            option.value = gv.id || gv.ma || gv.ttrg; 
+            option.textContent = gv.ten || gv.hoTen || gv.tenn; 
+            selectGv.appendChild(option); 
+        }); 
+        selectGv.style.setProperty('display', 'inline-block', 'important'); // Ép buộc hiển thị trên thanh flex-container
+        selectGv.disabled = false; 
+    } 
+    else { 
+        selectGv.style.setProperty('display', 'none', 'important'); 
+        selectGv.disabled = true; 
+    }
 }
 
 function xuLyCotE(giaTriE, danhSachGiaoVien) { 
@@ -901,12 +920,15 @@ function kiemTraLaGS() {
 }
 // 2. Cập nhật hàm khoiTaoTheoQuyen để cấp danh sách giáo viên cho "gs"
 function khoiTaoTheoQuyen() {
-    if (typeof canbHientai !== 'undefined' && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'gs')) {
+    // [SỬA LỖI] Bổ sung đầy đủ dải quyền bao gồm Quản trị VIP (xxx), Quản trị (xx) và Giám sát (gs) để kích hoạt nạp dropdown
+    if (typeof canbHientai !== 'undefined' && canbHientai && (canbHientai.quyen === 'xx' || canbHientai.quyen === 'xxx' || canbHientai.quyen === 'gs')) {
         if (typeof khachApi !== 'undefined' && typeof khachApi.gvLaydsCanb === 'function') { 
             khachApi.gvLaydsCanb(function(dl) { xuLyCotE(canbHientai.quyen, dl); }, function(err) { xuLyCotE(canbHientai.quyen, []); }); 
         } else { xuLyCotE(canbHientai.quyen, []); }
     } else {
-        cotETonTai = false; document.getElementById("hopChonGv").style.display = 'none';
+        cotETonTai = false; 
+        var selectGv = document.getElementById("hopChonGv");
+        if (selectGv) selectGv.style.setProperty('display', 'none', 'important');
         kiemTraQuyenTruyCap();
     }
     

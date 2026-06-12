@@ -417,11 +417,12 @@
     async function taiCacPhan() {
       try {
         const mb = "?v=" + new Date().getTime();
-        // Bổ sung tải giao diện Tiêu Chí Đánh Giá
-        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi] = await Promise.all([
+        // Bổ sung tải giao diện Tiêu Chí Đánh Giá VÀ Lịch Sử Đăng Nhập
+        const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi, phLichSu] = await Promise.all([
             fetch('./Menu_Doc.html' + mb), fetch('./PGV_Tab_NhiemVu.html' + mb), fetch('./PGV_Tab_GiaoViec.html' + mb),
             fetch('./PGV_Tab_TongHop.html' + mb), fetch('./PGV_Tab_Nghi.html' + mb), fetch('./PGV_Tab_YKien.html' + mb), 
-            fetch('./PGV_Tab_BaoCao.html' + mb), fetch('./PGV_PhanQuyen.html' + mb), fetch('./TieuChiDanhGia.html' + mb)
+            fetch('./PGV_Tab_BaoCao.html' + mb), fetch('./PGV_PhanQuyen.html' + mb), fetch('./TieuChiDanhGia.html' + mb),
+            fetch('./LichSuDangNhap.html' + mb) // <-- ĐÃ BỔ SUNG LỆNH TẢI TỆP LỊCH SỬ
         ]);
         
         document.getElementById('khuVucMenu').innerHTML = await phMenu.text(); 
@@ -432,12 +433,14 @@
         document.getElementById('khuYkien').innerHTML = await phYKien.text(); 
         document.getElementById('khuBaoCao').innerHTML = await phBaoCao.text();
         document.getElementById('khuCapQuyen').innerHTML = await phCapQuyen.text();
-        document.getElementById('khuTieuChi').innerHTML = await phTieuChi.text(); // Nhúng giao diện tiêu chí
+        document.getElementById('khuTieuChi').innerHTML = await phTieuChi.text(); 
+        document.getElementById('khuLichSu').innerHTML = await phLichSu.text(); // <-- ĐÃ BỔ SUNG LỆNH NHÚNG VÀO KHUNG
         
         if (typeof PGV_LINK_LOGO !== 'undefined') { var mnLg = document.getElementById('menu_logo'); if(mnLg) mnLg.src = PGV_LINK_LOGO; }
         if (typeof PGV_TEN_TRUONG !== 'undefined') { var mnSc = document.getElementById('menu_school_name'); if(mnSc) mnSc.innerText = PGV_TEN_TRUONG; }
         
-        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi'].forEach(i => thuchScript(document.getElementById(i)));
+        // <-- ĐÃ BỔ SUNG khuLichSu VÀO VÒNG LẶP CHẠY SCRIPT
+        ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi', 'khuLichSu'].forEach(i => thuchScript(document.getElementById(i)));
       } catch (e) { throw new Error("LỖI KẾT NỐI TỆP GIAO DIỆN: " + e.message); }
     }
 

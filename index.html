@@ -158,7 +158,7 @@
         }
     }
 
-    function xulyPhienDn(phanho) {
+   function xulyPhienDn(phanho) {
       try {
         const tdtai = giaimaJwt(phanho.credential);
         const idht = tdtai["email"]; 
@@ -168,13 +168,14 @@
         window.PGV_ID_TC = idht; 
         window.PGV_TOKEN = phanho.credential;
         
-        // Gọi lệnh ghi lịch sử hệ thống trước khi tải lại trang
+        // Gọi lệnh ghi lịch sử hệ thống
         datTaiDl(true, "Đang thiết lập phiên làm việc...");
         window.khachApi.ghiNhatKy(idht, function() {
+            // Chỉ khi máy chủ báo ghi thành công mới cho phép tải lại trang
             location.reload(); 
-        }, function() {
-            // Dù lỗi mạng vẫn cho phép vào phần mềm bình thường
-            location.reload(); 
+        }, function(loi) {
+            // Nếu có lỗi, DỪNG LẠI và hiển thị nguyên nhân trực tiếp trên màn hình
+            hienThongbLoi("Chưa thể vào hệ thống. Lỗi ghi nhật ký: " + loi.message);
         });
       } catch(loi) {
         hienThongbLoi("Không thể xác thực phiên đăng nhập do lỗi bảo mật trình duyệt. Vui lòng thử lại.");

@@ -68,7 +68,7 @@
         xoaTepBcao: function(tdtai, khiTcong, khiLoi) { this.yeucauApi("xoatepbcao", { tdtai: tdtai }, khiTcong, khiLoi); },
         hoiDapAi: function(cauHoi, khiTcong, khiLoi) { this.yeucauApi("hoidapai", { cauhoi: cauHoi }, khiTcong, khiLoi); },
         ghiKetQuaThop: function(dl, khiTcong, khiLoi) { this.yeucauApi("ghiketquathop", { dldeu: dl }, khiTcong, khiLoi); },
-        
+        ghiNhatKy: function(tk, khiTcong, khiLoi) { this.yeucauApi("ghinhatky", { taikhoan: tk }, khiTcong, khiLoi); },
         // Hỗ trợ gọi thủ công linh hoạt cho các module mới như TieuChiDanhGia
         goiThuCong: function(dlGoi, khiTcong, khiLoi) { this.yeucauApi(dlGoi.hdong, dlGoi, khiTcong, khiLoi); }
     };
@@ -167,7 +167,15 @@
         
         window.PGV_ID_TC = idht; 
         window.PGV_TOKEN = phanho.credential;
-        location.reload(); 
+        
+        // Gọi lệnh ghi lịch sử hệ thống trước khi tải lại trang
+        datTaiDl(true, "Đang thiết lập phiên làm việc...");
+        window.khachApi.ghiNhatKy(idht, function() {
+            location.reload(); 
+        }, function() {
+            // Dù lỗi mạng vẫn cho phép vào phần mềm bình thường
+            location.reload(); 
+        });
       } catch(loi) {
         hienThongbLoi("Không thể xác thực phiên đăng nhập do lỗi bảo mật trình duyệt. Vui lòng thử lại.");
       }

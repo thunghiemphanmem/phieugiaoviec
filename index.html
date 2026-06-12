@@ -128,7 +128,7 @@
         document.head.appendChild(metaDesc);
     }
 
-    function kiemTraPhienLamViec() {
+   function kiemTraPhienLamViec() {
         const tkluuhd = sessionStorage.getItem("MA_PBAN_HT");
         const tokenluu = sessionStorage.getItem("PGV_TOKEN"); 
 
@@ -136,7 +136,14 @@
             window.PGV_ID_TC = tkluuhd; 
             window.PGV_TOKEN = tokenluu;
             document.getElementById('manhChao').style.display = 'none'; 
-            chbiHt(); 
+            
+            // [BỔ SUNG] Ghi lịch sử truy cập ngay cả khi dùng phiên lưu sẵn
+            window.khachApi.ghiNhatKy(tkluuhd, function() {
+                chbiHt(); 
+            }, function() {
+                chbiHt(); // Vẫn cho phép vào hệ thống bình thường nếu lỗi mạng
+            });
+            
         } else { 
             document.getElementById('manhChao').style.display = 'flex'; 
             document.getElementById('khu_vuc_nut_dang_nhap').innerHTML = ""; 

@@ -479,22 +479,27 @@
         
         // ==================== CÁC HÀM XỬ LÝ DỮ LIỆU ====================
         function layDanhSach() {
-            return new Promise(function(resolve, reject) {
-                callApi('laydlkhai bao', {}, function(res) {
-                    var raw = res.dliu || [];
-                    var list = raw.map(function(row) {
-                        return {
-                            idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
-                            email: (row[1] || '').trim(),
-                            tenHienThi: (row[2] || '').trim(),
-                            quyen: (row[3] || '').trim(),
-                            chucVu: (row[4] || '').trim() // DÒNG BỔ SUNG
-                        };
-                    });
-                    resolve(list);
-                }, reject);
+    return new Promise(function(resolve, reject) {
+        callApi('laydlkhai bao', {}, function(res) {
+            var raw = res.dliu || [];
+            var list = raw.map(function(row) {
+                
+                // [ĐÃ FIX] Đọc cột F và ép giá trị mặc định nếu ô trên Sheet đang trống
+                var cv = (row[4] !== undefined && row[4] !== null) ? String(row[4]).trim() : '';
+                if (cv === '') cv = 'gv'; 
+
+                return {
+                    idSheet: String(row[0] !== undefined && row[0] !== null ? row[0] : '').trim(),
+                    email: (row[1] || '').trim(),
+                    tenHienThi: (row[2] || '').trim(),
+                    quyen: (row[3] || '').trim(),
+                    chucVu: cv // Đưa vào mảng bộ nhớ với giá trị 'gv' chuẩn xác
+                };
             });
-        }
+            resolve(list);
+        }, reject);
+    });
+}
         
         function capNhatDanhSach(list) {
             return new Promise(function(resolve, reject) {

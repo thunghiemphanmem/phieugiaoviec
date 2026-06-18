@@ -368,8 +368,8 @@
                         <th style="min-width: 120px">ID sheet</th>
                         <th style="min-width: 180px">Hộp thư (Email)</th>
                         <th style="min-width: 150px">Tên hiển thị</th>
-                        <th style="width: 120px">Chức vụ</th>
                         <th style="width: 130px">Quyền</th>
+                        <th style="width: 120px">Chức vụ</th>
                     </tr>
                 </thead>
                 <tbody id="quyenTableBodyPQ">
@@ -499,7 +499,7 @@
         function capNhatDanhSach(list) {
             return new Promise(function(resolve, reject) {
                 var dataToSave = list.map(function(item) {
-                    return [String(item.idSheet), item.email, item.tenHienThi, item.chucVu, item.quyen];
+                    return [String(item.idSheet), item.email, item.tenHienThi, item.quyen, item.chucVu];
                 });
                 callApi('capnhatkhai bao', { dliu: dataToSave }, resolve, reject);
             });
@@ -788,8 +788,8 @@
                 tr.appendChild(tdId);
                 tr.appendChild(tdEmail);
                 tr.appendChild(tdName);
-                tr.appendChild(tdChucVu);
                 tr.appendChild(tdQuyen);
+                tr.appendChild(tdChucVu);
                 tbody.appendChild(tr);
             }
             

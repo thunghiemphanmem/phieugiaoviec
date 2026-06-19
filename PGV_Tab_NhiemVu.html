@@ -739,7 +739,10 @@ function addNv() {
         var $newRow = lastRow.clone();
         $newRow.find('.oStt').text('');
         $newRow.find('.nhapNdung, .oColJ, .oColK, .oColL, .oColM').val('').removeClass('fw-bold text-primary text-uppercase');
-        $newRow.find('.nhapDiemMax, .nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
+        
+        // [ĐÃ CẬP NHẬT] Loại bỏ nhapDiemMax khỏi dánh sách bị xóa, nhân bản giá trị Cột C từ dòng trước
+        $newRow.find('.nhapTgGiao, .nhapTdo, .nhapTgHt, .anNguoiTH, .anGhiChu').val('');
+        $newRow.find('.nhapDiemMax').val(lastRow.find('.nhapDiemMax').val());
         
         var $chonKq = $newRow.find('.chonKq');
         $chonKq.val(''); 

@@ -476,7 +476,7 @@
         ptu.value = v; 
     }
   
-    function gvThemDong() {
+   function gvThemDong() {
         const tbody = $('#gvThanBang');
         if (!tbody || tbody.length === 0) return;
         const lastRow = tbody.find('tr:last');
@@ -501,7 +501,10 @@
 
         $newRow.find('.oSttGv').val(newStt);
         $newRow.find('.oNdGv, .oGchuGv').val('');
-        $newRow.find('.oDmaxGv').val('');
+        
+        // [ĐÃ CẬP NHẬT] Nhân bản giá trị Điểm Max (Cột C) từ dòng trên
+        $newRow.find('.oDmaxGv').val(lastRow.find('.oDmaxGv').val()); 
+        
         $newRow.find('.oTGGiao').val('');
         $newRow.find('.oTdoGv').val('');
         $newRow.find('.oNnghanGv').val('');

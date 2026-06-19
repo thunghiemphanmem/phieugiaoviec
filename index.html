@@ -70,7 +70,6 @@
         ghiKetQuaThop: function(dl, khiTcong, khiLoi) { this.yeucauApi("ghiketquathop", { dldeu: dl }, khiTcong, khiLoi); },
         ghiNhatKy: function(tk, khiTcong, khiLoi) { this.yeucauApi("ghinhatky", { taikhoan: tk }, khiTcong, khiLoi); },
         layDlLichSu: function(khiTcong, khiLoi) { this.yeucauApi("laydllichsu", {}, khiTcong, khiLoi); },
-        // Hỗ trợ gọi thủ công linh hoạt cho các module mới như TieuChiDanhGia
         goiThuCong: function(dlGoi, khiTcong, khiLoi) { this.yeucauApi(dlGoi.hdong, dlGoi, khiTcong, khiLoi); }
     };
 
@@ -178,6 +177,13 @@
         const tdtai = giaimaJwt(phanho.credential);
         const tuKhoaAnToan = "e" + "m" + "a" + "i" + "l"; 
         const idht = tdtai[tuKhoaAnToan]; 
+        
+        // NGĂN CHẶN LỖI CACHE UNDEFINED
+        if (!idht || String(idht).trim() === "" || String(idht) === "undefined" || String(idht) === "null") {
+            hienThongbLoi("Tài khoản Google này chưa được cấp quyền chia sẻ địa chỉ định danh (Email) trong bộ token. Vui lòng cấp quyền hoặc sử dụng tài khoản khác.");
+            return;
+        }
+        
         sessionStorage.setItem("MA_PBAN_HT", idht);
         sessionStorage.setItem("PGV_TOKEN", phanho.credential);
         
@@ -404,7 +410,6 @@
         $('#tabYkien').on('click', () => taiDlYkien(false)); 
         $('#tabBaoCao').on('click', () => { if(typeof taidlBcao === 'function') taidlBcao(false, false); });
         
-        // [CẬP NHẬT] Đã bổ sung sự kiện click kích hoạt hàm tải Tiêu Chí Nhân Viên
         $(document).on('click', '#tabTieuChi', () => { if(typeof khoiDongTabTieuChi === 'function') khoiDongTabTieuChi(); });
         $(document).on('click', '#tabTieuChiNV', () => { if(typeof khoiDongTabTieuChiNV === 'function') khoiDongTabTieuChiNV(); });
         
@@ -419,7 +424,6 @@
     async function taiCacPhan() {
       try {
         const mb = "?v=" + new Date().getTime();
-        // [CẬP NHẬT] Bổ sung tải tệp Tieuchinhanvien.html vào Promise array
         const [phMenu, phNhiemVu, phGiaoViec, phTongHop, phNghi, phYKien, phBaoCao, phCapQuyen, phTieuChi, phLichSu, phTieuChiNV] = await Promise.all([
             fetch('./Menu_Doc.html' + mb), fetch('./PGV_Tab_NhiemVu.html' + mb), fetch('./PGV_Tab_GiaoViec.html' + mb),
             fetch('./PGV_Tab_TongHop.html' + mb), fetch('./PGV_Tab_Nghi.html' + mb), fetch('./PGV_Tab_YKien.html' + mb), 
@@ -437,12 +441,11 @@
         document.getElementById('khuCapQuyen').innerHTML = await phCapQuyen.text();
         document.getElementById('khuTieuChi').innerHTML = await phTieuChi.text(); 
         document.getElementById('khuLichSu').innerHTML = await phLichSu.text(); 
-        document.getElementById('khuTieuChiNV').innerHTML = await phTieuChiNV.text(); // Đổ dữ liệu HTML vào khung
+        document.getElementById('khuTieuChiNV').innerHTML = await phTieuChiNV.text(); 
         
         if (typeof PGV_LINK_LOGO !== 'undefined') { var mnLg = document.getElementById('menu_logo'); if(mnLg) mnLg.src = PGV_LINK_LOGO; }
         if (typeof PGV_TEN_TRUONG !== 'undefined') { var mnSc = document.getElementById('menu_school_name'); if(mnSc) mnSc.innerText = PGV_TEN_TRUONG; }
         
-        // [CẬP NHẬT] Kích hoạt chạy các lệnh Script của Tiêu chí Nhân viên
         ['khuVucMenu', 'khuNhiemVu','khuGiaoViecChinh','khuTongHop','khuNghi','khuYkien','khuBaoCao','khuCapQuyen', 'khuTieuChi', 'khuLichSu', 'khuTieuChiNV'].forEach(i => thuchScript(document.getElementById(i)));
       } catch (e) { throw new Error("LỖI KẾT NỐI TỆP GIAO DIỆN: " + e.message); }
     }
